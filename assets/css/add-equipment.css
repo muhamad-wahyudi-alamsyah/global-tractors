@@ -1,0 +1,994 @@
+/**
+ * Add Equipment Page Styles
+ * @package global-tractors
+ */
+
+/* Back Button Row */
+.gti-ae-back-row {
+    margin-bottom: 20px;
+}
+
+.gti-ae-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gti-gray);
+    text-decoration: none;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: var(--gti-card);
+    transition: all 0.2s;
+}
+
+.gti-ae-back-btn:hover {
+    background: #f5f5f5;
+    border-color: #d1d5db;
+    color: var(--gti-dark);
+}
+
+/* Stepper Card */
+.gti-ae-stepper-card {
+    background: var(--gti-card);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.gti-ae-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+}
+
+.gti-ae-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.gti-ae-step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.gti-ae-step.active .gti-ae-step-circle {
+    background: var(--gti-primary);
+    color: #000;
+    box-shadow: 0 0 0 4px rgba(245, 166, 35, 0.15);
+}
+
+.gti-ae-step.completed .gti-ae-step-circle {
+    background: #10b981;
+    color: #fff;
+}
+
+.gti-ae-step-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #9ca3af;
+    white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.gti-ae-step.active .gti-ae-step-label {
+    color: var(--gti-dark);
+    font-weight: 600;
+}
+
+.gti-ae-step.completed .gti-ae-step-label {
+    color: #10b981;
+}
+
+.gti-ae-step-line {
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 8px;
+    margin-bottom: 28px;
+    min-width: 30px;
+    max-width: 80px;
+    transition: background 0.3s ease;
+}
+
+.gti-ae-step-line.active {
+    background: #10b981;
+}
+
+/* Form Card */
+.gti-ae-form-card {
+    background: var(--gti-card);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.gti-ae-card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.gti-ae-card-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gti-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.gti-ae-card-header h3 i {
+    color: var(--gti-primary);
+    font-size: 14px;
+}
+
+.gti-ae-card-body {
+    padding: 24px;
+}
+
+/* Form Grid */
+.gti-ae-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.gti-ae-form-grid:last-child {
+    margin-bottom: 0;
+}
+
+/* Fields */
+.gti-ae-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gti-ae-field-full {
+    grid-column: 1 / -1;
+    margin-bottom: 20px;
+}
+
+.gti-ae-field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gti-gray);
+}
+
+.gti-ae-field label .required {
+    color: #ef4444;
+}
+
+.gti-ae-field input[type="text"],
+.gti-ae-field input[type="number"],
+.gti-ae-field input[type="date"],
+.gti-ae-field input[type="email"],
+.gti-ae-field select,
+.gti-ae-field textarea {
+    padding: 10px 14px;
+    border: 2px solid #f0f0f0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--gti-dark);
+    background: var(--gti-card);
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.gti-ae-field input:focus,
+.gti-ae-field select:focus,
+.gti-ae-field textarea:focus {
+    border-color: var(--gti-primary);
+}
+
+.gti-ae-field input::placeholder,
+.gti-ae-field textarea::placeholder {
+    color: #c0c0c0;
+}
+
+.gti-ae-field select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+}
+
+.gti-ae-field textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Checkbox Label */
+.gti-ae-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--gti-dark);
+}
+
+.gti-ae-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--gti-primary);
+    cursor: pointer;
+}
+
+/* Upload Area */
+.gti-ae-upload-area {
+    border: 2px dashed #e5e7eb;
+    border-radius: 12px;
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fafafa;
+}
+
+.gti-ae-upload-area:hover {
+    border-color: var(--gti-primary);
+    background: #fffbeb;
+}
+
+.gti-ae-upload-placeholder i {
+    font-size: 36px;
+    color: #d1d5db;
+    margin-bottom: 12px;
+}
+
+.gti-ae-upload-placeholder p {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gti-gray);
+    margin: 0 0 4px;
+}
+
+.gti-ae-upload-placeholder span {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+/* Upload Preview */
+.gti-ae-upload-preview {
+    position: relative;
+    display: inline-block;
+}
+
+.gti-ae-upload-preview img {
+    max-width: 240px;
+    max-height: 180px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.gti-ae-remove-img {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.gti-ae-remove-img:hover {
+    background: #dc2626;
+}
+
+/* Gallery Preview */
+.gti-ae-gallery-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.gti-ae-gallery-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.gti-ae-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gti-ae-gallery-item .gti-ae-remove-img {
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+}
+
+/* Features Grid */
+.gti-ae-features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+.gti-ae-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #fafafa;
+    border: 2px solid #f0f0f0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gti-dark);
+    transition: all 0.2s;
+}
+
+.gti-ae-feature-item:hover {
+    border-color: var(--gti-primary);
+    background: #fffbeb;
+}
+
+.gti-ae-feature-item input[type="checkbox"] {
+    display: none;
+}
+
+.gti-ae-feature-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.gti-ae-feature-check::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 11px;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.gti-ae-feature-item input[type="checkbox"]:checked + .gti-ae-feature-check {
+    background: var(--gti-primary);
+    border-color: var(--gti-primary);
+}
+
+.gti-ae-feature-item input[type="checkbox"]:checked + .gti-ae-feature-check::after {
+    opacity: 1;
+}
+
+.gti-ae-feature-item input[type="checkbox"]:checked ~ span:last-child {
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .gti-ae-features-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .gti-ae-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Step Content */
+.gti-ae-step-content {
+    display: none;
+}
+
+.gti-ae-step-content.active {
+    display: block;
+}
+
+/* Form Navigation */
+.gti-ae-form-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    gap: 12px;
+}
+
+.gti-ae-form-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+/* Buttons */
+.gti-ae-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.gti-ae-btn-back {
+    background: var(--gti-card);
+    color: var(--gti-gray);
+    border: 2px solid #e5e7eb;
+}
+
+.gti-ae-btn-back:hover {
+    background: #f5f5f5;
+    border-color: #d1d5db;
+    color: var(--gti-dark);
+}
+
+.gti-ae-btn-cancel {
+    background: transparent;
+    color: var(--gti-gray);
+    border: 2px solid #e5e7eb;
+}
+
+.gti-ae-btn-cancel:hover {
+    background: #f5f5f5;
+    border-color: #d1d5db;
+    color: var(--gti-dark);
+}
+
+.gti-ae-btn-draft {
+    background: var(--gti-card);
+    color: var(--gti-gray);
+    border: 2px solid #e5e7eb;
+}
+
+.gti-ae-btn-draft:hover {
+    background: #f5f5f5;
+    border-color: #d1d5db;
+    color: var(--gti-dark);
+}
+
+.gti-ae-btn-next {
+    background: var(--gti-primary);
+    color: #000;
+}
+
+.gti-ae-btn-next:hover {
+    background: var(--gti-primary-hover);
+}
+
+.gti-ae-btn-submit {
+    background: #10b981;
+    color: #fff;
+}
+
+.gti-ae-btn-submit:hover {
+    background: #059669;
+}
+
+/* Video Thumb */
+.gti-ae-video-thumb {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-radius: 10px;
+}
+
+.gti-ae-video-thumb i {
+    font-size: 28px;
+    color: var(--gti-primary);
+}
+
+.gti-ae-video-thumb span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gti-dark);
+    word-break: break-all;
+}
+
+/* Price Guidelines */
+.gti-ae-price-guidelines {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    margin-top: 4px;
+    font-size: 13px;
+    color: #1e40af;
+    line-height: 1.6;
+}
+
+.gti-ae-price-guidelines > i {
+    font-size: 18px;
+    color: #3b82f6;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.gti-ae-price-guidelines strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.gti-ae-price-guidelines ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.gti-ae-price-guidelines li {
+    margin-bottom: 2px;
+}
+
+.gti-ae-price-guidelines li:last-child {
+    margin-bottom: 0;
+}
+
+/* ==================================
+   Step 5 - Additional Info Layout
+   ================================== */
+
+.gti-ae-step5-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    align-items: start;
+}
+
+.gti-ae-step5-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.gti-ae-step5-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 20px;
+}
+
+/* Subtitle inside card */
+.gti-ae-step5-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gti-dark);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.gti-ae-step5-subtitle i {
+    color: var(--gti-primary);
+    font-size: 13px;
+}
+
+/* Field span 2 columns */
+.gti-ae-field-span-2 {
+    grid-column: span 2;
+}
+
+/* Document Availability Grid */
+.gti-ae-doc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.gti-ae-doc-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #fafafa;
+    border: 2px solid #f0f0f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gti-ae-doc-item:hover {
+    border-color: var(--gti-primary);
+    background: #fffbeb;
+}
+
+.gti-ae-doc-item input[type="checkbox"] {
+    display: none;
+}
+
+.gti-ae-doc-check {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.gti-ae-doc-check::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 11px;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.gti-ae-doc-item input[type="checkbox"]:checked + .gti-ae-doc-check {
+    background: var(--gti-primary);
+    border-color: var(--gti-primary);
+}
+
+.gti-ae-doc-item input[type="checkbox"]:checked + .gti-ae-doc-check::after {
+    opacity: 1;
+}
+
+.gti-ae-doc-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gti-dark);
+}
+
+.gti-ae-doc-item input[type="checkbox"]:checked ~ .gti-ae-doc-label {
+    font-weight: 600;
+}
+
+/* Preview Summary Card */
+.gti-ae-preview-card .gti-ae-card-body {
+    padding: 20px;
+}
+
+.gti-ae-preview-image {
+    width: 100%;
+    height: 160px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+
+.gti-ae-preview-image i {
+    font-size: 32px;
+    color: #d1d5db;
+}
+
+.gti-ae-preview-image span {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.gti-ae-preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gti-ae-preview-tags {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.gti-ae-preview-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.gti-ae-preview-tag-ready {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.gti-ae-preview-title {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gti-dark);
+}
+
+.gti-ae-preview-subtitle {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.gti-ae-preview-location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 16px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.gti-ae-preview-location i {
+    color: var(--gti-primary);
+    font-size: 12px;
+}
+
+.gti-ae-preview-divider {
+    height: 1px;
+    background: #f0f0f0;
+    margin-bottom: 16px;
+}
+
+.gti-ae-preview-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+
+.gti-ae-preview-specs {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.gti-ae-preview-spec {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f9fafb;
+}
+
+.gti-ae-preview-spec:last-child {
+    border-bottom: none;
+}
+
+.gti-ae-preview-spec-label {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.gti-ae-preview-spec-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gti-dark);
+}
+
+/* Tips Card */
+.gti-ae-tips-card {
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+}
+
+.gti-ae-tips-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--gti-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.gti-ae-tips-icon i {
+    color: #000;
+    font-size: 14px;
+}
+
+.gti-ae-tips-content strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gti-dark);
+    margin-bottom: 4px;
+}
+
+.gti-ae-tips-content p {
+    margin: 0;
+    font-size: 12px;
+    color: #92400e;
+    line-height: 1.6;
+}
+
+/* Checklist Card */
+.gti-ae-checklist-card .gti-ae-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.gti-ae-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.gti-ae-checklist-item:hover {
+    background: #f9fafb;
+}
+
+.gti-ae-checklist-item input[type="checkbox"] {
+    display: none;
+}
+
+.gti-ae-checklist-check {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #d1d5db;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.gti-ae-checklist-check::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 10px;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.gti-ae-checklist-item input[type="checkbox"]:checked + .gti-ae-checklist-check {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.gti-ae-checklist-item input[type="checkbox"]:checked + .gti-ae-checklist-check::after {
+    opacity: 1;
+}
+
+.gti-ae-checklist-item span:last-child {
+    font-size: 13px;
+    color: var(--gti-dark);
+}
+
+.gti-ae-checklist-item input[type="checkbox"]:checked ~ span:last-child {
+    text-decoration: line-through;
+    color: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .gti-ae-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gti-ae-field-span-2 {
+        grid-column: span 1;
+    }
+
+    .gti-ae-doc-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .gti-ae-step5-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .gti-ae-step5-right {
+        position: static;
+    }
+
+    .gti-ae-doc-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .gti-ae-stepper {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .gti-ae-step-line {
+        display: none;
+    }
+
+    .gti-ae-step {
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .gti-ae-form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .gti-ae-field-full {
+        grid-column: 1 / -1;
+    }
+
+    .gti-ae-form-nav {
+        flex-direction: column;
+    }
+
+    .gti-ae-form-nav-right {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .gti-ae-stepper-card {
+        padding: 20px 16px;
+    }
+
+    .gti-ae-card-body {
+        padding: 16px;
+    }
+}

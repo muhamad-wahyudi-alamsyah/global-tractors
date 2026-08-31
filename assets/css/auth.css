@@ -1,0 +1,202 @@
+/* ============================================
+   Global Tractors Indonesia - Auth Styles
+   ============================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+.gti-auth-body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #1a1f36 0%, #2d3561 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gti-auth-container {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+}
+
+.gti-auth-card {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.gti-auth-logo {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.gti-auth-logo img { max-width: 80px; height: auto; }
+
+.gti-auth-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1f36;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.gti-auth-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.gti-alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    display: none;
+}
+
+.gti-alert--error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.gti-alert--success {
+    background: #f0fdf4;
+    color: #16a34a;
+    border: 1px solid #bbf7d0;
+}
+
+.gti-field { margin-bottom: 20px; }
+
+.gti-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.gti-label .required { color: #dc2626; }
+
+.gti-input-wrapper { position: relative; }
+
+.gti-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.gti-input:focus {
+    outline: none;
+    border-color: #F5A623;
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.1);
+}
+
+.gti-input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    width: 18px;
+    height: 18px;
+}
+
+.gti-input--icon-left { padding-left: 40px; }
+.gti-input--icon-right { padding-right: 40px; }
+
+.gti-input-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.gti-input-toggle:hover { color: #374151; }
+
+.gti-checkbox-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.gti-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+}
+
+.gti-link {
+    font-size: 14px;
+    color: #F5A623;
+    text-decoration: none;
+}
+
+.gti-link:hover { text-decoration: underline; }
+
+.gti-btn {
+    width: 100%;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.gti-btn--primary {
+    background: #F5A623;
+    color: #1a1f36;
+}
+
+.gti-btn--primary:hover { background: #e6951a; }
+.gti-btn--primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.gti-auth-footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.gti-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: gti-spin 0.8s linear infinite;
+    display: none;
+}
+
+.gti-btn.loading .gti-spinner { display: block; }
+.gti-btn.loading .btn-text { display: none; }
+
+@keyframes gti-spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 480px) {
+    .gti-auth-card { padding: 24px; }
+    .gti-auth-title { font-size: 20px; }
+}

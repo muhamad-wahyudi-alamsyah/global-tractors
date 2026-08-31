@@ -1,0 +1,920 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   GTI Equipment Detail Page
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Variables ────────────────────────────────────────────────────────────── */
+:root {
+  --ed-primary: #FEB802;
+  --ed-primary-hover: #e0a200;
+  --ed-dark: #111827;
+  --ed-gray: #374151;
+  --ed-muted: #6b7280;
+  --ed-light: #9ca3af;
+  --ed-border: #E5E7EB;
+  --ed-border-light: #F3F4F6;
+  --ed-bg: #FFFFFF;
+  --ed-white: #FFFFFF;
+  --ed-green: #239A35;
+  --ed-green-light: #dcfce7;
+  --ed-orange: #F97316;
+  --ed-red: #dc2626;
+  --ed-radius: 8px;
+  --ed-radius-lg: 12px;
+  --ed-radius-xl: 16px;
+  --ed-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --ed-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --ed-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08);
+  --ed-transition: all 0.2s ease;
+  --ed-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ed-whatsapp: #25D366;
+  --ed-whatsapp-hover: #1da851;
+}
+
+/* ── Wrapper ──────────────────────────────────────────────────────────────── */
+.gti-ed-wrapper {
+  font-family: var(--ed-font);
+  color: var(--ed-dark);
+  background: var(--ed-bg);
+  min-height: 100vh;
+}
+
+/* ── Breadcrumb ───────────────────────────────────────────────────────────── */
+.gti-ed-breadcrumb {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 40px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ed-muted);
+}
+
+.gti-ed-breadcrumb a {
+  color: var(--ed-muted);
+  text-decoration: none;
+  transition: var(--ed-transition);
+}
+
+.gti-ed-breadcrumb a:hover {
+  color: var(--ed-primary);
+}
+
+.gti-ed-breadcrumb .separator {
+  color: var(--ed-light);
+  font-size: 10px;
+}
+
+.gti-ed-breadcrumb .current {
+  color: var(--ed-dark);
+  font-weight: 500;
+}
+
+/* ═══ HERO SECTION ═════════════════════════════════════════════════════════ */
+.gti-ed-hero {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 24px 40px 40px;
+}
+
+.gti-ed-hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 320px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Gallery Column ──────────────────────────────────────────────────────── */
+.gti-ed-gallery {
+  position: relative;
+}
+
+.gti-ed-main-image-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: var(--ed-radius-lg);
+  overflow: hidden;
+  background: var(--ed-white);
+  border: 1px solid var(--ed-border);
+  aspect-ratio: 4 / 3;
+  box-shadow: var(--ed-shadow);
+}
+
+.gti-ed-main-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+.gti-ed-main-image-wrapper .placeholder-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  color: var(--ed-light);
+  background: var(--ed-bg);
+}
+
+.gti-ed-status-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+.gti-ed-status-badge.ready {
+  background: var(--ed-green);
+  color: #fff;
+}
+
+.gti-ed-status-badge.coming-soon {
+  background: var(--ed-orange);
+  color: #fff;
+}
+
+.gti-ed-status-badge.sold {
+  background: var(--ed-red);
+  color: #fff;
+}
+
+/* Gallery nav arrows */
+.gti-ed-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--ed-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--ed-dark);
+  z-index: 3;
+  box-shadow: var(--ed-shadow-md);
+  line-height: 1;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  transition: none !important;
+}
+
+.gti-ed-gallery-arrow:hover {
+  background: var(--ed-primary);
+  color: #fff;
+  border-color: var(--ed-primary);
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
+.gti-ed-gallery-arrow.prev { left: 12px; }
+.gti-ed-gallery-arrow.next { right: 12px; }
+
+/* Thumbnail strip */
+.gti-ed-thumbnails {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.gti-ed-thumb {
+  width: 72px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--ed-transition);
+  flex-shrink: 0;
+}
+
+.gti-ed-thumb.active {
+  border-color: var(--ed-primary);
+}
+
+.gti-ed-thumb:hover {
+  border-color: var(--ed-primary);
+}
+
+.gti-ed-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gti-ed-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ed-bg);
+  font-size: 18px;
+  color: var(--ed-light);
+}
+
+.gti-ed-thumb-more {
+  position: relative;
+}
+
+.gti-ed-thumb-more .gti-ed-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+/* ═══ PRODUCT SUMMARY (CENTER COL) ═══════════════════════════════════════ */
+.gti-ed-summary {
+  padding: 4px 0;
+}
+
+.gti-ed-brand-badge {
+  display: inline-block;
+  background: var(--ed-primary);
+  color: var(--ed-dark);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.gti-ed-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ed-dark);
+  line-height: 1.2;
+  margin: 0 0 6px;
+}
+
+.gti-ed-tagline {
+  color: var(--ed-orange);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 18px;
+}
+
+/* Spec list */
+.gti-ed-specs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--ed-border-light);
+}
+
+.gti-ed-spec-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--ed-border-light);
+}
+
+.gti-ed-spec-item i {
+  width: 18px;
+  text-align: center;
+  color: var(--ed-primary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.gti-ed-spec-item .spec-label {
+  color: var(--ed-muted);
+  min-width: 100px;
+  font-size: 13px;
+}
+
+.gti-ed-spec-item .spec-value {
+  color: var(--ed-dark);
+  font-weight: 600;
+}
+
+/* CTA buttons */
+.gti-ed-cta-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gti-ed-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  padding: 13px 20px;
+  border-radius: var(--ed-radius);
+  font-family: var(--ed-font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: var(--ed-transition);
+  text-decoration: none;
+  text-align: center;
+  letter-spacing: 0.3px;
+  box-sizing: border-box;
+}
+
+.gti-ed-btn-whatsapp {
+  background: var(--ed-whatsapp);
+  color: #fff;
+  border-color: var(--ed-whatsapp);
+}
+
+.gti-ed-btn-whatsapp:hover {
+  background: var(--ed-whatsapp-hover);
+  border-color: var(--ed-whatsapp-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+}
+
+.gti-ed-btn-offer {
+  background: var(--ed-primary);
+  color: var(--ed-dark);
+  border-color: var(--ed-primary);
+}
+
+.gti-ed-btn-offer:hover {
+  background: var(--ed-primary-hover);
+  border-color: var(--ed-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(254, 184, 2, 0.3);
+}
+
+.gti-ed-btn-share {
+  background: var(--ed-white);
+  color: var(--ed-dark);
+  border-color: var(--ed-border);
+}
+
+.gti-ed-btn-share:hover {
+  border-color: var(--ed-primary);
+  color: var(--ed-primary);
+  transform: translateY(-1px);
+}
+
+/* ═══ INQUIRY FORM (RIGHT COL) ═══════════════════════════════════════════ */
+.gti-ed-inquiry-card {
+  background: var(--ed-white);
+  border-radius: var(--ed-radius-lg);
+  border: 1px solid var(--ed-border);
+  padding: 28px;
+  position: sticky;
+  top: 100px;
+  box-shadow: var(--ed-shadow);
+}
+
+.gti-ed-inquiry-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ed-dark);
+  margin: 0 0 4px;
+}
+
+.gti-ed-inquiry-desc {
+  font-size: 13px;
+  color: var(--ed-muted);
+  margin: 0 0 20px;
+}
+
+.gti-ed-form-group {
+  margin-bottom: 14px;
+}
+
+.gti-ed-form-group label {
+  display: none;
+}
+
+.gti-ed-form-group input,
+.gti-ed-form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--ed-border);
+  border-radius: var(--ed-radius);
+  font-family: var(--ed-font);
+  font-size: 13px;
+  color: var(--ed-dark);
+  background: var(--ed-white);
+  transition: var(--ed-transition);
+  box-sizing: border-box;
+}
+
+.gti-ed-form-group input::placeholder,
+.gti-ed-form-group textarea::placeholder {
+  color: var(--ed-light);
+}
+
+.gti-ed-form-group input:focus,
+.gti-ed-form-group textarea:focus {
+  outline: none;
+  border-color: var(--ed-primary);
+  box-shadow: 0 0 0 3px rgba(254, 184, 2, 0.15);
+}
+
+.gti-ed-form-group textarea {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.gti-ed-form-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px;
+  border-radius: var(--ed-radius);
+  background: var(--ed-primary);
+  color: var(--ed-dark);
+  border: none;
+  font-family: var(--ed-font);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--ed-transition);
+}
+
+.gti-ed-form-submit:hover {
+  background: var(--ed-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(254, 184, 2, 0.3);
+}
+
+.gti-ed-form-privacy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--ed-light);
+  text-align: center;
+  justify-content: center;
+}
+
+.gti-ed-form-privacy i {
+  font-size: 11px;
+}
+
+/* ═══ DETAIL SECTION ═══════════════════════════════════════════════════════ */
+.gti-ed-detail-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 40px 48px;
+}
+
+.gti-ed-detail-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 24px;
+}
+
+/* ── Specifications ──────────────────────────────────────────────────────── */
+.gti-ed-specs-block {
+  background: var(--ed-white);
+  border-radius: var(--ed-radius-lg);
+  border: 1px solid var(--ed-border);
+  padding: 28px;
+  box-shadow: var(--ed-shadow);
+}
+
+.gti-ed-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ed-dark);
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--ed-border-light);
+}
+
+.gti-ed-spec-table {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+.gti-ed-spec-row {
+  display: flex;
+  padding: 10px 0;
+}
+
+.gti-ed-spec-row:nth-child(odd) {
+  padding-right: 16px;
+}
+
+.gti-ed-spec-row:nth-child(even) {
+  padding-left: 16px;
+}
+
+.gti-ed-spec-row .label {
+  color: var(--ed-muted);
+  font-size: 13px;
+  min-width: 120px;
+}
+
+.gti-ed-spec-row .value {
+  color: var(--ed-dark);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Features ────────────────────────────────────────────────────────────── */
+.gti-ed-features-block {
+  background: var(--ed-white);
+  border-radius: var(--ed-radius-lg);
+  border: 1px solid var(--ed-border);
+  padding: 28px;
+  box-shadow: var(--ed-shadow);
+}
+
+.gti-ed-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--ed-dark);
+}
+
+.gti-ed-feature-item:last-child {
+  border-bottom: none;
+}
+
+.gti-ed-feature-item i {
+  color: var(--ed-green);
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* ── Why Buy from GTI ───────────────────────────────────────────────────── */
+.gti-ed-why-block {
+  background: var(--ed-white);
+  border-radius: var(--ed-radius-lg);
+  border: 1px solid var(--ed-border);
+  padding: 28px;
+  box-shadow: var(--ed-shadow);
+}
+
+.gti-ed-why-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.gti-ed-why-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gti-ed-why-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(254, 184, 2, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ed-primary);
+  font-size: 15px;
+}
+
+.gti-ed-why-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ed-dark);
+  line-height: 1.4;
+}
+
+/* ═══ RELATED PRODUCTS ═════════════════════════════════════════════════════ */
+.gti-ed-related-section {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 40px 60px;
+}
+
+.gti-ed-related-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.gti-ed-related-header h2 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--ed-dark);
+  margin: 0;
+}
+
+.gti-ed-related-header a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ed-primary);
+  text-decoration: none;
+  transition: var(--ed-transition);
+}
+
+.gti-ed-related-header a:hover {
+  color: var(--ed-primary-hover);
+}
+
+.gti-ed-related-carousel-wrapper {
+  position: relative;
+}
+
+.gti-ed-related-carousel {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 4px 0;
+}
+
+.gti-ed-related-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* Related card (same as filter card style) */
+.gti-ed-related-card {
+  flex: 0 0 280px;
+  scroll-snap-align: start;
+  background: var(--ed-white);
+  border-radius: var(--ed-radius-lg);
+  border: 1px solid var(--ed-border);
+  overflow: hidden;
+  transition: var(--ed-transition);
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.gti-ed-related-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ed-shadow-lg);
+  border-color: var(--ed-primary);
+}
+
+.gti-ed-related-card-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--ed-bg);
+  position: relative;
+}
+
+.gti-ed-related-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.gti-ed-related-card-image .placeholder-icon {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36px;
+  color: var(--ed-light);
+}
+
+.gti-ed-related-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.gti-ed-related-card-badge.ready {
+  background: var(--ed-green);
+  color: #fff;
+}
+
+.gti-ed-related-card-badge.sold {
+  background: var(--ed-red);
+  color: #fff;
+}
+
+.gti-ed-related-card-badge.coming-soon {
+  background: var(--ed-orange);
+  color: #fff;
+}
+
+.gti-ed-related-card-body {
+  padding: 14px 16px 16px;
+}
+
+.gti-ed-related-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ed-dark);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.gti-ed-related-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+
+.gti-ed-related-card-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ed-muted);
+}
+
+.gti-ed-related-card-meta-row i {
+  width: 14px;
+  text-align: center;
+  color: var(--ed-primary);
+  font-size: 11px;
+}
+
+.gti-ed-related-card-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ed-dark);
+  margin-bottom: 12px;
+}
+
+.gti-ed-related-card-cta {
+  display: block;
+  width: 100%;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: var(--ed-radius);
+  background: var(--ed-primary);
+  color: var(--ed-dark);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  transition: var(--ed-transition);
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gti-ed-related-card:hover .gti-ed-related-card-cta {
+  background: var(--ed-primary-hover);
+}
+
+/* Carousel arrows */
+.gti-ed-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--ed-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--ed-dark);
+  z-index: 3;
+  box-shadow: var(--ed-shadow-md);
+  line-height: 1;
+  padding: 0;
+  aspect-ratio: 1 / 1;
+  transition: none !important;
+}
+
+.gti-ed-carousel-arrow:hover {
+  background: var(--ed-primary);
+  color: #fff;
+  border-color: var(--ed-primary);
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
+.gti-ed-carousel-arrow.prev { left: -22px; }
+.gti-ed-carousel-arrow.next { right: -22px; }
+
+/* ═══ RESPONSIVE ════════════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .gti-ed-hero-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gti-ed-inquiry-card {
+    grid-column: 1 / -1;
+    position: static;
+  }
+  .gti-ed-detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .gti-ed-why-block {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .gti-ed-hero {
+    padding: 16px 20px 32px;
+  }
+  .gti-ed-breadcrumb {
+    padding: 12px 20px 0;
+  }
+  .gti-ed-hero-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .gti-ed-detail-section {
+    padding: 0 20px 36px;
+  }
+  .gti-ed-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .gti-ed-related-section {
+    padding: 0 20px 40px;
+  }
+  .gti-ed-title {
+    font-size: 22px;
+  }
+  .gti-ed-inquiry-card {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .gti-ed-hero {
+    padding: 12px 16px 24px;
+  }
+  .gti-ed-breadcrumb {
+    padding: 10px 16px 0;
+    font-size: 12px;
+  }
+  .gti-ed-title {
+    font-size: 20px;
+  }
+  .gti-ed-spec-table {
+    grid-template-columns: 1fr;
+  }
+  .gti-ed-spec-row:nth-child(odd) {
+    padding-right: 0;
+  }
+  .gti-ed-spec-row:nth-child(even) {
+    padding-left: 0;
+  }
+  .gti-ed-why-grid {
+    grid-template-columns: 1fr;
+  }
+  .gti-ed-related-card {
+    flex: 0 0 240px;
+  }
+  .gti-ed-related-header h2 {
+    font-size: 18px;
+  }
+  .gti-ed-thumbnails {
+    gap: 8px;
+  }
+  .gti-ed-thumb {
+    width: 60px;
+    height: 48px;
+  }
+}

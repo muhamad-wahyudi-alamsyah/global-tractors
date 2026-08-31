@@ -1,0 +1,41 @@
+/*
+ Theme Name:   Global Tractors Indonesia
+ Theme URI:    https://global-tractors.test
+ Description:  Child theme for Global Tractors Indonesia with custom admin dashboard
+ Author:       Vodeco
+ Author URI:   https://vodeco.co.id
+ Template:     themify-ultra
+ Version:      1.0.0
+ License:      GNU General Public License v2 or later
+ License URI:  https://www.gnu.org/licenses/gpl-2.0.html
+ Text Domain:  global-tractors
+*/
+
+/* Main stylesheet loaded via enqueue */
+
+/* Request Quotation button in header */
+#main-nav .highlight-link > a,
+#main-nav .menu-item-1033 > a {
+    background: #F5A623;
+    color: #ffffff !important;
+    border-radius: 5px;
+    padding: 8px 18px;
+    font-weight: 400;
+    transition: background 0.2s;
+}
+
+#main-nav .highlight-link > a em,
+#main-nav .menu-item-1033 > a em {
+    color: #ffffff !important;
+}
+
+#main-nav .highlight-link > a svg,
+#main-nav .menu-item-1033 > a svg {
+    fill: #ffffff !important;
+}
+
+#main-nav .highlight-link > a:hover,
+#main-nav .menu-item-1033 > a:hover {
+    background: #e6951a;
+    color: #ffffff !important;
+}

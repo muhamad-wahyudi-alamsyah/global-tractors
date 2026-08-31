@@ -1,0 +1,54 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   GTI Search Card — Homepage Search Module
+   Shortcode: [gti_search_card]
+   All layout styles are inline. This file only holds hover/focus transitions
+   and responsive overrides that cannot be expressed inline.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Hover / Focus transitions (cannot be inline) ──────────────────────── */
+#gti-search-card input[type="text"]:focus {
+  outline: none;
+  border-color: #FFB800 !important;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.15);
+}
+
+#gti-search-card select:hover {
+  border-color: #d1d5db;
+}
+
+#gti-search-card select:focus {
+  outline: none;
+  border-color: #FFB800 !important;
+  box-shadow: 0 0 0 3px rgba(255, 184, 0, 0.15);
+}
+
+#gti-search-card button:hover {
+  background: #e6a600 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 184, 0, 0.35);
+}
+
+#gti-search-card button:active {
+  transform: translateY(0);
+}
+
+/* ── Responsive: stack vertically on small screens ─────────────────────── */
+@media (max-width: 640px) {
+  #gti-search-card > div {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  #gti-search-card > div > div:first-child {
+    min-width: 100% !important;
+  }
+
+  #gti-search-card > div > div:not(:first-child):not(:last-child) {
+    min-width: calc(50% - 4px) !important;
+    max-width: none !important;
+  }
+
+  #gti-search-card button {
+    min-width: 100% !important;
+  }
+}

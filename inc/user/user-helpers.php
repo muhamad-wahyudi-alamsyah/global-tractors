@@ -1,0 +1,87 @@
+<?php
+/**
+ * User helper functions
+ *
+ * @package global-tractors
+ */
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+/**
+ * Get user by phone number.
+ *
+ * @param string $phone
+ * @return WP_User|null
+ */
+function gti_get_user_by_phone( $phone ) {
+    global $wpdb;
+    
+    $phone = gti_normalize_phone( $phone );
+    
+    $user_id = $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT user_id FROM {$wpdb->usermeta}
+             WHERE meta_key = 'gti_phone'
+             AND meta_value = %s",
+            $phone
+        )
+    );
+    
+    if ( $user_id ) {
+        return get_userdata( $user_id );
+    }
+    
+    return null;
+}
+
+/**
+ * Check if email exists.
+ *
+ * @param string $email
+ * @return bool
+ */
+function gti_email_exists( $email ) {
+    return email_exists( $email ) !== false;
+}
+
+/**
+ * Check if phone exists.
+ *
+ * @param string $phone
+ * @return bool
+ */
+function gti_phone_exists( $phone ) {
+    return gti_get_user_by_phone( $phone ) !== null;
+}
+
+/**
+ * Get user display name.
+ *
+ * @param int $user_id
+ * @return string
+ */
+function gti_get_user_name( $user_id ) {
+    $user = get_userdata( $user_id );
+    return $user ? $user->display_name : '';
+}
+
+/**
+ * Get user orders.
+ *
+ * @param int $user_id
+ * @param int $limit
+ * @return array
+ */
+function gti_get_user_orders( $user_id, $limit = 10 ) {
+    if ( ! class_exists( 'WooCommerce' ) ) return [];
+    
+    $args = [
+        'customer_id' => $user_id,
+        'limit'       => $limit,
+        'orderby'     => 'date',
+        'order'       => 'DESC',
+        'return'      => 'objects',
+    ];
+    
+    return wc_get_orders( $args );
+}
