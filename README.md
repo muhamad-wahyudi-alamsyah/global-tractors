@@ -271,7 +271,7 @@ functions.php
 
 ## Author
 
-**Vodeco** — [https://vodeco.co.id](https://vodeco.co.id)
+**Muhamad Wahyudi Alamsyah** — at (https://vodeco.co.id)
 
 ## Version
 
