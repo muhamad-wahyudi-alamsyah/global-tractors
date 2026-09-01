@@ -16,6 +16,7 @@ class GTI_Ajax {
         // Equipment AJAX
         add_action('wp_ajax_gti_save_equipment', array(__CLASS__, 'save_equipment'));
         add_action('wp_ajax_gti_delete_equipment', array(__CLASS__, 'delete_equipment'));
+        add_action('wp_ajax_gti_publish_equipment', array(__CLASS__, 'publish_equipment'));
         add_action('wp_ajax_gti_get_equipment', array(__CLASS__, 'get_equipment'));
         
         // Spare Parts AJAX
@@ -61,6 +62,7 @@ class GTI_Ajax {
      * Stores complex nested fields (specs, features, docs, location) as JSON.
      */
     public static function save_equipment() {
+        while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
 
         global $wpdb;
@@ -274,7 +276,7 @@ class GTI_Ajax {
         }
 
         if ( $result !== false ) {
-            self::log_activity( $id > 0 ? 'update' : 'create', 'equipment', $id );
+            try { self::log_activity( $id > 0 ? 'update' : 'create', 'equipment', $id ); } catch (\Throwable $e) { /* log silently */ }
 
             wp_send_json_success( [
                 'message'  => $is_draft ? 'Draft saved successfully' : 'Equipment saved successfully',
@@ -282,7 +284,14 @@ class GTI_Ajax {
                 'redirect' => gti_dashboard_url( 'used-equipment' ),
             ] );
         } else {
-            wp_send_json_error( [ 'message' => 'Failed to save equipment. DB error.' ] );
+            $err = $wpdb->last_error;
+            $msg = 'Failed to save equipment.';
+            if ( stripos( $err, 'duplicate' ) !== false || stripos( $err, 'unique' ) !== false ) {
+                $msg = 'Equipment code already exists. Please use a unique code.';
+            } else {
+                $msg .= ' ' . $err;
+            }
+            wp_send_json_error( [ 'message' => $msg ] );
         }
 
         exit;
@@ -335,29 +344,61 @@ class GTI_Ajax {
      * Delete Equipment
      */
     public static function delete_equipment() {
+        // Clean any output buffer before sending JSON
+        while (ob_get_level()) { ob_end_clean(); }
+
         self::verify_nonce();
-        
+
         global $wpdb;
         $table = $wpdb->prefix . 'gti_equipment';
         $id = intval($_POST['id']);
-        
+
         // Soft delete
         $result = $wpdb->update(
             $table,
             array('deleted_at' => current_time('mysql')),
             array('id' => $id)
         );
-        
+
         if ($result !== false) {
-            self::log_activity('delete', 'equipment', $id);
+            try { self::log_activity('delete', 'equipment', $id); } catch (\Throwable $e) { /* log silently */ }
             wp_send_json_success(array('message' => 'Equipment deleted'));
         } else {
             wp_send_json_error(array('message' => 'Failed to delete equipment'));
         }
-        
+
         exit;
     }
     
+    /**
+     * Publish Equipment — change status from draft to available
+     */
+    public static function publish_equipment() {
+        self::verify_nonce();
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_equipment';
+        $id = intval($_POST['id']);
+
+        $result = $wpdb->update(
+            $table,
+            array(
+                'status'     => 'available',
+                'updated_at' => current_time('mysql'),
+            ),
+            array('id' => $id)
+        );
+
+        if ($result !== false) {
+            self::log_activity('publish', 'equipment', $id);
+            wp_send_json_success(array('message' => 'Equipment published successfully'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to publish equipment'));
+        }
+
+        exit;
+    }
+
     /**
      * Get Equipment by ID
      */

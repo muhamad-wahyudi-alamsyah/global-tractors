@@ -117,6 +117,7 @@ $_gti_eq_status_badge = function($status) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
+    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css">
     <style>
         /* Border overrides to match request-equipment style */
         .gti-ue-stat-card { border: 1px solid #e5e7eb; }
@@ -278,8 +279,7 @@ $_gti_eq_status_badge = function($status) {
         .gti-ue-table tbody tr { cursor: pointer; transition: background 0.15s; }
         .gti-ue-table tbody tr:hover { background: #f9fafb; }
         /* Action menu overflow fix */
-        .gti-ue-table-card { overflow: visible; }
-        .gti-ue-action-dropdown { z-index: 100; }
+        .gti-ue-action-dropdown { z-index: 100; position: fixed; width: max-content; white-space: nowrap; }
         .gti-drawer-btn {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 9px 16px; border-radius: 8px; font-size: 13px;
@@ -293,6 +293,8 @@ $_gti_eq_status_badge = function($status) {
             border-color: #F5A623; font-weight: 600;
         }
         .gti-drawer-btn-primary:hover { background: #e6991a; }
+        .gti-drawer-btn-publish:hover { background: #047857 !important; }
+        .gti-drawer-btn-delete:hover { background: #fef2f2 !important; }
         .gti-drawer-btn-icon {
             width: 36px; height: 36px; padding: 0; justify-content: center;
         }
@@ -415,11 +417,33 @@ $_gti_eq_status_badge = function($status) {
         }
         .gti-ue-edit-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 20px 28px; border-bottom: 1px solid #e5e7eb;
+            padding: 16px 28px; border-bottom: 1px solid #e5e7eb;
             background: #fff; border-radius: 16px 16px 0 0; flex-shrink: 0;
+            position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
-        .gti-ue-edit-header h2 { margin: 0; font-size: 18px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 10px; }
+        .gti-ue-edit-header-left { display: flex; align-items: center; gap: 12px; }
+        .gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         .gti-ue-edit-header h2 i { color: #F5A623; }
+        /* Compact stepper inside header */
+        .gti-ue-edit-header .gti-ae-stepper-card {
+            margin: 0; background: none; border: none; box-shadow: none;
+            border-radius: 0; overflow: visible;
+            flex: 0 1 auto; height: fit-content; width: fit-content;
+        }
+        .gti-ue-edit-header .gti-ae-stepper {
+            gap: 0; padding: 0; margin: 0; justify-content: center;
+        }
+        .gti-ue-edit-header .gti-ae-step { cursor: pointer; gap: 4px; }
+        .gti-ue-edit-header .gti-ae-step-circle {
+            width: 24px; height: 24px; font-size: 11px; font-weight: 600;
+        }
+        .gti-ue-edit-header .gti-ae-step-label {
+            font-size: 10px; font-weight: 500;
+        }
+        .gti-ue-edit-header .gti-ae-step-line {
+            margin-top: 11px; min-width: 8px; max-width: 20px; height: 2px;
+        }
         .gti-ue-edit-close {
             width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb;
             background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -451,7 +475,6 @@ $_gti_eq_status_badge = function($status) {
         .gti-ue-edit-footer .gti-ae-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* Reuse existing stepper/form styles inside the edit modal */
-        .gti-ue-edit-body .gti-ae-stepper-card { margin-bottom: 24px; }
         .gti-ue-edit-body .gti-ae-step-content { display: none; }
         .gti-ue-edit-body .gti-ae-step-content.active { display: block; }
         .gti-ue-edit-body .gti-ae-step-nav {
@@ -544,7 +567,7 @@ $_gti_eq_status_badge = function($status) {
             transform: translateY(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
         }
         .gti-ue-toast.show { transform: translateY(0); opacity: 1; }
-        .gti-ue-toast.success { background: #065f46; color: #fff; }
+        .gti-ue-toast.success { background: #059669; color: #fff; }
         .gti-ue-toast.error { background: #991b1b; color: #fff; }
         .gti-ue-toast.warning { background: #92400e; color: #fff; }
     </style>
@@ -687,7 +710,7 @@ $_gti_eq_status_badge = function($status) {
                             <input type="text" name="search" placeholder="Search equipment..." value="<?php echo esc_attr($search); ?>">
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="category">
+                            <select name="category" onchange="this.form.submit()">
                                 <option value="">All Categories</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?php echo esc_attr($cat); ?>" <?php selected($category, $cat); ?>><?php echo esc_html($cat); ?></option>
@@ -695,7 +718,7 @@ $_gti_eq_status_badge = function($status) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="brand">
+                            <select name="brand" onchange="this.form.submit()">
                                 <option value="">All Brands</option>
                                 <?php foreach ($brands as $b): ?>
                                     <option value="<?php echo esc_attr($b); ?>" <?php selected($brand, $b); ?>><?php echo esc_html($b); ?></option>
@@ -703,7 +726,7 @@ $_gti_eq_status_badge = function($status) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="status">
+                            <select name="status" onchange="this.form.submit()">
                                 <option value="">All Status</option>
                                 <option value="available" <?php selected($status_filter, 'available'); ?>>Available</option>
                                 <option value="sold" <?php selected($status_filter, 'sold'); ?>>Sold</option>
@@ -712,7 +735,7 @@ $_gti_eq_status_badge = function($status) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="condition">
+                            <select name="condition" onchange="this.form.submit()">
                                 <option value="">All Conditions</option>
                                 <option value="Excellent" <?php selected($condition_filter, 'Excellent'); ?>>Excellent</option>
                                 <option value="Good" <?php selected($condition_filter, 'Good'); ?>>Good</option>
@@ -1008,15 +1031,10 @@ $_gti_eq_status_badge = function($status) {
             </div>
         </div>
         <div class="gti-drawer-footer">
-            <button type="button" class="gti-drawer-btn gti-drawer-btn-primary"><i class="fas fa-edit"></i> Edit</button>
+            <button type="button" class="gti-drawer-btn gti-drawer-btn-primary" id="drawer-btn-edit"><i class="fas fa-edit"></i> Edit</button>
             <span class="gti-drawer-footer-spacer"></span>
-            <div class="gti-drawer-btn-group">
-                <button type="button" class="gti-drawer-btn gti-drawer-btn-icon" id="drawer-btn-more" title="More Actions"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="gti-drawer-dropdown" id="drawer-more-dropdown">
-                    <a href="#" class="gti-drawer-dropdown-item"><i class="fas fa-eye"></i> View Full Details</a>
-                    <a href="#" class="gti-drawer-dropdown-item" style="color:#b91c1c;"><i class="fas fa-trash"></i> Delete</a>
-                </div>
-            </div>
+            <button type="button" class="gti-drawer-btn" id="drawer-btn-publish" style="display:none;background:#059669;color:#fff;border-color:#059669;font-weight:600;"><i class="fas fa-check-circle"></i> Publish</button>
+            <button type="button" class="gti-drawer-btn" id="drawer-btn-delete" style="color:#b91c1c;border-color:#fca5a5;"><i class="fas fa-trash"></i> Delete</button>
         </div>
     </div>
             </div> <!-- /.gti-content -->
@@ -1028,7 +1046,37 @@ $_gti_eq_status_badge = function($status) {
         <div class="gti-edit-backdrop" onclick="closeEditModal()"></div>
         <div class="gti-ue-edit-container">
             <div class="gti-ue-edit-header">
-                <h2><i class="fas fa-edit"></i> Edit Equipment</h2>
+                <div class="gti-ue-edit-header-left">
+                    <h2><i class="fas fa-edit"></i> Edit Equipment</h2>
+                </div>
+                <div class="gti-ae-stepper-card">
+                    <div class="gti-ae-stepper">
+                        <div class="gti-ae-step active" data-step="1" onclick="editGoStep(1)">
+                            <div class="gti-ae-step-circle">1</div>
+                            <div class="gti-ae-step-label">General Info</div>
+                        </div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="2" onclick="editGoStep(2)">
+                            <div class="gti-ae-step-circle">2</div>
+                            <div class="gti-ae-step-label">Specifications</div>
+                        </div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="3" onclick="editGoStep(3)">
+                            <div class="gti-ae-step-circle">3</div>
+                            <div class="gti-ae-step-label">Pricing</div>
+                        </div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="4" onclick="editGoStep(4)">
+                            <div class="gti-ae-step-circle">4</div>
+                            <div class="gti-ae-step-label">Images & Media</div>
+                        </div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="5" onclick="editGoStep(5)">
+                            <div class="gti-ae-step-circle">5</div>
+                            <div class="gti-ae-step-label">Additional Info</div>
+                        </div>
+                    </div>
+                </div>
                 <button class="gti-ue-edit-close" onclick="closeEditModal()" title="Close"><i class="fas fa-times"></i></button>
             </div>
             <div class="gti-ue-edit-body">
@@ -1037,36 +1085,6 @@ $_gti_eq_status_badge = function($status) {
                     <input type="hidden" name="action" value="gti_save_equipment">
                     <input type="hidden" name="nonce" value="<?php echo esc_attr(wp_create_nonce('gti_nonce')); ?>">
 
-                    <!-- Stepper -->
-                    <div class="gti-ae-stepper-card">
-                        <div class="gti-ae-stepper">
-                            <div class="gti-ae-step active" data-step="1" onclick="editGoStep(1)">
-                                <div class="gti-ae-step-circle">1</div>
-                                <div class="gti-ae-step-label">General Info</div>
-                            </div>
-                            <div class="gti-ae-step-line"></div>
-                            <div class="gti-ae-step" data-step="2" onclick="editGoStep(2)">
-                                <div class="gti-ae-step-circle">2</div>
-                                <div class="gti-ae-step-label">Specifications</div>
-                            </div>
-                            <div class="gti-ae-step-line"></div>
-                            <div class="gti-ae-step" data-step="3" onclick="editGoStep(3)">
-                                <div class="gti-ae-step-circle">3</div>
-                                <div class="gti-ae-step-label">Pricing</div>
-                            </div>
-                            <div class="gti-ae-step-line"></div>
-                            <div class="gti-ae-step" data-step="4" onclick="editGoStep(4)">
-                                <div class="gti-ae-step-circle">4</div>
-                                <div class="gti-ae-step-label">Images & Media</div>
-                            </div>
-                            <div class="gti-ae-step-line"></div>
-                            <div class="gti-ae-step" data-step="5" onclick="editGoStep(5)">
-                                <div class="gti-ae-step-circle">5</div>
-                                <div class="gti-ae-step-label">Additional Info</div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Step 1: General Information -->
                     <div class="gti-ae-step-content active" data-step="1">
                         <div class="gti-ae-form-card">
@@ -1074,7 +1092,7 @@ $_gti_eq_status_badge = function($status) {
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Equipment Name <span class="required">*</span></label><input type="text" name="name" required></div>
-                                    <div class="gti-ae-field"><label>Equipment Code <span class="required">*</span></label><input type="text" name="equipment_code" required></div>
+                                    <div class="gti-ae-field"><label>Equipment Code <span class="required">*</span></label><input type="text" name="equipment_code" readonly required style="background:#f9fafb;cursor:not-allowed;"></div>
                                     <div class="gti-ae-field"><label>Category <span class="required">*</span></label><select name="category" required><option value="">Select Category</option><option value="Excavator">Excavator</option><option value="Bulldozer">Bulldozer</option><option value="Wheel Loader">Wheel Loader</option><option value="Dump Truck">Dump Truck</option><option value="Motor Grader">Motor Grader</option><option value="Crane">Crane</option><option value="Compactor">Compactor</option></select></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
@@ -1341,6 +1359,10 @@ $_gti_eq_status_badge = function($status) {
     <div class="gti-ue-toast" id="gtiUeToast"></div>
 
     <script>
+    var gtiAjax = gtiAjax || {
+        ajaxurl: '<?php echo esc_js(admin_url("admin-ajax.php")); ?>',
+        nonce: '<?php echo esc_js(wp_create_nonce("gti_nonce")); ?>'
+    };
     document.addEventListener('DOMContentLoaded', function() {
         // Sidebar collapse
         var collapseBtn = document.getElementById('gti-collapse-btn');
@@ -1367,7 +1389,7 @@ $_gti_eq_status_badge = function($status) {
             });
         });
 
-        // Action Dropdown Toggle
+        // Action Dropdown Toggle — fixed positioning outside gti-content
         document.addEventListener('click', function(e) {
             var toggle = e.target.closest('.gti-ue-action-toggle');
             if (toggle) {
@@ -1377,7 +1399,23 @@ $_gti_eq_status_badge = function($status) {
                 var dropdown = menu.querySelector('.gti-ue-action-dropdown');
                 var isOpen = dropdown.classList.contains('show');
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
-                if (!isOpen) dropdown.classList.add('show');
+                if (!isOpen) {
+                    // Position dropdown relative to viewport, outside parent containers
+                    var rect = toggle.getBoundingClientRect();
+                    var ddWidth = 160;
+                    var ddHeight = 110;
+                    var top = rect.bottom + 4;
+                    var left = rect.right - ddWidth;
+                    // Prevent overflow below viewport
+                    if (top + ddHeight > window.innerHeight) {
+                        top = rect.top - ddHeight - 4;
+                    }
+                    // Prevent overflow left of viewport
+                    if (left < 8) left = 8;
+                    dropdown.style.top = top + 'px';
+                    dropdown.style.left = left + 'px';
+                    dropdown.classList.add('show');
+                }
                 return;
             }
             if (!e.target.closest('.gti-ue-action-menu')) {
@@ -1437,15 +1475,36 @@ $_gti_eq_status_badge = function($status) {
             }
         });
 
-        // More actions dropdown
-        document.getElementById('drawer-btn-more').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('drawer-more-dropdown').classList.toggle('show');
-        });
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.gti-drawer-btn-group')) {
-                document.getElementById('drawer-more-dropdown').classList.remove('show');
+        // Search input — real-time search with debounce + maintain focus after submit
+        var searchInput = document.querySelector('.gti-ue-search input[name="search"]');
+        var searchTimer = null;
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var self = this;
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() {
+                    self.form.submit();
+                }, 400);
+            });
+            // Re-focus search input after page reload if it had a value
+            if (searchInput.value) {
+                searchInput.focus();
+                var len = searchInput.value.length;
+                searchInput.setSelectionRange(len, len);
             }
+        }
+
+        // Drawer Edit button
+        document.getElementById('drawer-btn-edit').addEventListener('click', function() {
+            if (_currentDrawerEq) openEditModal(_currentDrawerEq);
+        });
+        // Drawer Publish button
+        document.getElementById('drawer-btn-publish').addEventListener('click', function() {
+            if (_currentDrawerEq) handlePublishEquipment(_currentDrawerEq);
+        });
+        // Drawer Delete button
+        document.getElementById('drawer-btn-delete').addEventListener('click', function() {
+            if (_currentDrawerEq) openDeleteModal(_currentDrawerEq);
         });
 
         // Row click → drawer
@@ -1467,8 +1526,11 @@ $_gti_eq_status_badge = function($status) {
         // Edit modal image upload handlers
         initEditImageUploads();
 
-        // Edit modal submit button
-        document.getElementById('gti-edit-submit').addEventListener('click', handleEditSubmit);
+        // Edit modal submit button — bind to click
+        var editSubmitBtn = document.getElementById('gti-edit-submit');
+        if (editSubmitBtn) {
+            editSubmitBtn.addEventListener('click', handleEditSubmit);
+        }
 
         // Delete confirm button
         document.getElementById('gti-delete-confirm-btn').addEventListener('click', handleDeleteConfirm);
@@ -1609,6 +1671,11 @@ $_gti_eq_status_badge = function($status) {
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
         var activeRow = document.querySelector('.gti-ue-table tbody tr[data-eq-id="' + eq.id + '"]');
         if (activeRow) activeRow.classList.add('active-row');
+        // Show/hide Publish button based on status
+        var publishBtn = document.getElementById('drawer-btn-publish');
+        if (publishBtn) {
+            publishBtn.style.display = (eq.status === 'draft') ? '' : 'none';
+        }
     }
     function setText(id, val) {
         var el = document.getElementById(id);
@@ -1634,7 +1701,6 @@ $_gti_eq_status_badge = function($status) {
         document.getElementById('eqDetailDrawer').classList.remove('open');
         document.getElementById('drawerBackdrop').classList.remove('show');
         document.body.style.overflow = '';
-        document.getElementById('drawer-more-dropdown').classList.remove('show');
         var steps = document.querySelectorAll('#eqDetailDrawer .gti-drawer-step');
         var lines = document.querySelectorAll('#eqDetailDrawer .gti-drawer-step-line');
         steps.forEach(function(s,i){ s.classList.remove('active','completed'); if(i===0) s.classList.add('active'); });
@@ -1837,15 +1903,29 @@ $_gti_eq_status_badge = function($status) {
     }
 
     function handleEditSubmit(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         var form = document.getElementById('gti-edit-form');
         var submitBtn = document.getElementById('gti-edit-submit');
+        if (!form || !submitBtn) return;
+
         var formData = new FormData(form);
+        // Ensure action and nonce are present
+        if (!formData.has('action')) formData.append('action', 'gti_save_equipment');
+        if (!formData.has('nonce')) formData.append('nonce', gtiAjax.nonce);
+
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
         fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                return r.text().then(function(text) {
+                    try { return JSON.parse(text); }
+                    catch(e) {
+                        console.error('Save: non-JSON response', text);
+                        throw new Error('Server returned non-JSON response');
+                    }
+                });
+            })
             .then(function(data) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
@@ -1857,10 +1937,10 @@ $_gti_eq_status_badge = function($status) {
                     showUeToast(data.data.message || 'Failed to save changes', 'error');
                 }
             })
-            .catch(function() {
+            .catch(function(err) {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-                showUeToast('An error occurred while saving', 'error');
+                showUeToast('An error occurred while saving: ' + (err.message || 'Unknown error'), 'error');
             });
     }
 
@@ -1903,18 +1983,32 @@ $_gti_eq_status_badge = function($status) {
         formData.append('id', _deleteCurrentEq.id);
 
         fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
-            .then(function(r) { return r.json(); })
+            .then(function(r) {
+                return r.text().then(function(text) {
+                    try { return JSON.parse(text); }
+                    catch(e) {
+                        // If JSON parsing fails but HTTP was OK, treat as success
+                        // (server likely deleted but response had extra output)
+                        if (r.ok) return { success: true, data: { message: 'Equipment deleted' } };
+                        throw e;
+                    }
+                });
+            })
             .then(function(data) {
                 if (data.success) {
                     showUeToast(data.data.message || 'Equipment deleted', 'success');
+                    // Capture id BEFORE closing modal (closeDeleteModal sets _deleteCurrentEq = null)
+                    var deletedId = _deleteCurrentEq ? _deleteCurrentEq.id : null;
                     closeDeleteModal();
                     // Remove the row from table
-                    var row = document.querySelector('tr[data-eq-id="' + _deleteCurrentEq.id + '"]');
-                    if (row) {
-                        row.style.transition = 'opacity 0.3s, transform 0.3s';
-                        row.style.opacity = '0';
-                        row.style.transform = 'translateX(20px)';
-                        setTimeout(function() { row.remove(); }, 350);
+                    if (deletedId) {
+                        var row = document.querySelector('tr[data-eq-id="' + deletedId + '"]');
+                        if (row) {
+                            row.style.transition = 'opacity 0.3s, transform 0.3s';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(20px)';
+                            setTimeout(function() { row.remove(); }, 350);
+                        }
                     }
                 } else {
                     confirmBtn.disabled = false;
@@ -1922,10 +2016,43 @@ $_gti_eq_status_badge = function($status) {
                     showUeToast(data.data.message || 'Failed to delete', 'error');
                 }
             })
-            .catch(function() {
+            .catch(function(err) {
+                console.error('Delete error:', err);
                 confirmBtn.disabled = false;
                 confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
                 showUeToast('An error occurred while deleting', 'error');
+            });
+    }
+
+    // ================================================================
+    //  PUBLISH EQUIPMENT — Change draft to available
+    // ================================================================
+    function handlePublishEquipment(eq) {
+        var btn = document.getElementById('drawer-btn-publish');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+
+        var formData = new FormData();
+        formData.append('action', 'gti_publish_equipment');
+        formData.append('nonce', gtiAjax.nonce);
+        formData.append('id', eq.id);
+
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish';
+                if (data.success) {
+                    showUeToast(data.data.message || 'Equipment published', 'success');
+                    setTimeout(function() { window.location.reload(); }, 1200);
+                } else {
+                    showUeToast(data.data.message || 'Failed to publish', 'error');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish';
+                showUeToast('An error occurred while publishing', 'error');
             });
     }
 

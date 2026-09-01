@@ -9,6 +9,25 @@ gti_require_login();
 $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
+
+// Auto-generate equipment code
+global $wpdb;
+$table = $wpdb->prefix . 'gti_equipment';
+$year = date('Y');
+$cat_abbrev_map = [
+    'Excavator'     => 'EXC', 'Bulldozer'     => 'BLD', 'Wheel Loader'  => 'WLD',
+    'Dump Truck'    => 'DMP', 'Motor Grader'  => 'MGR', 'Crane'         => 'CRN',
+    'Compactor'     => 'CMP',
+];
+$gti_next_code = '';
+// Default first code
+$gti_next_code = 'GTI-GEN-' . $year . '-001';
+
+// Category abbrev map for JS
+$gti_cat_map_json = wp_json_encode($cat_abbrev_map);
+
+// AJAX endpoint to get next code
+$gti_ajax_url = admin_url('admin-ajax.php');
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -173,7 +192,8 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
                                     </div>
                                     <div class="gti-ae-field">
                                         <label>Equipment Code <span class="required">*</span></label>
-                                        <input type="text" name="equipment_code" placeholder="e.g., EQ-001" required>
+                                        <input type="text" name="equipment_code" value="<?php echo esc_attr($gti_next_code); ?>" readonly required style="background:#f9fafb;cursor:not-allowed;">
+                                        <small style="color:#6b7280;font-size:11px;margin-top:4px;display:block;">Auto-generated • will change when category is selected</small>
                                     </div>
                                     <div class="gti-ae-field">
                                         <label>Category <span class="required">*</span></label>
@@ -980,6 +1000,41 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
             nonce: '<?php echo esc_js(wp_create_nonce('gti_nonce')); ?>',
             version: '<?php echo esc_js(GTI_VERSION); ?>'
         };
+        // Auto-generate equipment code on category change
+        document.addEventListener('DOMContentLoaded', function() {
+            var catMap = <?php echo $gti_cat_map_json; ?>;
+            var catSelect = document.querySelector('select[name="category"]');
+            var codeInput = document.querySelector('input[name="equipment_code"]');
+            if (!catSelect || !codeInput) return;
+
+            function generateCode(catVal) {
+                if (!catVal) return;
+                var abbr = catMap[catVal] || 'GEN';
+                var year = new Date().getFullYear();
+                var fd = new FormData();
+                fd.append('action', 'gti_get_next_code');
+                fd.append('nonce', gtiAjax.nonce);
+                fd.append('category', catVal);
+                fetch(gtiAjax.ajaxurl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.success && d.data && d.data.code) {
+                            codeInput.value = d.data.code;
+                        } else {
+                            var ts = Date.now().toString().slice(-4);
+                            codeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
+                        }
+                    })
+                    .catch(function(err) {
+                        var ts = Date.now().toString().slice(-4);
+                        codeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
+                    });
+            }
+
+            catSelect.addEventListener('change', function() {
+                generateCode(this.value);
+            });
+        });
     </script>
     <script src="<?php echo GTI_CHILD_URL; ?>/assets/js/add-equipment.js?v=<?php echo GTI_VERSION; ?>"></script>
 </body>

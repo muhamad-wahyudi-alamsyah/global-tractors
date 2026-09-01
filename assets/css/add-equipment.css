@@ -33,7 +33,7 @@
 .gti-ae-stepper-card {
     background: var(--gti-card);
     border-radius: 14px;
-    padding: 28px 32px;
+    padding: 10px 32px;
     margin-bottom: 20px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
