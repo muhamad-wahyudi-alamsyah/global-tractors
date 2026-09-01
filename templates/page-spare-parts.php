@@ -79,66 +79,6 @@ $inventory_value = (float) $wpdb->get_var("SELECT SUM(stock * unit_price) FROM {
 $categories = $wpdb->get_col("SELECT DISTINCT category FROM {$table} WHERE category != '' ORDER BY category");
 $brands = $wpdb->get_col("SELECT DISTINCT brand FROM {$table} WHERE brand != '' ORDER BY brand");
 
-// Dummy data fallback when DB is empty
-if (empty($spare_parts)) {
-    $spare_parts = array();
-
-    $d = new stdClass();
-    $d->id = 3001; $d->part_number = 'PC200-FIL-001'; $d->name = 'Oil Filter PC200';
-    $d->category = 'Filters'; $d->brand = 'KOMATSU';
-    $d->description = 'Genuine KOMATSU oil filter for PC200 series excavators. OEM quality.';
-    $d->stock = 25; $d->minimum_stock = 10; $d->unit_price = 450000;
-    $d->supplier = 'PT KOMATSU Indonesia'; $d->location = 'Warehouse A, Rack 12';
-    $d->image = 'https://picsum.photos/seed/sp1/200/200'; $d->status = 'in_stock';
-    $d->created_at = '2026-01-10 08:00:00'; $d->updated_at = '2026-08-20 10:00:00';
-    $spare_parts[] = $d;
-
-    $d = new stdClass();
-    $d->id = 3002; $d->part_number = 'CAT-FLT-002'; $d->name = 'Air Filter 320D';
-    $d->category = 'Filters'; $d->brand = 'CATERPILLAR';
-    $d->description = 'Heavy-duty air filter for CAT 320D excavator. High filtration efficiency.';
-    $d->stock = 4; $d->minimum_stock = 5; $d->unit_price = 380000;
-    $d->supplier = 'PT Trakindo Utama'; $d->location = 'Warehouse A, Rack 14';
-    $d->image = 'https://picsum.photos/seed/sp2/200/200'; $d->status = 'low_stock';
-    $d->created_at = '2026-02-15 09:00:00'; $d->updated_at = '2026-08-18 11:30:00';
-    $spare_parts[] = $d;
-
-    $d = new stdClass();
-    $d->id = 3003; $d->part_number = 'KMT-BLT-003'; $d->name = 'Track Chain D65';
-    $d->category = 'Undercarriage'; $d->brand = 'KOMATSU';
-    $d->description = 'KOMATSU D65PX bulldozer track chain assembly. Heavy-duty construction.';
-    $d->stock = 0; $d->minimum_stock = 3; $d->unit_price = 12500000;
-    $d->supplier = 'PT KOMATSU Indonesia'; $d->location = 'Warehouse B, Rack 05';
-    $d->image = 'https://picsum.photos/seed/sp3/200/200'; $d->status = 'out_of_stock';
-    $d->created_at = '2026-03-05 10:30:00'; $d->updated_at = '2026-08-15 14:00:00';
-    $spare_parts[] = $d;
-
-    $d = new stdClass();
-    $d->id = 3004; $d->part_number = 'CAT-HYD-004'; $d->name = 'Hydraulic Pump 950GC';
-    $d->category = 'Hydraulics'; $d->brand = 'CATERPILLAR';
-    $d->description = 'CAT 950GC wheel loader hydraulic pump assembly. Remanufactured unit with warranty.';
-    $d->stock = 2; $d->minimum_stock = 2; $d->unit_price = 18500000;
-    $d->supplier = 'PT Trakindo Utama'; $d->location = 'Warehouse B, Rack 08';
-    $d->image = 'https://picsum.photos/seed/sp4/200/200'; $d->status = 'in_stock';
-    $d->created_at = '2026-04-12 11:15:00'; $d->updated_at = '2026-08-22 09:45:00';
-    $spare_parts[] = $d;
-
-    $d = new stdClass();
-    $d->id = 3005; $d->part_number = 'HTC-BRK-005'; $d->name = 'Brake Disc ZX210';
-    $d->category = 'Brakes'; $d->brand = 'HITACHI';
-    $d->description = 'HITACHI ZX210LCH-5A excavator brake disc. OEM specification.';
-    $d->stock = 8; $d->minimum_stock = 5; $d->unit_price = 2200000;
-    $d->supplier = 'PT Hexindo Adi Perkasa'; $d->location = 'Warehouse A, Rack 20';
-    $d->image = 'https://picsum.photos/seed/sp5/200/200'; $d->status = 'in_stock';
-    $d->created_at = '2026-05-01 13:00:00'; $d->updated_at = '2026-08-25 08:30:00';
-    $spare_parts[] = $d;
-
-    $total_parts = count($spare_parts);
-    $in_stock = 3; $low_stock = 1; $out_of_stock = 1;
-    $inventory_value = 0;
-    foreach ($spare_parts as $sp) $inventory_value += $sp->stock * $sp->unit_price;
-}
-
 // Format currency inline to avoid redeclaration errors
 $_gti_sp_fmt = function($amount) {
     return 'Rp ' . number_format((float)$amount, 0, ',', '.');
@@ -155,6 +95,7 @@ $_gti_sp_fmt = function($amount) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
+    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css">
     <style>
         /* Stats: Inventory Value card wider */
         .gti-ue-stats-row { flex-wrap: wrap; }
@@ -360,6 +301,180 @@ $_gti_sp_fmt = function($amount) {
         }
         .gti-drawer-dropdown-item:hover { background: #f9fafb; }
         .gti-drawer-dropdown-item i { width: 16px; color: #6b7280; }
+
+        /* Action menu overflow fix */
+        .gti-ue-action-dropdown { z-index: 100; position: fixed; width: max-content; white-space: nowrap; }
+        .gti-drawer-btn-delete:hover { background: #fef2f2 !important; }
+
+        /* ====== View Button — Hide on wide screens ====== */
+        @media (min-width: 1600px) {
+            .gti-ue-btn-view { display: none !important; }
+        }
+
+        /* ====== Drawer Stepper ====== */
+        .gti-drawer-stepper {
+            display: flex; align-items: flex-start; justify-content: center;
+            gap: 0; margin: -24px -24px 20px -24px;
+            padding: 20px 16px 16px; border-bottom: 1px solid #f3f4f6;
+            flex-shrink: 0;
+        }
+        .gti-drawer-step {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; cursor: pointer; flex-shrink: 0;
+        }
+        .gti-drawer-step-circle {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: #e5e7eb; color: #9ca3af;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 600; transition: all 0.25s ease;
+        }
+        .gti-drawer-step.active .gti-drawer-step-circle {
+            background: #F5A623; color: #1a1f36;
+            box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
+        }
+        .gti-drawer-step.completed .gti-drawer-step-circle {
+            background: #10b981; color: #fff;
+        }
+        .gti-drawer-step-label {
+            font-size: 10px; font-weight: 500; color: #9ca3af;
+            white-space: nowrap; transition: color 0.25s ease;
+            text-align: center; max-width: 56px;
+            overflow: hidden; text-overflow: ellipsis;
+        }
+        .gti-drawer-step.active .gti-drawer-step-label {
+            color: #1a1f36; font-weight: 600;
+        }
+        .gti-drawer-step.completed .gti-drawer-step-label { color: #10b981; }
+        .gti-drawer-step-line {
+            flex: 1; height: 2px; background: #e5e7eb;
+            margin: 0 4px; margin-top: 14px;
+            min-width: 12px; max-width: 28px;
+            transition: background 0.25s ease;
+        }
+        .gti-drawer-step-line.active { background: #10b981; }
+        .gti-drawer-section[data-section] { display: none; }
+        .gti-drawer-section[data-section].active { display: block; }
+
+        /* ====== Fullscreen Edit Modal ====== */
+        .gti-ue-edit-overlay {
+            display: none; position: fixed; inset: 0; z-index: 2000;
+            background: #f3f4f6; overflow-y: auto;
+        }
+        .gti-ue-edit-overlay.show { display: block; }
+        .gti-ue-edit-overlay .gti-edit-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .gti-ue-edit-overlay.show .gti-edit-backdrop { opacity: 1; }
+        .gti-ue-edit-container {
+            position: relative; z-index: 2;
+            margin: 40px; background: #fff;
+            border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+            min-height: calc(100vh - 80px); display: flex; flex-direction: column;
+        }
+        .gti-ue-edit-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 28px; border-bottom: 1px solid #e5e7eb;
+            background: #fff; border-radius: 16px 16px 0 0; flex-shrink: 0;
+            position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .gti-ue-edit-header-left { display: flex; align-items: center; gap: 12px; }
+        .gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; }
+        .gti-ue-edit-header h2 i { color: #F5A623; }
+        .gti-ue-edit-close {
+            width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb;
+            background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #6b7280; font-size: 16px; transition: all 0.15s;
+        }
+        .gti-ue-edit-close:hover { background: #f3f4f6; color: #1a1f36; }
+        .gti-ue-edit-body { flex: 1; padding: 28px; overflow-y: auto; }
+        .gti-ue-edit-footer {
+            display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+            padding: 16px 28px; border-top: 1px solid #e5e7eb; flex-shrink: 0;
+            background: #fff; border-radius: 0 0 16px 16px;
+        }
+        .gti-ue-edit-footer .gti-ae-btn-cancel {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            border: 1px solid #e5e7eb; background: #fff; color: #374151;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-edit-footer .gti-ae-btn-cancel:hover { background: #f9fafb; }
+        .gti-ue-edit-footer .gti-ae-btn-submit {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            border: none; background: #F5A623; color: #1a1f36;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-edit-footer .gti-ae-btn-submit:hover { background: #e6991a; }
+        .gti-ue-edit-footer .gti-ae-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ====== Delete Confirmation Modal ====== */
+        .gti-ue-delete-overlay {
+            display: none; position: fixed; inset: 0; z-index: 3000;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .gti-ue-delete-overlay.show { display: flex; }
+        .gti-ue-delete-modal {
+            background: #fff; border-radius: 16px; width: 440px; max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+            animation: gti-modal-in 0.25s ease;
+        }
+        @keyframes gti-modal-in { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform: scale(1); } }
+        .gti-ue-delete-header { display: flex; align-items: center; gap: 12px; padding: 20px 24px 0; }
+        .gti-ue-delete-icon {
+            width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+            background: #fef2f2; display: flex; align-items: center; justify-content: center;
+            color: #dc2626; font-size: 18px;
+        }
+        .gti-ue-delete-header-text h3 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; }
+        .gti-ue-delete-header-text p { margin: 4px 0 0; font-size: 13px; color: #6b7280; }
+        .gti-ue-delete-body { padding: 16px 24px; }
+        .gti-ue-delete-eq-info {
+            background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 10px;
+            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+        }
+        .gti-ue-delete-eq-thumb {
+            width: 48px; height: 48px; border-radius: 8px; background: #e5e7eb;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            overflow: hidden;
+        }
+        .gti-ue-delete-eq-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .gti-ue-delete-eq-thumb i { color: #9ca3af; font-size: 18px; }
+        .gti-ue-delete-eq-name { font-size: 14px; font-weight: 600; color: #1a1f36; }
+        .gti-ue-delete-eq-code { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+        .gti-ue-delete-warning {
+            margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+            background: #fffbeb; border: 1px solid #fde68a;
+            font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 8px;
+        }
+        .gti-ue-delete-warning i { margin-top: 2px; color: #f59e0b; flex-shrink: 0; }
+        .gti-ue-delete-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 16px 24px; border-top: 1px solid #f3f4f6;
+        }
+        .gti-ue-delete-footer button {
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-delete-cancel { border: 1px solid #e5e7eb; background: #fff; color: #374151; }
+        .gti-ue-delete-cancel:hover { background: #f9fafb; }
+        .gti-ue-delete-confirm { border: none; background: #dc2626; color: #fff; font-weight: 600; }
+        .gti-ue-delete-confirm:hover { background: #b91c1c; }
+        .gti-ue-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ====== Toast Notification ====== */
+        .gti-ue-toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 5000;
+            padding: 14px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 10px;
+            transform: translateY(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .gti-ue-toast.show { transform: translateY(0); opacity: 1; }
+        .gti-ue-toast.success { background: #059669; color: #fff; }
+        .gti-ue-toast.error { background: #991b1b; color: #fff; }
     </style>
 </head>
 <body class="gti-body">
@@ -500,13 +615,14 @@ $_gti_sp_fmt = function($amount) {
 
                 <!-- Toolbar -->
                 <form class="gti-ue-toolbar" method="get">
+                    <input type="hidden" name="gti_page" value="spare-parts">
                     <div class="gti-ue-toolbar-left">
                         <div class="gti-ue-search">
                             <i class="fas fa-search"></i>
                             <input type="text" name="search" placeholder="Search spare parts..." value="<?php echo esc_attr($search); ?>">
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="category">
+                            <select name="category" onchange="this.form.submit()">
                                 <option value="">All Categories</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?php echo esc_attr($cat); ?>" <?php selected($category, $cat); ?>><?php echo esc_html($cat); ?></option>
@@ -514,7 +630,7 @@ $_gti_sp_fmt = function($amount) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="brand">
+                            <select name="brand" onchange="this.form.submit()">
                                 <option value="">All Brands</option>
                                 <?php foreach ($brands as $b): ?>
                                     <option value="<?php echo esc_attr($b); ?>" <?php selected($brand, $b); ?>><?php echo esc_html($b); ?></option>
@@ -522,7 +638,7 @@ $_gti_sp_fmt = function($amount) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="status">
+                            <select name="status" onchange="this.form.submit()">
                                 <option value="">All Status</option>
                                 <option value="in_stock" <?php selected($status_filter, 'in_stock'); ?>>In Stock</option>
                                 <option value="low_stock" <?php selected($status_filter, 'low_stock'); ?>>Low Stock</option>
@@ -613,14 +729,9 @@ $_gti_sp_fmt = function($amount) {
                                             <div class="gti-ue-action-menu">
                                                 <button class="gti-ue-action-toggle" title="Actions"><i class="fas fa-ellipsis-v"></i></button>
                                                 <div class="gti-ue-action-dropdown">
-                                                    <a href="#" class="gti-ue-action-item"><i class="fas fa-eye"></i> View</a>
-                                                    <a href="<?php echo admin_url('admin.php?page=gti-spare-parts-edit&id=' . $part->id); ?>" class="gti-ue-action-item"><i class="fas fa-edit"></i> Edit</a>
-                                                    <a href="#" class="gti-ue-action-item delete gti-confirm-delete"
-                                                       data-action="gti_delete_spare_part"
-                                                       data-id="<?php echo esc_attr($part->id); ?>"
-                                                       data-message="Are you sure you want to delete this spare part?">
-                                                        <i class="fas fa-trash"></i> Delete
-                                                    </a>
+                                                    <a href="#" class="gti-ue-action-item gti-ue-btn-view"><i class="fas fa-eye"></i> View</a>
+                                                    <a href="#" class="gti-ue-action-item gti-ue-btn-edit"><i class="fas fa-edit"></i> Edit</a>
+                                                    <a href="#" class="gti-ue-action-item delete gti-ue-btn-delete"><i class="fas fa-trash"></i> Delete</a>
                                                 </div>
                                             </div>
                                         </td>
@@ -698,14 +809,32 @@ $_gti_sp_fmt = function($amount) {
             <button type="button" class="gti-drawer-close" onclick="closeDetailDrawer()"><i class="fas fa-times"></i></button>
         </div>
         <div class="gti-drawer-body">
-            <div class="gti-drawer-section">
+            <!-- Stepper Navigation -->
+            <div class="gti-drawer-stepper">
+                <div class="gti-drawer-step active" data-section="info" onclick="switchDrawerStep(this)">
+                    <div class="gti-drawer-step-circle">1</div>
+                    <div class="gti-drawer-step-label">Info</div>
+                </div>
+                <div class="gti-drawer-step-line"></div>
+                <div class="gti-drawer-step" data-section="inventory" onclick="switchDrawerStep(this)">
+                    <div class="gti-drawer-step-circle">2</div>
+                    <div class="gti-drawer-step-label">Inventory</div>
+                </div>
+                <div class="gti-drawer-step-line"></div>
+                <div class="gti-drawer-step" data-section="additional" onclick="switchDrawerStep(this)">
+                    <div class="gti-drawer-step-circle">3</div>
+                    <div class="gti-drawer-step-label">More</div>
+                </div>
+            </div>
+
+            <div class="gti-drawer-section active" data-section="info">
                 <div class="gti-drawer-section-title"><i class="fas fa-cog"></i> Part Information</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Part Number</span><span class="gti-drawer-value" id="drawer-partnum">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Part Name</span><span class="gti-drawer-value" id="drawer-name">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Category</span><span class="gti-drawer-value" id="drawer-category">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Brand</span><span class="gti-drawer-value" id="drawer-brand">-</span></div>
             </div>
-            <div class="gti-drawer-section">
+            <div class="gti-drawer-section" data-section="inventory">
                 <div class="gti-drawer-section-title"><i class="fas fa-boxes"></i> Inventory</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Current Stock</span><span class="gti-drawer-value" id="drawer-stock">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Minimum Stock</span><span class="gti-drawer-value" id="drawer-min-stock">-</span></div>
@@ -716,7 +845,7 @@ $_gti_sp_fmt = function($amount) {
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Unit Price</span><span class="gti-drawer-value" id="drawer-unit-price">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Total Value</span><span class="gti-drawer-value" id="drawer-total-value">-</span></div>
             </div>
-            <div class="gti-drawer-section">
+            <div class="gti-drawer-section" data-section="additional">
                 <div class="gti-drawer-section-title"><i class="fas fa-info-circle"></i> Additional</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Supplier</span><span class="gti-drawer-value" id="drawer-supplier">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Location</span><span class="gti-drawer-value" id="drawer-location">-</span></div>
@@ -729,137 +858,259 @@ $_gti_sp_fmt = function($amount) {
             </div>
         </div>
         <div class="gti-drawer-footer">
-            <a href="#" class="gti-drawer-btn gti-drawer-btn-primary"><i class="fas fa-edit"></i> Edit</a>
+            <button type="button" class="gti-drawer-btn gti-drawer-btn-primary" id="drawer-btn-edit"><i class="fas fa-edit"></i> Edit</button>
             <span class="gti-drawer-footer-spacer"></span>
-            <div class="gti-drawer-btn-group">
-                <button type="button" class="gti-drawer-btn gti-drawer-btn-icon" id="drawer-btn-more" title="More Actions"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="gti-drawer-dropdown" id="drawer-more-dropdown">
-                    <a href="#" class="gti-drawer-dropdown-item"><i class="fas fa-eye"></i> View Full Details</a>
-                    <a href="#" class="gti-drawer-dropdown-item" style="color:#b91c1c;"><i class="fas fa-trash"></i> Delete</a>
-                </div>
-            </div>
+            <button type="button" class="gti-drawer-btn" id="drawer-btn-delete" style="color:#b91c1c;border-color:#fca5a5;"><i class="fas fa-trash"></i> Delete</button>
         </div>
     </div>
             </div>
         </main>
     </div>
 
+    
+    <!-- ====== Edit Spare Part Modal (Fullscreen Popup) ====== -->
+    <div class="gti-ue-edit-overlay" id="gtiEditOverlay">
+        <div class="gti-edit-backdrop" onclick="closeEditModal()"></div>
+        <div class="gti-ue-edit-container">
+            <div class="gti-ue-edit-header">
+                <div class="gti-ue-edit-header-left">
+                    <h2><i class="fas fa-edit"></i> Edit Spare Part</h2>
+                </div>
+                <button class="gti-ue-edit-close" onclick="closeEditModal()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="gti-ue-edit-body">
+                <form id="gti-edit-form" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="edit-field-id" value="">
+                    <input type="hidden" name="action" value="gti_save_spare_part">
+                    <input type="hidden" name="nonce" value="<?php echo esc_attr(wp_create_nonce('gti_nonce')); ?>">
+
+                    <div class="gti-ae-form-card">
+                        <div class="gti-ae-card-header"><h3><i class="fas fa-cog"></i> Part Information</h3></div>
+                        <div class="gti-ae-card-body">
+                            <div class="gti-ae-form-grid">
+                                <div class="gti-ae-field"><label>Part Number <span class="required">*</span></label><input type="text" name="part_number" required></div>
+                                <div class="gti-ae-field"><label>Part Name <span class="required">*</span></label><input type="text" name="name" required></div>
+                            </div>
+                            <div class="gti-ae-form-grid">
+                                <div class="gti-ae-field"><label>Category <span class="required">*</span></label><select name="category" required><option value="">Select Category</option><option value="Filters">Filters</option><option value="Undercarriage">Undercarriage</option><option value="Hydraulics">Hydraulics</option><option value="Brakes">Brakes</option><option value="Engine Parts">Engine Parts</option><option value="Electrical">Electrical</option><option value="Transmission">Transmission</option><option value="Body &amp; Frame">Body &amp; Frame</option><option value="Other">Other</option></select></div>
+                                <div class="gti-ae-field"><label>Brand <span class="required">*</span></label><select name="brand" required><option value="">Select Brand</option><option value="KOMATSU">KOMATSU</option><option value="CATERPILLAR">CATERPILLAR</option><option value="HITACHI">HITACHI</option><option value="VOLVO">VOLVO</option><option value="KOBELCO">KOBELCO</option><option value="DOOSAN">DOOSAN</option><option value="HYUNDAI">HYUNDAI</option></select></div>
+                            </div>
+                            <div class="gti-ae-field gti-ae-field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="gti-ae-form-card">
+                        <div class="gti-ae-card-header"><h3><i class="fas fa-boxes"></i> Inventory &amp; Pricing</h3></div>
+                        <div class="gti-ae-card-body">
+                            <div class="gti-ae-form-grid">
+                                <div class="gti-ae-field"><label>Current Stock</label><input type="number" name="stock" min="0"></div>
+                                <div class="gti-ae-field"><label>Minimum Stock</label><input type="number" name="minimum_stock" min="0" value="10"></div>
+                                <div class="gti-ae-field"><label>Unit Price (IDR)</label><input type="text" name="unit_price" inputmode="numeric"></div>
+                            </div>
+                            <div class="gti-ae-form-grid">
+                                <div class="gti-ae-field"><label>Supplier</label><input type="text" name="supplier"></div>
+                                <div class="gti-ae-field"><label>Location</label><input type="text" name="location"></div>
+                                <div class="gti-ae-field"><label>Status</label><select name="status"><option value="in_stock">In Stock</option><option value="low_stock">Low Stock</option><option value="out_of_stock">Out of Stock</option></select></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gti-ae-form-card">
+                        <div class="gti-ae-card-header"><h3><i class="fas fa-images"></i> Image</h3></div>
+                        <div class="gti-ae-card-body">
+                            <div class="gti-ae-field gti-ae-field-full">
+                                <label>Main Image</label>
+                                <div class="gti-ae-upload-area" id="gti-edit-main-upload">
+                                    <input type="file" name="image" id="gti-edit-main-image" accept="image/*" style="display:none;">
+                                    <div class="gti-ae-upload-placeholder" id="gti-edit-upload-placeholder"><i class="fas fa-cloud-upload-alt"></i><p>Click or drag image here to upload</p></div>
+                                    <div class="gti-ae-upload-preview" id="gti-edit-upload-preview" style="display:none;"><img id="gti-edit-preview-img" src="" alt="Preview"><button type="button" class="gti-ae-remove-img" id="gti-edit-remove-img"><i class="fas fa-times"></i></button></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="gti-ue-edit-footer">
+                <button type="button" class="gti-ae-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="gti-ae-btn-submit" id="gti-edit-submit"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== Delete Confirmation Modal ====== -->
+    <div class="gti-ue-delete-overlay" id="gtiDeleteOverlay">
+        <div class="gti-ue-delete-modal">
+            <div class="gti-ue-delete-header">
+                <div class="gti-ue-delete-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="gti-ue-delete-header-text">
+                    <h3>Delete Spare Part</h3>
+                    <p>This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="gti-ue-delete-body">
+                <div class="gti-ue-delete-eq-info">
+                    <div class="gti-ue-delete-eq-thumb" id="delete-sp-thumb"><i class="fas fa-cog"></i></div>
+                    <div>
+                        <div class="gti-ue-delete-eq-name" id="delete-sp-name">&mdash;</div>
+                        <div class="gti-ue-delete-eq-code" id="delete-sp-code">&mdash;</div>
+                    </div>
+                </div>
+                <div class="gti-ue-delete-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Spare part will be permanently removed from inventory. This data cannot be recovered.</span>
+                </div>
+            </div>
+            <div class="gti-ue-delete-footer">
+                <button class="gti-ue-delete-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="gti-ue-delete-confirm" id="gti-delete-confirm-btn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== Toast ====== -->
+    <div class="gti-ue-toast" id="gtiUeToast"></div>
+
     <script>
+    var gtiAjax = gtiAjax || {
+        ajaxurl: '<?php echo esc_js(admin_url('admin-ajax.php')); ?>',
+        nonce: '<?php echo esc_js(wp_create_nonce('gti_nonce')); ?>'
+    };
     document.addEventListener('DOMContentLoaded', function() {
         // Sidebar collapse
         var collapseBtn = document.getElementById('gti-collapse-btn');
         var sidebar = document.getElementById('gti-sidebar');
         var mainEl = document.getElementById('gti-main');
         if (collapseBtn && sidebar) {
-            if (localStorage.getItem('gti-sidebar-collapsed') === 'true') {
-                sidebar.classList.add('collapsed');
-                if (mainEl) mainEl.classList.add('collapsed');
-            }
-            collapseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                sidebar.classList.toggle('collapsed');
-                if (mainEl) mainEl.classList.toggle('collapsed');
-                localStorage.setItem('gti-sidebar-collapsed', sidebar.classList.contains('collapsed'));
-            });
+            if (localStorage.getItem('gti-sidebar-collapsed') === 'true') { sidebar.classList.add('collapsed'); if (mainEl) mainEl.classList.add('collapsed'); }
+            collapseBtn.addEventListener('click', function(e) { e.preventDefault(); sidebar.classList.toggle('collapsed'); if (mainEl) mainEl.classList.toggle('collapsed'); localStorage.setItem('gti-sidebar-collapsed', sidebar.classList.contains('collapsed')); });
         }
         // Sidebar dropdown toggle
         document.querySelectorAll('[data-toggle="dropdown"]').forEach(function(toggle) {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                var group = this.closest('.gti-has-children');
-                if (group) group.classList.toggle('open');
-            });
+            toggle.addEventListener('click', function(e) { e.preventDefault(); var group = this.closest('.gti-has-children'); if (group) group.classList.toggle('open'); });
         });
-        // Action Dropdown Toggle
+        // Action Dropdown Toggle — fixed positioning
         document.addEventListener('click', function(e) {
             var toggle = e.target.closest('.gti-ue-action-toggle');
             if (toggle) {
-                e.preventDefault();
+                e.preventDefault(); e.stopPropagation();
                 var menu = toggle.closest('.gti-ue-action-menu');
                 var dropdown = menu.querySelector('.gti-ue-action-dropdown');
                 var isOpen = dropdown.classList.contains('show');
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
-                if (!isOpen) dropdown.classList.add('show');
+                if (!isOpen) {
+                    var rect = toggle.getBoundingClientRect();
+                    var ddWidth = 160; var ddHeight = 110;
+                    var top = rect.bottom + 4; var left = rect.right - ddWidth;
+                    if (top + ddHeight > window.innerHeight) top = rect.top - ddHeight - 4;
+                    if (left < 8) left = 8;
+                    dropdown.style.top = top + 'px'; dropdown.style.left = left + 'px';
+                    dropdown.classList.add('show');
+                }
                 return;
             }
-            if (!e.target.closest('.gti-ue-action-menu')) {
+            if (!e.target.closest('.gti-ue-action-menu')) { document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); }); }
+        });
+        // VIEW BUTTON
+        document.querySelectorAll('.gti-ue-btn-view').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                var row = btn.closest('tr[data-sp]');
+                if (!row) return;
+                var sp; try { sp = JSON.parse(row.getAttribute('data-sp')); } catch(err) { return; }
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
-            }
+                showSparePartDetail(sp);
+            });
         });
-        // Backdrop close
+        // EDIT BUTTON
+        document.querySelectorAll('.gti-ue-btn-edit').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                var row = btn.closest('tr[data-sp]');
+                if (!row) return;
+                var sp; try { sp = JSON.parse(row.getAttribute('data-sp')); } catch(err) { return; }
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
+                openEditModal(sp);
+            });
+        });
+        // DELETE BUTTON
+        document.querySelectorAll('.gti-ue-btn-delete').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                var row = btn.closest('tr[data-sp]');
+                if (!row) return;
+                var sp; try { sp = JSON.parse(row.getAttribute('data-sp')); } catch(err) { return; }
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
+                openDeleteModal(sp);
+            });
+        });
+        // Drawer backdrop close
         document.getElementById('drawerBackdrop').addEventListener('click', closeDetailDrawer);
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDetailDrawer(); });
-        // More actions dropdown
-        document.getElementById('drawer-btn-more').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('drawer-more-dropdown').classList.toggle('show');
-        });
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.gti-drawer-btn-group')) {
-                document.getElementById('drawer-more-dropdown').classList.remove('show');
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('gtiEditOverlay').classList.contains('show')) { closeEditModal(); return; }
+                if (document.getElementById('gtiDeleteOverlay').classList.contains('show')) { closeDeleteModal(); return; }
+                closeDetailDrawer();
             }
+        });
+        // Search input — real-time search with debounce
+        var searchInput = document.querySelector('.gti-ue-search input[name="search"]');
+        var searchTimer = null;
+        if (searchInput) {
+            searchInput.addEventListener('input', function() { var self = this; clearTimeout(searchTimer); searchTimer = setTimeout(function() { self.form.submit(); }, 400); });
+            if (searchInput.value) { searchInput.focus(); var len = searchInput.value.length; searchInput.setSelectionRange(len, len); }
+        }
+        // Drawer Edit button
+        document.getElementById('drawer-btn-edit').addEventListener('click', function() {
+            if (_currentDrawerSp) openEditModal(_currentDrawerSp);
+        });
+        // Drawer Delete button
+        document.getElementById('drawer-btn-delete').addEventListener('click', function() {
+            if (_currentDrawerSp) openDeleteModal(_currentDrawerSp);
         });
         // Row click → drawer
         document.querySelectorAll('.gti-ue-table tbody tr[data-sp]').forEach(function(row) {
             row.addEventListener('click', function(e) {
                 if (e.target.closest('.gti-ue-action-menu') || e.target.type === 'checkbox') return;
-                var sp;
-                try { sp = JSON.parse(this.getAttribute('data-sp')); } catch(err) { return; }
+                var sp; try { sp = JSON.parse(this.getAttribute('data-sp')); } catch(err) { return; }
                 showSparePartDetail(sp);
             });
         });
         // Auto-populate drawer with first row
         var firstRow = document.querySelector('.gti-ue-table tbody tr[data-sp]');
-        if (firstRow) {
-            try { updateDrawerContent(JSON.parse(firstRow.getAttribute('data-sp'))); } catch(e) {}
-        }
-        // Delete confirmation
-        document.querySelectorAll('.gti-confirm-delete').forEach(function(btn) {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                var message = this.getAttribute('data-message') || 'Are you sure you want to delete this item?';
-                if (confirm(message)) {
-                    var action = this.getAttribute('data-action');
-                    var id = this.getAttribute('data-id');
-                    var formData = new FormData();
-                    formData.append('action', action);
-                    formData.append('id', id);
-                    formData.append('nonce', gtiAjax.nonce);
-                    fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
-                        .then(function(r) { return r.json(); })
-                        .then(function(data) {
-                            if (data.success) location.reload();
-                            else alert(data.data || 'Delete failed.');
-                        })
-                        .catch(function() { alert('An error occurred.'); });
-                }
-            });
-        });
+        if (firstRow) { try { updateDrawerContent(JSON.parse(firstRow.getAttribute('data-sp'))); } catch(e) {} }
+        // Edit modal image upload
+        initEditImageUploads();
+        // Edit modal submit
+        var editSubmitBtn = document.getElementById('gti-edit-submit');
+        if (editSubmitBtn) editSubmitBtn.addEventListener('click', handleEditSubmit);
+        // Delete confirm
+        document.getElementById('gti-delete-confirm-btn').addEventListener('click', handleDeleteConfirm);
     });
 
     var _currentDrawerSp = null;
+    function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val || '-'; }
     function updateDrawerContent(sp) {
         _currentDrawerSp = sp;
-        document.getElementById('drawer-part-number').textContent = sp.part_number || '-';
+        setText('drawer-part-number', sp.part_number);
+        setText('drawer-partnum', sp.part_number);
         var badge = document.getElementById('drawer-status-badge');
         var statusMap = { 'in_stock':'In Stock', 'low_stock':'Low Stock', 'out_of_stock':'Out of Stock' };
         var sl = statusMap[sp.status] || sp.status || 'In Stock';
-        badge.textContent = sl;
-        badge.className = 'gti-drawer-status status-' + (sp.status || 'in_stock');
-        document.getElementById('drawer-partnum').textContent = sp.part_number || '-';
-        document.getElementById('drawer-name').textContent = sp.name || '-';
-        document.getElementById('drawer-category').textContent = sp.category || '-';
-        document.getElementById('drawer-brand').textContent = sp.brand || '-';
-        document.getElementById('drawer-stock').textContent = sp.stock || '0';
-        document.getElementById('drawer-min-stock').textContent = sp.minimum_stock || '10';
-        document.getElementById('drawer-status-text').textContent = sl;
-        document.getElementById('drawer-unit-price').textContent = formatRupiah(sp.unit_price);
-        document.getElementById('drawer-total-value').textContent = formatRupiah((sp.stock || 0) * (sp.unit_price || 0));
-        document.getElementById('drawer-supplier').textContent = sp.supplier || '-';
-        document.getElementById('drawer-location').textContent = sp.location || '-';
-        document.getElementById('drawer-description').textContent = sp.description || '-';
-        document.getElementById('drawer-created').textContent = formatDate(sp.created_at);
-        document.getElementById('drawer-updated').textContent = formatDate(sp.updated_at);
+        badge.textContent = sl; badge.className = 'gti-drawer-status status-' + (sp.status || 'in_stock');
+        setText('drawer-name', sp.name);
+        setText('drawer-category', sp.category);
+        setText('drawer-brand', sp.brand);
+        setText('drawer-stock', sp.stock || '0');
+        setText('drawer-min-stock', sp.minimum_stock || '10');
+        setText('drawer-status-text', sl);
+        setText('drawer-unit-price', formatRupiah(sp.unit_price));
+        setText('drawer-total-value', formatRupiah((sp.stock || 0) * (sp.unit_price || 0)));
+        setText('drawer-supplier', sp.supplier);
+        setText('drawer-location', sp.location);
+        setText('drawer-description', sp.description);
+        setText('drawer-created', formatDate(sp.created_at));
+        setText('drawer-updated', formatDate(sp.updated_at));
+        // Highlight active row
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
         var activeRow = document.querySelector('.gti-ue-table tbody tr[data-sp-id="' + sp.id + '"]');
         if (activeRow) activeRow.classList.add('active-row');
@@ -877,23 +1128,154 @@ $_gti_sp_fmt = function($amount) {
         document.getElementById('spDetailDrawer').classList.remove('open');
         document.getElementById('drawerBackdrop').classList.remove('show');
         document.body.style.overflow = '';
-        document.getElementById('drawer-more-dropdown').classList.remove('show');
+        // Reset stepper
+        var steps = document.querySelectorAll('#spDetailDrawer .gti-drawer-step');
+        var lines = document.querySelectorAll('#spDetailDrawer .gti-drawer-step-line');
+        steps.forEach(function(s,i){ s.classList.remove('active','completed'); if(i===0) s.classList.add('active'); });
+        lines.forEach(function(l){ l.classList.remove('active'); });
+        document.querySelectorAll('#spDetailDrawer .gti-drawer-section[data-section]').forEach(function(s){ s.classList.remove('active'); });
+        var first = document.querySelector('#spDetailDrawer .gti-drawer-section[data-section="info"]');
+        if(first) first.classList.add('active');
         _currentDrawerSp = null;
     }
-    function formatRupiah(val) {
-        if (!val) return '-';
-        return 'Rp ' + Number(val).toLocaleString('id-ID');
+    function switchDrawerStep(step) {
+        var section = step.getAttribute('data-section');
+        var steps = document.querySelectorAll('#spDetailDrawer .gti-drawer-step');
+        var lines = document.querySelectorAll('#spDetailDrawer .gti-drawer-step-line');
+        var clickedIdx = Array.prototype.indexOf.call(steps, step);
+        steps.forEach(function(s, i) { s.classList.remove('active','completed'); if (i < clickedIdx) s.classList.add('completed'); else if (i === clickedIdx) s.classList.add('active'); });
+        lines.forEach(function(l, i) { l.classList.toggle('active', i < clickedIdx); });
+        document.querySelectorAll('#spDetailDrawer .gti-drawer-section[data-section]').forEach(function(s) { s.classList.remove('active'); });
+        var target = document.querySelector('#spDetailDrawer .gti-drawer-section[data-section="' + section + '"]');
+        if (target) target.classList.add('active');
     }
+    function formatRupiah(val) { if (!val) return '-'; return 'Rp ' + Number(val).toLocaleString('id-ID'); }
     function formatDate(dateStr) {
         if (!dateStr) return '-';
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
+        var d = new Date(dateStr); if (isNaN(d.getTime())) return dateStr;
         var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-        var day = d.getDate();
-        var hours = d.getHours(); var minutes = String(d.getMinutes()).padStart(2, '0');
-        var ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
+        var day = d.getDate(); var hours = d.getHours(); var minutes = String(d.getMinutes()).padStart(2, '0');
+        var ampm = hours >= 12 ? 'PM' : 'AM'; hours = hours % 12 || 12;
         return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ', ' + hours + ':' + minutes + ' ' + ampm;
+    }
+    function populateField(form, name, value) {
+        var field = form.querySelector('[name="' + name + '"]');
+        if (!field) return; if (value === null || value === undefined) value = ''; field.value = value;
+    }
+    function parseJson(val) {
+        if (!val) return null; if (typeof val === 'object') return val;
+        try { return JSON.parse(val); } catch(e) { return null; }
+    }
+    function showUeToast(message, type) {
+        var toast = document.getElementById('gtiUeToast');
+        toast.className = 'gti-ue-toast ' + (type || 'success');
+        toast.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i> ' + message;
+        toast.classList.add('show'); setTimeout(function() { toast.classList.remove('show'); }, 3500);
+    }
+    // ====== EDIT MODAL ======
+    var _editCurrentEq = null;
+    function openEditModal(sp) {
+        _editCurrentEq = sp;
+        var overlay = document.getElementById('gtiEditOverlay');
+        overlay.classList.add('show'); document.body.style.overflow = 'hidden';
+        document.getElementById('edit-field-id').value = sp.id;
+        var form = document.getElementById('gti-edit-form');
+        populateField(form, 'part_number', sp.part_number);
+        populateField(form, 'name', sp.name);
+        populateField(form, 'category', sp.category);
+        populateField(form, 'brand', sp.brand);
+        populateField(form, 'description', sp.description);
+        populateField(form, 'stock', sp.stock);
+        populateField(form, 'minimum_stock', sp.minimum_stock);
+        populateField(form, 'unit_price', sp.unit_price ? Number(sp.unit_price).toLocaleString('id-ID') : '');
+        populateField(form, 'supplier', sp.supplier);
+        populateField(form, 'location', sp.location);
+        populateField(form, 'status', sp.status);
+        // Image preview
+        var previewEl = document.getElementById('gti-edit-upload-preview');
+        var placeholderEl = document.getElementById('gti-edit-upload-placeholder');
+        var previewImg = document.getElementById('gti-edit-preview-img');
+        if (sp.image) { previewImg.src = sp.image; placeholderEl.style.display = 'none'; previewEl.style.display = ''; }
+        else { previewImg.src = ''; placeholderEl.style.display = ''; previewEl.style.display = 'none'; }
+    }
+    function closeEditModal() {
+        document.getElementById('gtiEditOverlay').classList.remove('show');
+        document.body.style.overflow = ''; _editCurrentEq = null;
+    }
+    function handleEditSubmit(e) {
+        if (e) e.preventDefault();
+        var form = document.getElementById('gti-edit-form');
+        var submitBtn = document.getElementById('gti-edit-submit');
+        if (!form || !submitBtn) return;
+        var formData = new FormData(form);
+        if (!formData.has('action')) formData.append('action', 'gti_save_spare_part');
+        if (!formData.has('nonce')) formData.append('nonce', gtiAjax.nonce);
+        submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.text().then(function(text) { try { return JSON.parse(text); } catch(e) { throw new Error('Server returned non-JSON response'); } }); })
+            .then(function(data) {
+                submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                if (data.success) { showUeToast(data.data.message || 'Spare part updated!', 'success'); closeEditModal(); setTimeout(function() { window.location.reload(); }, 1200); }
+                else { showUeToast(data.data.message || 'Failed to save', 'error'); }
+            })
+            .catch(function(err) {
+                submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                showUeToast('An error occurred: ' + (err.message || 'Unknown'), 'error');
+            });
+    }
+    // ====== DELETE MODAL ======
+    var _deleteCurrentSp = null;
+    function openDeleteModal(sp) {
+        _deleteCurrentSp = sp;
+        document.getElementById('delete-sp-name').textContent = sp.name || '\u2014';
+        document.getElementById('delete-sp-code').textContent = sp.part_number || '\u2014';
+        var thumb = document.getElementById('delete-sp-thumb');
+        if (sp.image) { thumb.innerHTML = '<img src="' + sp.image + '" alt="">'; }
+        else { thumb.innerHTML = '<i class="fas fa-cog"></i>'; }
+        var confirmBtn = document.getElementById('gti-delete-confirm-btn');
+        confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        document.getElementById('gtiDeleteOverlay').classList.add('show');
+    }
+    function closeDeleteModal() { document.getElementById('gtiDeleteOverlay').classList.remove('show'); _deleteCurrentSp = null; }
+    function handleDeleteConfirm(e) {
+        e.preventDefault(); if (!_deleteCurrentSp) return;
+        var confirmBtn = document.getElementById('gti-delete-confirm-btn');
+        confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        var formData = new FormData();
+        formData.append('action', 'gti_delete_spare_part');
+        formData.append('nonce', gtiAjax.nonce);
+        formData.append('id', _deleteCurrentSp.id);
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.text().then(function(text) { try { return JSON.parse(text); } catch(e) { if (r.ok) return { success: true, data: { message: 'Spare part deleted' } }; throw e; } }); })
+            .then(function(data) {
+                if (data.success) {
+                    showUeToast(data.data.message || 'Spare part deleted', 'success');
+                    var deletedId = _deleteCurrentSp ? _deleteCurrentSp.id : null;
+                    closeDeleteModal();
+                    if (deletedId) { var row = document.querySelector('tr[data-sp-id="' + deletedId + '"]'); if (row) { row.style.transition = 'opacity 0.3s, transform 0.3s'; row.style.opacity = '0'; row.style.transform = 'translateX(20px)'; setTimeout(function() { row.remove(); }, 350); } }
+                } else { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete'; showUeToast(data.data.message || 'Failed to delete', 'error'); }
+            })
+            .catch(function() { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete'; showUeToast('An error occurred while deleting', 'error'); });
+    }
+    // ====== IMAGE UPLOADS ======
+    function initEditImageUploads() {
+        var mainUpload = document.getElementById('gti-edit-main-upload');
+        var mainInput = document.getElementById('gti-edit-main-image');
+        var mainPlaceholder = document.getElementById('gti-edit-upload-placeholder');
+        var mainPreview = document.getElementById('gti-edit-upload-preview');
+        var previewImg = document.getElementById('gti-edit-preview-img');
+        var removeImg = document.getElementById('gti-edit-remove-img');
+        if (mainUpload && mainInput) {
+            mainUpload.addEventListener('click', function(e) { if (e.target.closest('.gti-ae-remove-img')) return; mainInput.click(); });
+            mainInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(ev) { previewImg.src = ev.target.result; mainPlaceholder.style.display = 'none'; mainPreview.style.display = ''; };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        if (removeImg) { removeImg.addEventListener('click', function(e) { e.stopPropagation(); mainInput.value = ''; previewImg.src = ''; mainPlaceholder.style.display = ''; mainPreview.style.display = 'none'; }); }
     }
     </script>
 </body>

@@ -86,99 +86,6 @@ $total_equipment = array_sum(array_column($status_counts, 'count'));
 $categories = $wpdb->get_col("SELECT DISTINCT category FROM {$table} WHERE type = 'rental' AND category != '' AND deleted_at IS NULL ORDER BY category");
 $brands = $wpdb->get_col("SELECT DISTINCT brand FROM {$table} WHERE type = 'rental' AND brand != '' AND deleted_at IS NULL ORDER BY brand");
 
-// Dummy data fallback when DB is empty
-if (empty($equipments)) {
-    $dummy_specs = '{"Engine":"Diesel Turbocharged","Operating Weight":"20,700 kg","Bucket Capacity":"1.0 m\u00b3","Max Digging Depth":"6,520 mm","Engine Power":"110 kW (150 HP)","Fuel Tank Capacity":"410 L"}';
-    $equipments = array();
-
-    $d = new stdClass();
-    $d->id = 2001; $d->equipment_code = 'RE-2024-001'; $d->name = 'KOMATSU PC200-8';
-    $d->type = 'rental'; $d->category = 'Excavator'; $d->brand = 'KOMATSU';
-    $d->model = 'PC200-8'; $d->year = 2020; $d->condition_status = 'Excellent';
-    $d->status = 'available'; $d->price = 35000000; $d->price_type = 'monthly_rental';
-    $d->location = 'Jakarta, Indonesia';
-    $d->description = 'Available for monthly rental. Well-maintained with full service records.';
-    $d->specifications = $dummy_specs;
-    $d->images = '["https://picsum.photos/seed/re1-g1/200/200","https://picsum.photos/seed/re1-g2/200/200","https://picsum.photos/seed/re1-g3/200/200"]';
-    $d->main_image = 'https://picsum.photos/seed/re1/400/300';
-    $d->hours = 5200; $d->warranty_info = 'Rental period covered';
-    $d->last_service_date = '2026-03-15'; $d->next_service_due = '2026-09-15';
-    $d->registration_number = 'B 1111 RE'; $d->insurance_status = 'Active';
-    $d->notes = 'Available for immediate deployment. Delivery within 48 hours.';
-    $d->created_at = '2026-01-20 10:00:00'; $d->updated_at = '2026-08-25 09:00:00';
-    $equipments[] = $d;
-
-    $d = new stdClass();
-    $d->id = 2002; $d->equipment_code = 'RE-2024-002'; $d->name = 'CAT 320D';
-    $d->type = 'rental'; $d->category = 'Excavator'; $d->brand = 'CATERPILLAR';
-    $d->model = '320D'; $d->year = 2019; $d->condition_status = 'Good';
-    $d->status = 'rented'; $d->price = 28000000; $d->price_type = 'monthly_rental';
-    $d->location = 'Surabaya, Indonesia';
-    $d->description = 'Currently rented to PT Maju Jaya for construction project.';
-    $d->specifications = $dummy_specs;
-    $d->images = '["https://picsum.photos/seed/re2-g1/200/200","https://picsum.photos/seed/re2-g2/200/200","https://picsum.photos/seed/re2-g3/200/200"]';
-    $d->main_image = 'https://picsum.photos/seed/re2/400/300';
-    $d->hours = 8100; $d->warranty_info = 'Rental period covered';
-    $d->last_service_date = '2026-02-20'; $d->next_service_due = '2026-08-20';
-    $d->registration_number = 'B 2222 RE'; $d->insurance_status = 'Active';
-    $d->notes = 'Rented until Sept 2026. Monthly maintenance included.';
-    $d->created_at = '2026-02-15 08:30:00'; $d->updated_at = '2026-08-18 14:00:00';
-    $equipments[] = $d;
-
-    $d = new stdClass();
-    $d->id = 2003; $d->equipment_code = 'RE-2024-003'; $d->name = 'KOMATSU D65PX-18';
-    $d->type = 'rental'; $d->category = 'Bulldozer'; $d->brand = 'KOMATSU';
-    $d->model = 'D65PX-18'; $d->year = 2021; $d->condition_status = 'Excellent';
-    $d->status = 'rented'; $d->price = 45000000; $d->price_type = 'monthly_rental';
-    $d->location = 'Bandung, Indonesia';
-    $d->description = 'Rented to mining company in West Java. Long-term contract.';
-    $d->specifications = $dummy_specs;
-    $d->images = '["https://picsum.photos/seed/re3-g1/200/200","https://picsum.photos/seed/re3-g2/200/200","https://picsum.photos/seed/re3-g3/200/200"]';
-    $d->main_image = 'https://picsum.photos/seed/re3/400/300';
-    $d->hours = 3800; $d->warranty_info = 'Rental period covered';
-    $d->last_service_date = '2026-04-01'; $d->next_service_due = '2026-10-01';
-    $d->registration_number = 'B 3333 RE'; $d->insurance_status = 'Active';
-    $d->notes = 'Long-term rental contract. On-site maintenance every 500 hours.';
-    $d->created_at = '2026-03-10 11:00:00'; $d->updated_at = '2026-08-15 10:30:00';
-    $equipments[] = $d;
-
-    $d = new stdClass();
-    $d->id = 2004; $d->equipment_code = 'RE-2024-004'; $d->name = 'CAT 950GC';
-    $d->type = 'rental'; $d->category = 'Wheel Loader'; $d->brand = 'CATERPILLAR';
-    $d->model = '950GC'; $d->year = 2022; $d->condition_status = 'Good';
-    $d->status = 'reserved'; $d->price = 32000000; $d->price_type = 'monthly_rental';
-    $d->location = 'Medan, Indonesia';
-    $d->description = 'Reserved for upcoming project in North Sumatra.';
-    $d->specifications = $dummy_specs;
-    $d->images = '["https://picsum.photos/seed/re4-g1/200/200","https://picsum.photos/seed/re4-g2/200/200","https://picsum.photos/seed/re4-g3/200/200"]';
-    $d->main_image = 'https://picsum.photos/seed/re4/400/300';
-    $d->hours = 2500; $d->warranty_info = 'Rental period covered';
-    $d->last_service_date = '2026-05-10'; $d->next_service_due = '2026-11-10';
-    $d->registration_number = 'B 4444 RE'; $d->insurance_status = 'Active';
-    $d->notes = 'Reserved for Medan project starting October 2026.';
-    $d->created_at = '2026-04-20 14:00:00'; $d->updated_at = '2026-08-22 08:00:00';
-    $equipments[] = $d;
-
-    $d = new stdClass();
-    $d->id = 2005; $d->equipment_code = 'RE-2024-005'; $d->name = 'HITACHI ZX210LCH-5A';
-    $d->type = 'rental'; $d->category = 'Excavator'; $d->brand = 'HITACHI';
-    $d->model = 'ZX210LCH-5A'; $d->year = 2020; $d->condition_status = 'Fair';
-    $d->status = 'available'; $d->price = 25000000; $d->price_type = 'monthly_rental';
-    $d->location = 'Semarang, Indonesia';
-    $d->description = 'Available for short or long-term rental. Recently serviced.';
-    $d->specifications = $dummy_specs;
-    $d->images = '["https://picsum.photos/seed/re5-g1/200/200","https://picsum.photos/seed/re5-g2/200/200","https://picsum.photos/seed/re5-g3/200/200"]';
-    $d->main_image = 'https://picsum.photos/seed/re5/400/300';
-    $d->hours = 6400; $d->warranty_info = 'Rental period covered';
-    $d->last_service_date = '2026-01-20'; $d->next_service_due = '2026-07-20';
-    $d->registration_number = 'B 5555 RE'; $d->insurance_status = 'Active';
-    $d->notes = 'Fair condition. Hydraulic system serviced.';
-    $d->created_at = '2026-05-05 09:30:00'; $d->updated_at = '2026-08-25 07:45:00';
-    $equipments[] = $d;
-
-    $total_equipment = count($equipments);
-}
-
 // Format currency inline to avoid redeclaration errors
 $_gti_re_fmt = function($amount) {
     return 'Rp ' . number_format((float)$amount, 0, ',', '.');
@@ -188,9 +95,11 @@ $_gti_re_fmt = function($amount) {
 $_gti_re_status_badge = function($status) {
     $map = array(
         'available' => array('class' => 'available', 'label' => 'Available'),
+        'sold' => array('class' => 'sold', 'label' => 'Sold'),
         'rented' => array('class' => 'sold', 'label' => 'Rented'),
         'reserved' => array('class' => 'reserved', 'label' => 'Reserved'),
         'maintenance' => array('class' => 'reserved', 'label' => 'Maintenance'),
+        'draft' => array('class' => 'draft', 'label' => 'Draft'),
     );
     $info = isset($map[$status]) ? $map[$status] : array('class' => 'available', 'label' => ucfirst($status));
     return '<span class="gti-badge-status ' . esc_attr($info['class']) . '">' . esc_html($info['label']) . '</span>';
@@ -207,6 +116,7 @@ $_gti_re_status_badge = function($status) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
+    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css">
     <style>
         /* Border overrides to match request-equipment style */
         .gti-ue-stat-card { border: 1px solid #e5e7eb; }
@@ -442,6 +352,189 @@ $_gti_re_status_badge = function($status) {
         .gti-drawer-step-line.active { background: #10b981; }
         .gti-drawer-section[data-section] { display: none; }
         .gti-drawer-section[data-section].active { display: block; }
+
+        /* Action menu overflow fix */
+        .gti-ue-action-dropdown { z-index: 100; position: fixed; width: max-content; white-space: nowrap; }
+        .gti-drawer-btn-publish:hover { background: #047857 !important; }
+        .gti-drawer-btn-delete:hover { background: #fef2f2 !important; }
+
+        /* ====== View Button — Hide on wide screens where drawer is already in-flow ====== */
+        @media (min-width: 1600px) {
+            .gti-ue-btn-view { display: none !important; }
+        }
+
+        /* ====== Fullscreen Edit Modal ====== */
+        .gti-ue-edit-overlay {
+            display: none; position: fixed; inset: 0; z-index: 2000;
+            background: #f3f4f6; overflow-y: auto;
+        }
+        .gti-ue-edit-overlay.show { display: block; }
+        .gti-ue-edit-overlay .gti-edit-backdrop {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .gti-ue-edit-overlay.show .gti-edit-backdrop { opacity: 1; }
+        .gti-ue-edit-container {
+            position: relative; z-index: 2;
+            margin: 40px; background: #fff;
+            border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+            min-height: calc(100vh - 80px); display: flex; flex-direction: column;
+        }
+        .gti-ue-edit-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 28px; border-bottom: 1px solid #e5e7eb;
+            background: #fff; border-radius: 16px 16px 0 0; flex-shrink: 0;
+            position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .gti-ue-edit-header-left { display: flex; align-items: center; gap: 12px; }
+        .gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .gti-ue-edit-header h2 i { color: #F5A623; }
+        /* Compact stepper inside header */
+        .gti-ue-edit-header .gti-ae-stepper-card {
+            margin: 0; background: none; border: none; box-shadow: none;
+            border-radius: 0; overflow: visible;
+            flex: 0 1 auto; height: fit-content; width: fit-content;
+        }
+        .gti-ue-edit-header .gti-ae-stepper {
+            gap: 0; padding: 0; margin: 0; justify-content: center;
+        }
+        .gti-ue-edit-header .gti-ae-step { cursor: pointer; gap: 4px; }
+        .gti-ue-edit-header .gti-ae-step-circle {
+            width: 24px; height: 24px; font-size: 11px; font-weight: 600;
+        }
+        .gti-ue-edit-header .gti-ae-step-label {
+            font-size: 10px; font-weight: 500;
+        }
+        .gti-ue-edit-header .gti-ae-step-line {
+            margin-top: 11px; min-width: 8px; max-width: 20px; height: 2px;
+        }
+        .gti-ue-edit-close {
+            width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb;
+            background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: #6b7280; font-size: 16px; transition: all 0.15s;
+        }
+        .gti-ue-edit-close:hover { background: #f3f4f6; color: #1a1f36; }
+        .gti-ue-edit-body {
+            flex: 1; padding: 28px; overflow-y: auto;
+        }
+        .gti-ue-edit-footer {
+            display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+            padding: 16px 28px; border-top: 1px solid #e5e7eb; flex-shrink: 0;
+            background: #fff; border-radius: 0 0 16px 16px;
+        }
+        .gti-ue-edit-footer .gti-ae-btn-cancel {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            border: 1px solid #e5e7eb; background: #fff; color: #374151;
+            cursor: pointer; font-family: inherit; transition: all 0.15s; text-decoration: none;
+        }
+        .gti-ue-edit-footer .gti-ae-btn-cancel:hover { background: #f9fafb; }
+        .gti-ue-edit-footer .gti-ae-btn-submit {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            border: none; background: #F5A623; color: #1a1f36;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-edit-footer .gti-ae-btn-submit:hover { background: #e6991a; }
+        .gti-ue-edit-footer .gti-ae-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Reuse existing stepper/form styles inside the edit modal */
+        .gti-ue-edit-body .gti-ae-step-content { display: none; }
+        .gti-ue-edit-body .gti-ae-step-content.active { display: block; }
+        .gti-ue-edit-body .gti-ae-step-nav {
+            display: flex; justify-content: space-between; margin-top: 24px; padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .gti-ue-edit-body .gti-ae-step-nav button {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev {
+            border: 1px solid #e5e7eb; background: #fff; color: #374151;
+        }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev:hover { background: #f9fafb; }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-next {
+            border: 1px solid #F5A623; background: #F5A623; color: #1a1f36; font-weight: 600;
+        }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-next:hover { background: #e6991a; }
+
+        /* ====== Delete Confirmation Modal ====== */
+        .gti-ue-delete-overlay {
+            display: none; position: fixed; inset: 0; z-index: 3000;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .gti-ue-delete-overlay.show { display: flex; }
+        .gti-ue-delete-modal {
+            background: #fff; border-radius: 16px; width: 440px; max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+            animation: gti-modal-in 0.25s ease;
+        }
+        @keyframes gti-modal-in { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform: scale(1); } }
+        .gti-ue-delete-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 24px 0;
+        }
+        .gti-ue-delete-icon {
+            width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+            background: #fef2f2; display: flex; align-items: center; justify-content: center;
+            color: #dc2626; font-size: 18px;
+        }
+        .gti-ue-delete-header-text h3 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; }
+        .gti-ue-delete-header-text p { margin: 4px 0 0; font-size: 13px; color: #6b7280; }
+        .gti-ue-delete-body {
+            padding: 16px 24px;
+        }
+        .gti-ue-delete-eq-info {
+            background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 10px;
+            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+        }
+        .gti-ue-delete-eq-thumb {
+            width: 48px; height: 48px; border-radius: 8px; background: #e5e7eb;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            overflow: hidden;
+        }
+        .gti-ue-delete-eq-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .gti-ue-delete-eq-thumb i { color: #9ca3af; font-size: 18px; }
+        .gti-ue-delete-eq-name { font-size: 14px; font-weight: 600; color: #1a1f36; }
+        .gti-ue-delete-eq-code { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+        .gti-ue-delete-warning {
+            margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+            background: #fffbeb; border: 1px solid #fde68a;
+            font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 8px;
+        }
+        .gti-ue-delete-warning i { margin-top: 2px; color: #f59e0b; flex-shrink: 0; }
+        .gti-ue-delete-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 16px 24px; border-top: 1px solid #f3f4f6;
+        }
+        .gti-ue-delete-footer button {
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-delete-cancel {
+            border: 1px solid #e5e7eb; background: #fff; color: #374151;
+        }
+        .gti-ue-delete-cancel:hover { background: #f9fafb; }
+        .gti-ue-delete-confirm {
+            border: none; background: #dc2626; color: #fff; font-weight: 600;
+        }
+        .gti-ue-delete-confirm:hover { background: #b91c1c; }
+        .gti-ue-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ====== Toast Notification ====== */
+        .gti-ue-toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 5000;
+            padding: 14px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 10px;
+            transform: translateY(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .gti-ue-toast.show { transform: translateY(0); opacity: 1; }
+        .gti-ue-toast.success { background: #059669; color: #fff; }
+        .gti-ue-toast.error { background: #991b1b; color: #fff; }
+        .gti-ue-toast.warning { background: #92400e; color: #fff; }
     </style>
 </head>
 <body class="gti-body">
@@ -582,7 +675,7 @@ $_gti_re_status_badge = function($status) {
                             <input type="text" name="search" placeholder="Search equipment..." value="<?php echo esc_attr($search); ?>">
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="category">
+                            <select name="category" onchange="this.form.submit()">
                                 <option value="">All Categories</option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?php echo esc_attr($cat); ?>" <?php selected($category, $cat); ?>><?php echo esc_html($cat); ?></option>
@@ -590,7 +683,7 @@ $_gti_re_status_badge = function($status) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="brand">
+                            <select name="brand" onchange="this.form.submit()">
                                 <option value="">All Brands</option>
                                 <?php foreach ($brands as $b): ?>
                                     <option value="<?php echo esc_attr($b); ?>" <?php selected($brand, $b); ?>><?php echo esc_html($b); ?></option>
@@ -598,15 +691,17 @@ $_gti_re_status_badge = function($status) {
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="status">
+                            <select name="status" onchange="this.form.submit()">
                                 <option value="">All Status</option>
                                 <option value="available" <?php selected($status_filter, 'available'); ?>>Available</option>
                                 <option value="rented" <?php selected($status_filter, 'rented'); ?>>Rented</option>
                                 <option value="reserved" <?php selected($status_filter, 'reserved'); ?>>Reserved</option>
+                                <option value="maintenance" <?php selected($status_filter, 'maintenance'); ?>>Maintenance</option>
+                                <option value="draft" <?php selected($status_filter, 'draft'); ?>>Draft</option>
                             </select>
                         </div>
                         <div class="gti-ue-filter">
-                            <select name="condition">
+                            <select name="condition" onchange="this.form.submit()">
                                 <option value="">All Conditions</option>
                                 <option value="Excellent" <?php selected($condition_filter, 'Excellent'); ?>>Excellent</option>
                                 <option value="Good" <?php selected($condition_filter, 'Good'); ?>>Good</option>
@@ -685,9 +780,9 @@ $_gti_re_status_badge = function($status) {
                                             <div class="gti-ue-action-menu">
                                                 <button class="gti-ue-action-toggle" title="Actions"><i class="fas fa-ellipsis-v"></i></button>
                                                 <div class="gti-ue-action-dropdown">
-                                                    <a href="#" class="gti-ue-action-item"><i class="fas fa-eye"></i> View</a>
-                                                    <a href="#" class="gti-ue-action-item"><i class="fas fa-edit"></i> Edit</a>
-                                                    <a href="#" class="gti-ue-action-item delete"><i class="fas fa-trash"></i> Delete</a>
+                                                    <a href="#" class="gti-ue-action-item gti-ue-btn-view"><i class="fas fa-eye"></i> View</a>
+                                                    <a href="#" class="gti-ue-action-item gti-ue-btn-edit"><i class="fas fa-edit"></i> Edit</a>
+                                                    <a href="#" class="gti-ue-action-item delete gti-ue-btn-delete"><i class="fas fa-trash"></i> Delete</a>
                                                 </div>
                                             </div>
                                         </td>
@@ -771,30 +866,62 @@ $_gti_re_status_badge = function($status) {
                     <div class="gti-drawer-step-label">Specs</div>
                 </div>
                 <div class="gti-drawer-step-line"></div>
-                <div class="gti-drawer-step" data-section="additional" onclick="switchDrawerStep(this)">
+                <div class="gti-drawer-step" data-section="pricing" onclick="switchDrawerStep(this)">
                     <div class="gti-drawer-step-circle">3</div>
+                    <div class="gti-drawer-step-label">Pricing</div>
+                </div>
+                <div class="gti-drawer-step-line"></div>
+                <div class="gti-drawer-step" data-section="media" onclick="switchDrawerStep(this)">
+                    <div class="gti-drawer-step-circle">4</div>
+                    <div class="gti-drawer-step-label">Media</div>
+                </div>
+                <div class="gti-drawer-step-line"></div>
+                <div class="gti-drawer-step" data-section="additional" onclick="switchDrawerStep(this)">
+                    <div class="gti-drawer-step-circle">5</div>
                     <div class="gti-drawer-step-label">More</div>
                 </div>
             </div>
 
-            <!-- Section: Info (General + Images) -->
+                        <!-- Section: 1 - Info (General + Engine & Origin + Basic) -->
             <div class="gti-drawer-section active" data-section="info">
                 <div class="gti-drawer-section-title"><i class="fas fa-info-circle"></i> General Information</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Name</span><span class="gti-drawer-value" id="drawer-name">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Brand</span><span class="gti-drawer-value" id="drawer-brand">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Equipment Code</span><span class="gti-drawer-value" id="drawer-eq-code-info">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Category</span><span class="gti-drawer-value" id="drawer-category">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Brand</span><span class="gti-drawer-value" id="drawer-brand">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Model</span><span class="gti-drawer-value" id="drawer-model">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Year</span><span class="gti-drawer-value" id="drawer-year">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Condition</span><span class="gti-drawer-value" id="drawer-condition">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Hours</span><span class="gti-drawer-value" id="drawer-hours">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Rental Price</span><span class="gti-drawer-value" id="drawer-price">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Condition</span><span class="gti-drawer-value" id="drawer-condition">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Status</span><span class="gti-drawer-value" id="drawer-status-text">-</span></div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-clipboard-list"></i> Basic Information</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Type</span><span class="gti-drawer-value" id="drawer-type">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Location</span><span class="gti-drawer-value" id="drawer-location">-</span></div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
                         <span class="gti-drawer-label">Description</span>
                         <span class="gti-drawer-value is-message" id="drawer-description">-</span>
                     </div>
-                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-images"></i> Images</div>
+            </div>
+
+            <!-- Section: 2 - Specs (Technical + Features) -->
+            <div class="gti-drawer-section" data-section="specs">
+                <div class="gti-drawer-section-title"><i class="fas fa-cogs"></i> Technical Specifications</div>
+                    <div id="drawer-specs-list"><div class="gti-drawer-row"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No specifications available</span></div></div>
+            </div>
+
+            <!-- Section: 3 - Pricing & Status -->
+            <div class="gti-drawer-section" data-section="pricing">
+                <div class="gti-drawer-section-title"><i class="fas fa-tag"></i> Pricing Information</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Rental Price</span><span class="gti-drawer-value" id="drawer-price">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Price Type</span><span class="gti-drawer-value" id="drawer-price-type">-</span></div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-clipboard-check"></i> Availability</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Availability</span><span class="gti-drawer-value" id="drawer-availability-status">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty</span><span class="gti-drawer-value" id="drawer-warranty">-</span></div>
+            </div>
+
+            <!-- Section: 4 - Media (Images) -->
+            <div class="gti-drawer-section" data-section="media">
+                <div class="gti-drawer-section-title"><i class="fas fa-images"></i> Images</div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
                         <span class="gti-drawer-label">Main Image</span>
                         <div id="drawer-main-image" style="margin-top:8px;"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No image</span></div>
@@ -805,21 +932,13 @@ $_gti_re_status_badge = function($status) {
                     </div>
             </div>
 
-            <!-- Section: Specs -->
-            <div class="gti-drawer-section" data-section="specs">
-                <div class="gti-drawer-section-title"><i class="fas fa-list-alt"></i> Technical Specifications</div>
-                    <div id="drawer-specs-list"><div class="gti-drawer-row"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No specifications available</span></div></div>
-            </div>
-
-            <!-- Section: Additional -->
+            <!-- Section: 5 - Additional (History, Docs, Location, System) -->
             <div class="gti-drawer-section" data-section="additional">
-                <div class="gti-drawer-section-title"><i class="fas fa-ellipsis-h"></i> Additional Info</div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Equipment Code</span><span class="gti-drawer-value" id="drawer-eq-code-alt">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Last Service</span><span class="gti-drawer-value" id="drawer-last-service">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Next Service</span><span class="gti-drawer-value" id="drawer-next-service">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty</span><span class="gti-drawer-value" id="drawer-warranty">-</span></div>
+                <div class="gti-drawer-section-title"><i class="fas fa-history"></i> Equipment History</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Last Service Date</span><span class="gti-drawer-value" id="drawer-last-service">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Registration</span><span class="gti-drawer-value" id="drawer-registration">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Insurance</span><span class="gti-drawer-value" id="drawer-insurance">-</span></div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-database"></i> System</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Created</span><span class="gti-drawer-value" id="drawer-created">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Updated</span><span class="gti-drawer-value" id="drawer-updated">-</span></div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
@@ -829,22 +948,190 @@ $_gti_re_status_badge = function($status) {
             </div>
         </div>
         <div class="gti-drawer-footer">
-            <button type="button" class="gti-drawer-btn gti-drawer-btn-primary"><i class="fas fa-edit"></i> Edit</button>
+            <button type="button" class="gti-drawer-btn gti-drawer-btn-primary" id="drawer-btn-edit"><i class="fas fa-edit"></i> Edit</button>
             <span class="gti-drawer-footer-spacer"></span>
-            <div class="gti-drawer-btn-group">
-                <button type="button" class="gti-drawer-btn gti-drawer-btn-icon" id="drawer-btn-more" title="More Actions"><i class="fas fa-ellipsis-v"></i></button>
-                <div class="gti-drawer-dropdown" id="drawer-more-dropdown">
-                    <a href="#" class="gti-drawer-dropdown-item"><i class="fas fa-eye"></i> View Full Details</a>
-                    <a href="#" class="gti-drawer-dropdown-item" style="color:#b91c1c;"><i class="fas fa-trash"></i> Delete</a>
-                </div>
-            </div>
+            <button type="button" class="gti-drawer-btn" id="drawer-btn-publish" style="display:none;background:#059669;color:#fff;border-color:#059669;font-weight:600;"><i class="fas fa-check-circle"></i> Publish</button>
+            <button type="button" class="gti-drawer-btn" id="drawer-btn-delete" style="color:#b91c1c;border-color:#fca5a5;"><i class="fas fa-trash"></i> Delete</button>
         </div>
     </div>
-            </div> <!-- /.gti-content -->
         </main>
     </div>
 
+    
+    <!-- ====== Edit Equipment Modal (Fullscreen Popup) ====== -->
+    <div class="gti-ue-edit-overlay" id="gtiEditOverlay">
+        <div class="gti-edit-backdrop" onclick="closeEditModal()"></div>
+        <div class="gti-ue-edit-container">
+            <div class="gti-ue-edit-header">
+                <div class="gti-ue-edit-header-left">
+                    <h2><i class="fas fa-edit"></i> Edit Equipment</h2>
+                </div>
+                <div class="gti-ae-stepper-card">
+                    <div class="gti-ae-stepper">
+                        <div class="gti-ae-step active" data-step="1" onclick="editGoStep(1)"><div class="gti-ae-step-circle">1</div><div class="gti-ae-step-label">General</div></div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="2" onclick="editGoStep(2)"><div class="gti-ae-step-circle">2</div><div class="gti-ae-step-label">Specs</div></div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="3" onclick="editGoStep(3)"><div class="gti-ae-step-circle">3</div><div class="gti-ae-step-label">Pricing</div></div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="4" onclick="editGoStep(4)"><div class="gti-ae-step-circle">4</div><div class="gti-ae-step-label">Media</div></div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="5" onclick="editGoStep(5)"><div class="gti-ae-step-circle">5</div><div class="gti-ae-step-label">Additional</div></div>
+                    </div>
+                </div>
+                <button class="gti-ue-edit-close" onclick="closeEditModal()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="gti-ue-edit-body">
+                <form id="gti-edit-form" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="id" id="edit-field-id" value="">
+                    <input type="hidden" name="action" value="gti_save_equipment">
+                    <input type="hidden" name="nonce" value="<?php echo esc_attr(wp_create_nonce('gti_nonce')); ?>">
+
+                    <!-- Step 1: General Information -->
+                    <div class="gti-ae-step-content active" data-step="1">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-info-circle"></i> General Information</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Equipment Name <span class="required">*</span></label><input type="text" name="name" required></div>
+                                    <div class="gti-ae-field"><label>Equipment Code <span class="required">*</span></label><input type="text" name="equipment_code" readonly required style="background:#f9fafb;cursor:not-allowed;"></div>
+                                    <div class="gti-ae-field"><label>Category <span class="required">*</span></label><select name="category" required><option value="">Select Category</option><option value="Excavator">Excavator</option><option value="Bulldozer">Bulldozer</option><option value="Wheel Loader">Wheel Loader</option><option value="Dump Truck">Dump Truck</option><option value="Motor Grader">Motor Grader</option><option value="Crane">Crane</option><option value="Compactor">Compactor</option></select></div>
+                                </div>
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Brand <span class="required">*</span></label><select name="brand" required><option value="">Select Brand</option><option value="KOMATSU">KOMATSU</option><option value="CATERPILLAR">CATERPILLAR</option><option value="HITACHI">HITACHI</option><option value="VOLVO">VOLVO</option><option value="KOBELCO">KOBELCO</option><option value="DOOSAN">DOOSAN</option><option value="HYUNDAI">HYUNDAI</option></select></div>
+                                    <div class="gti-ae-field"><label>Model <span class="required">*</span></label><input type="text" name="model" required></div>
+                                    <div class="gti-ae-field"><label>Year <span class="required">*</span></label><input type="number" name="year" min="1900" max="<?php echo date('Y') + 1; ?>" required></div>
+                                </div>
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Operating Hours</label><input type="number" name="hours"></div>
+                                    <div class="gti-ae-field"><label>Condition <span class="required">*</span></label><select name="condition_status" required><option value="">Select Condition</option><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
+                                    <div class="gti-ae-field"><label>Equipment Type</label><select name="type"><option value="rental">Rental Equipment</option><option value="used">Used Equipment</option></select></div>
+                                </div>
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Location</label><select name="location"><option value="">Select Location</option><option value="Jakarta">Jakarta</option><option value="Balikpapan">Balikpapan</option><option value="Surabaya">Surabaya</option><option value="Bandung">Bandung</option><option value="Medan">Medan</option><option value="Makassar">Makassar</option></select></div>
+                                    <div class="gti-ae-field"><label>Status <span class="required">*</span></label><select name="status" required><option value="">Select Status</option><option value="available">Available</option><option value="rented">Rented</option><option value="reserved">Reserved</option><option value="maintenance">Maintenance</option><option value="draft">Draft</option></select></div>
+                                </div>
+                                <div class="gti-ae-field gti-ae-field-full"><label>Description <span class="required">*</span></label><textarea name="description" rows="4" required></textarea></div>
+                            </div>
+                        </div>
+                        <div class="gti-ae-step-nav"><span></span><button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button></div>
+                    </div>
+
+                    <!-- Step 2: Specifications -->
+                    <div class="gti-ae-step-content" data-step="2">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-cogs"></i> Technical Specifications</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Operating Weight</label><input type="text" name="operating_weight"></div>
+                                    <div class="gti-ae-field"><label>Bucket Capacity</label><input type="text" name="bucket_capacity"></div>
+                                    <div class="gti-ae-field"><label>Engine Model</label><input type="text" name="engine_model"></div>
+                                </div>
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Engine Power</label><input type="text" name="engine_power"></div>
+                                    <div class="gti-ae-field"><label>Fuel Tank Capacity</label><input type="text" name="fuel_tank_capacity"></div>
+                                    <div class="gti-ae-field"><label>Max. Digging Depth</label><input type="text" name="max_digging_depth"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gti-ae-step-nav"><button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button><button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button></div>
+                    </div>
+
+                    <!-- Step 3: Pricing -->
+                    <div class="gti-ae-step-content" data-step="3">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-tag"></i> Pricing Information</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Selling Price (IDR)</label><input type="text" name="selling_price" inputmode="numeric"></div>
+                                    <div class="gti-ae-field"><label>Rental Price (IDR/Month)</label><input type="text" name="rental_price" inputmode="numeric"></div>
+                                    <div class="gti-ae-field"><label>Price Type</label><select name="price_type"><option value="">-- Select --</option><option value="monthly_rental">Monthly Rental</option><option value="daily_rental">Daily Rental</option><option value="sale">For Sale</option></select></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gti-ae-step-nav"><button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button><button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button></div>
+                    </div>
+
+                    <!-- Step 4: Images -->
+                    <div class="gti-ae-step-content" data-step="4">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-images"></i> Images</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-field gti-ae-field-full">
+                                    <label>Main Image</label>
+                                    <div class="gti-ae-upload-area" id="gti-edit-main-upload">
+                                        <input type="file" name="main_image" id="gti-edit-main-image" accept="image/*" style="display:none;">
+                                        <div class="gti-ae-upload-placeholder" id="gti-edit-upload-placeholder"><i class="fas fa-cloud-upload-alt"></i><p>Click or drag image here to upload</p></div>
+                                        <div class="gti-ae-upload-preview" id="gti-edit-upload-preview" style="display:none;"><img id="gti-edit-preview-img" src="" alt="Preview"><button type="button" class="gti-ae-remove-img" id="gti-edit-remove-img"><i class="fas fa-times"></i></button></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gti-ae-step-nav"><button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button><button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button></div>
+                    </div>
+
+                    <!-- Step 5: Additional -->
+                    <div class="gti-ae-step-content" data-step="5">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-clipboard-list"></i> Additional Information</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Last Service Date</label><input type="date" name="last_service_date"></div>
+                                    <div class="gti-ae-field"><label>Registration Number</label><input type="text" name="registration_number"></div>
+                                    <div class="gti-ae-field"><label>Insurance Status</label><select name="insurance_status"><option value="">Select</option><option value="Active">Active</option><option value="Expired">Expired</option><option value="None">None</option></select></div>
+                                </div>
+                                <div class="gti-ae-field gti-ae-field-full"><label>Notes</label><textarea name="notes" rows="3"></textarea></div>
+                            </div>
+                        </div>
+                        <div class="gti-ae-step-nav"><button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button><span></span></div>
+                    </div>
+                </form>
+            </div>
+            <div class="gti-ue-edit-footer">
+                <button type="button" class="gti-ae-btn-cancel" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="gti-ae-btn-submit" id="gti-edit-submit"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== Delete Confirmation Modal ====== -->
+    <div class="gti-ue-delete-overlay" id="gtiDeleteOverlay">
+        <div class="gti-ue-delete-modal">
+            <div class="gti-ue-delete-header">
+                <div class="gti-ue-delete-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="gti-ue-delete-header-text">
+                    <h3>Delete Equipment</h3>
+                    <p>This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="gti-ue-delete-body">
+                <div class="gti-ue-delete-eq-info">
+                    <div class="gti-ue-delete-eq-thumb" id="delete-eq-thumb"><i class="fas fa-truck"></i></div>
+                    <div>
+                        <div class="gti-ue-delete-eq-name" id="delete-eq-name">&mdash;</div>
+                        <div class="gti-ue-delete-eq-code" id="delete-eq-code">&mdash;</div>
+                    </div>
+                </div>
+                <div class="gti-ue-delete-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Equipment will be permanently removed from the system. This data cannot be recovered.</span>
+                </div>
+            </div>
+            <div class="gti-ue-delete-footer">
+                <button class="gti-ue-delete-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="gti-ue-delete-confirm" id="gti-delete-confirm-btn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== Toast ====== -->
+    <div class="gti-ue-toast" id="gtiUeToast"></div>
+
     <script>
+    var gtiAjax = gtiAjax || {
+        ajaxurl: '<?php echo esc_js(admin_url('admin-ajax.php')); ?>',
+        nonce: '<?php echo esc_js(wp_create_nonce('gti_nonce')); ?>'
+    };
     document.addEventListener('DOMContentLoaded', function() {
         // Sidebar collapse
         var collapseBtn = document.getElementById('gti-collapse-btn');
@@ -870,101 +1157,174 @@ $_gti_re_status_badge = function($status) {
                 if (group) group.classList.toggle('open');
             });
         });
-        // Action Dropdown Toggle
+        // Action Dropdown Toggle — fixed positioning
         document.addEventListener('click', function(e) {
             var toggle = e.target.closest('.gti-ue-action-toggle');
             if (toggle) {
                 e.preventDefault();
+                e.stopPropagation();
                 var menu = toggle.closest('.gti-ue-action-menu');
                 var dropdown = menu.querySelector('.gti-ue-action-dropdown');
                 var isOpen = dropdown.classList.contains('show');
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
-                if (!isOpen) dropdown.classList.add('show');
+                if (!isOpen) {
+                    var rect = toggle.getBoundingClientRect();
+                    var ddWidth = 160; var ddHeight = 110;
+                    var top = rect.bottom + 4; var left = rect.right - ddWidth;
+                    if (top + ddHeight > window.innerHeight) top = rect.top - ddHeight - 4;
+                    if (left < 8) left = 8;
+                    dropdown.style.top = top + 'px'; dropdown.style.left = left + 'px';
+                    dropdown.classList.add('show');
+                }
                 return;
             }
             if (!e.target.closest('.gti-ue-action-menu')) {
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
             }
         });
-        // Backdrop close
-        document.getElementById('drawerBackdrop').addEventListener('click', closeDetailDrawer);
-        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeDetailDrawer(); });
-        // More actions dropdown
-        document.getElementById('drawer-btn-more').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('drawer-more-dropdown').classList.toggle('show');
+        // VIEW BUTTON
+        document.querySelectorAll('.gti-ue-btn-view').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                var row = btn.closest('tr[data-eq]');
+                if (!row) return;
+                var eq; try { eq = JSON.parse(row.getAttribute('data-eq')); } catch(err) { return; }
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
+                showEquipmentDetail(eq);
+            });
         });
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.gti-drawer-btn-group')) {
-                document.getElementById('drawer-more-dropdown').classList.remove('show');
+        // EDIT BUTTON
+        document.querySelectorAll('.gti-ue-btn-edit').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                var row = btn.closest('tr[data-eq]');
+                if (!row) return;
+                var eq; try { eq = JSON.parse(row.getAttribute('data-eq')); } catch(err) { return; }
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
+                openEditModal(eq);
+            });
+        });
+        // DELETE BUTTON
+        document.querySelectorAll('.gti-ue-btn-delete').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault(); e.stopPropagation();
+                var row = btn.closest('tr[data-eq]');
+                if (!row) return;
+                var eq; try { eq = JSON.parse(row.getAttribute('data-eq')); } catch(err) { return; }
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
+                openDeleteModal(eq);
+            });
+        });
+        // Drawer backdrop close
+        document.getElementById('drawerBackdrop').addEventListener('click', closeDetailDrawer);
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (document.getElementById('gtiEditOverlay').classList.contains('show')) { closeEditModal(); return; }
+                if (document.getElementById('gtiDeleteOverlay').classList.contains('show')) { closeDeleteModal(); return; }
+                closeDetailDrawer();
             }
+        });
+        // Search input — real-time search with debounce
+        var searchInput = document.querySelector('.gti-ue-search input[name="search"]');
+        var searchTimer = null;
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var self = this; clearTimeout(searchTimer);
+                searchTimer = setTimeout(function() { self.form.submit(); }, 400);
+            });
+            if (searchInput.value) { searchInput.focus(); var len = searchInput.value.length; searchInput.setSelectionRange(len, len); }
+        }
+        // Drawer Edit button
+        document.getElementById('drawer-btn-edit').addEventListener('click', function() {
+            if (_currentDrawerEq) openEditModal(_currentDrawerEq);
+        });
+        // Drawer Publish button
+        document.getElementById('drawer-btn-publish').addEventListener('click', function() {
+            if (_currentDrawerEq) handlePublishEquipment(_currentDrawerEq);
+        });
+        // Drawer Delete button
+        document.getElementById('drawer-btn-delete').addEventListener('click', function() {
+            if (_currentDrawerEq) openDeleteModal(_currentDrawerEq);
         });
         // Row click → drawer
         document.querySelectorAll('.gti-ue-table tbody tr[data-eq]').forEach(function(row) {
             row.addEventListener('click', function(e) {
                 if (e.target.closest('.gti-ue-action-menu') || e.target.type === 'checkbox') return;
-                var eq;
-                try { eq = JSON.parse(this.getAttribute('data-eq')); } catch(err) { return; }
+                var eq; try { eq = JSON.parse(this.getAttribute('data-eq')); } catch(err) { return; }
                 showEquipmentDetail(eq);
             });
         });
         // Auto-populate drawer with first row
         var firstRow = document.querySelector('.gti-ue-table tbody tr[data-eq]');
-        if (firstRow) {
-            try { updateDrawerContent(JSON.parse(firstRow.getAttribute('data-eq'))); } catch(e) {}
-        }
+        if (firstRow) { try { updateDrawerContent(JSON.parse(firstRow.getAttribute('data-eq'))); } catch(e) {} }
+        // Edit modal image upload
+        initEditImageUploads();
+        // Edit modal submit
+        var editSubmitBtn = document.getElementById('gti-edit-submit');
+        if (editSubmitBtn) editSubmitBtn.addEventListener('click', handleEditSubmit);
+        // Delete confirm
+        document.getElementById('gti-delete-confirm-btn').addEventListener('click', handleDeleteConfirm);
     });
 
     var _currentDrawerEq = null;
+    function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val || '-'; }
     function updateDrawerContent(eq) {
         _currentDrawerEq = eq;
-        document.getElementById('drawer-eq-code').textContent = eq.equipment_code || '-';
+        setText('drawer-eq-code', eq.equipment_code);
+        setText('drawer-eq-code-info', eq.equipment_code);
         var badge = document.getElementById('drawer-status-badge');
-        var statusMap = { 'available':'Available', 'rented':'Rented', 'reserved':'Reserved', 'maintenance':'Maintenance' };
+        var statusMap = { 'available':'Available', 'sold':'Sold', 'rented':'Rented', 'reserved':'Reserved', 'maintenance':'Maintenance', 'draft':'Draft' };
         var sl = statusMap[eq.status] || eq.status || 'Available';
         badge.textContent = sl;
         badge.className = 'gti-drawer-status status-' + (eq.status || 'available');
-        document.getElementById('drawer-name').textContent = eq.name || '-';
-        document.getElementById('drawer-brand').textContent = eq.brand || '-';
-        document.getElementById('drawer-category').textContent = eq.category || '-';
-        document.getElementById('drawer-model').textContent = eq.model || '-';
-        document.getElementById('drawer-year').textContent = eq.year || '-';
-        document.getElementById('drawer-condition').textContent = eq.condition_status || '-';
-        document.getElementById('drawer-hours').textContent = eq.hours ? number_format(eq.hours) + ' Hours' : '-';
-        document.getElementById('drawer-price').textContent = formatRupiah(eq.price) + '/bln';
-        document.getElementById('drawer-status-text').textContent = sl;
-        document.getElementById('drawer-location').textContent = eq.location || '-';
-        document.getElementById('drawer-description').textContent = eq.description || '-';
-        // Images (with dummy fallback)
-        var mainImgUrl = eq.main_image || 'https://picsum.photos/seed/' + (eq.equipment_code || 'eq') + '/400/300';
-        document.getElementById('drawer-main-image').innerHTML = '<img src="' + mainImgUrl + '" alt="Main" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;">';
+        setText('drawer-name', eq.name);
+        setText('drawer-category', eq.category);
+        setText('drawer-brand', eq.brand);
+        setText('drawer-model', eq.model);
+        setText('drawer-year', eq.year);
+        setText('drawer-hours', eq.hours ? number_format(eq.hours) + ' Hours' : null);
+        setText('drawer-condition', eq.condition_status);
+        setText('drawer-status-text', sl);
+        setText('drawer-type', eq.type);
+        setText('drawer-location', eq.location);
+        setText('drawer-description', eq.description);
+        // Pricing
+        setText('drawer-price', eq.price ? formatRupiah(eq.price) + '/bln' : null);
+        var ptMap = { 'monthly_rental':'Monthly Rental', 'daily_rental':'Daily Rental', 'sale':'For Sale' };
+        setText('drawer-price-type', ptMap[eq.price_type] || eq.price_type);
+        setText('drawer-availability-status', eq.status ? eq.status.charAt(0).toUpperCase() + eq.status.slice(1) : null);
+        setText('drawer-warranty', eq.warranty_info);
+        // Images
+        var mainImgUrl = eq.main_image || '';
+        var mainImgEl = document.getElementById('drawer-main-image');
+        if (mainImgUrl) { mainImgEl.innerHTML = '<img src="' + mainImgUrl + '" alt="Main" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;">'; }
+        else { mainImgEl.innerHTML = '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No image</span>'; }
         var galleryUrls = [];
         if (eq.images) { try { var parsed = typeof eq.images === 'string' ? JSON.parse(eq.images) : eq.images; if (Array.isArray(parsed)) galleryUrls = parsed; } catch(e){} }
-        if (!galleryUrls.length) { var seed = eq.equipment_code || 'eq'; galleryUrls = ['https://picsum.photos/seed/' + seed + '-g1/200/200','https://picsum.photos/seed/' + seed + '-g2/200/200','https://picsum.photos/seed/' + seed + '-g3/200/200']; }
-        document.getElementById('drawer-gallery').innerHTML = galleryUrls.map(function(src){ return '<img src="' + src + '" alt="Gallery" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;">'; }).join('');
-        // Specs (with dummy fallback)
-        var specsHtml = '';
-        var specs = null;
+        var galleryEl = document.getElementById('drawer-gallery');
+        if (galleryUrls.length > 0) { galleryEl.innerHTML = galleryUrls.map(function(src){ return '<img src="' + src + '" alt="Gallery" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;">'; }).join(''); }
+        else { galleryEl.innerHTML = '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No images</span>'; }
+        // Specs
+        var specsHtml = ''; var specs = null;
         if (eq.specifications) { try { specs = typeof eq.specifications === 'string' ? JSON.parse(eq.specifications) : eq.specifications; } catch(e){} }
-        if (!specs || !Object.keys(specs).length) {
-            specs = { 'Engine': 'Diesel Turbocharged', 'Operating Weight': '20,700 kg', 'Bucket Capacity': '1.0 m³', 'Max Digging Depth': '6,520 mm', 'Engine Power': '110 kW (150 HP)', 'Fuel Tank Capacity': '410 L' };
+        if (specs && typeof specs === 'object') {
+            for (var key in specs) { if (specs.hasOwnProperty(key)) specsHtml += '<div class="gti-drawer-row"><span class="gti-drawer-label">' + key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g,' ') + '</span><span class="gti-drawer-value">' + specs[key] + '</span></div>'; }
         }
-        for (var key in specs) { if (specs.hasOwnProperty(key)) specsHtml += '<div class="gti-drawer-row"><span class="gti-drawer-label">' + key.charAt(0).toUpperCase() + key.slice(1) + '</span><span class="gti-drawer-value">' + specs[key] + '</span></div>'; }
-        document.getElementById('drawer-specs-list').innerHTML = specsHtml;
-        // Maintenance (with dummy fallback)
-        document.getElementById('drawer-last-service').textContent = eq.last_service_date || '2026-04-10';
-        document.getElementById('drawer-next-service').textContent = eq.next_service_due || '2026-10-10';
-        document.getElementById('drawer-warranty').textContent = eq.warranty_info || '12 months / 2,000 hours';
-        document.getElementById('drawer-registration').textContent = eq.registration_number || 'B 5678 RE';
-        document.getElementById('drawer-insurance').textContent = eq.insurance_status || 'Active';
+        document.getElementById('drawer-specs-list').innerHTML = specsHtml || '<div class="gti-drawer-row"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No specifications available</span></div>';
         // Additional
-        document.getElementById('drawer-eq-code-alt').textContent = eq.equipment_code || '-';
-        document.getElementById('drawer-created').textContent = formatDate(eq.created_at);
-        document.getElementById('drawer-updated').textContent = formatDate(eq.updated_at);
-        document.getElementById('drawer-notes').textContent = eq.notes || '-';
+        setText('drawer-last-service', eq.last_service_date);
+        setText('drawer-registration', eq.registration_number);
+        setText('drawer-insurance', eq.insurance_status);
+        setText('drawer-created', formatDate(eq.created_at));
+        setText('drawer-updated', formatDate(eq.updated_at));
+        setText('drawer-notes', eq.notes);
+        // Highlight active row
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
         var activeRow = document.querySelector('.gti-ue-table tbody tr[data-eq-id="' + eq.id + '"]');
         if (activeRow) activeRow.classList.add('active-row');
+        // Show/hide Publish button
+        var publishBtn = document.getElementById('drawer-btn-publish');
+        if (publishBtn) publishBtn.style.display = (eq.status === 'draft') ? '' : 'none';
     }
     function showEquipmentDetail(eq) {
         updateDrawerContent(eq);
@@ -979,10 +1339,10 @@ $_gti_re_status_badge = function($status) {
         document.getElementById('eqDetailDrawer').classList.remove('open');
         document.getElementById('drawerBackdrop').classList.remove('show');
         document.body.style.overflow = '';
-        document.getElementById('drawer-more-dropdown').classList.remove('show');
         var steps = document.querySelectorAll('#eqDetailDrawer .gti-drawer-step');
+        var lines = document.querySelectorAll('#eqDetailDrawer .gti-drawer-step-line');
         steps.forEach(function(s,i){ s.classList.remove('active','completed'); if(i===0) s.classList.add('active'); });
-        document.querySelectorAll('#eqDetailDrawer .gti-drawer-step-line').forEach(function(l){ l.classList.remove('active'); });
+        lines.forEach(function(l){ l.classList.remove('active'); });
         document.querySelectorAll('#eqDetailDrawer .gti-drawer-section[data-section]').forEach(function(s){ s.classList.remove('active'); });
         var first = document.querySelector('#eqDetailDrawer .gti-drawer-section[data-section="info"]');
         if(first) first.classList.add('active');
@@ -993,35 +1353,199 @@ $_gti_re_status_badge = function($status) {
         var steps = document.querySelectorAll('#eqDetailDrawer .gti-drawer-step');
         var lines = document.querySelectorAll('#eqDetailDrawer .gti-drawer-step-line');
         var clickedIdx = Array.prototype.indexOf.call(steps, step);
-        steps.forEach(function(s, i) {
-            s.classList.remove('active','completed');
-            if (i < clickedIdx) s.classList.add('completed');
-            else if (i === clickedIdx) s.classList.add('active');
-        });
-        lines.forEach(function(l, i) {
-            l.classList.toggle('active', i < clickedIdx);
-        });
+        steps.forEach(function(s, i) { s.classList.remove('active','completed'); if (i < clickedIdx) s.classList.add('completed'); else if (i === clickedIdx) s.classList.add('active'); });
+        lines.forEach(function(l, i) { l.classList.toggle('active', i < clickedIdx); });
         document.querySelectorAll('#eqDetailDrawer .gti-drawer-section[data-section]').forEach(function(s) { s.classList.remove('active'); });
         var target = document.querySelector('#eqDetailDrawer .gti-drawer-section[data-section="' + section + '"]');
         if (target) target.classList.add('active');
     }
-    function formatRupiah(val) {
-        if (!val) return '-';
-        return 'Rp ' + Number(val).toLocaleString('id-ID');
-    }
-    function number_format(val) {
-        return Number(val).toLocaleString('id-ID');
-    }
+    function formatRupiah(val) { if (!val) return '-'; return 'Rp ' + Number(val).toLocaleString('id-ID'); }
+    function number_format(val) { return Number(val).toLocaleString('id-ID'); }
     function formatDate(dateStr) {
         if (!dateStr) return '-';
-        var d = new Date(dateStr);
-        if (isNaN(d.getTime())) return dateStr;
+        var d = new Date(dateStr); if (isNaN(d.getTime())) return dateStr;
         var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-        var day = d.getDate();
-        var hours = d.getHours(); var minutes = String(d.getMinutes()).padStart(2, '0');
-        var ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12 || 12;
+        var day = d.getDate(); var hours = d.getHours(); var minutes = String(d.getMinutes()).padStart(2, '0');
+        var ampm = hours >= 12 ? 'PM' : 'AM'; hours = hours % 12 || 12;
         return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ', ' + hours + ':' + minutes + ' ' + ampm;
+    }
+    function populateField(form, name, value) {
+        var field = form.querySelector('[name="' + name + '"]');
+        if (!field) return;
+        if (value === null || value === undefined) value = '';
+        field.value = value;
+    }
+    function parseJson(val) {
+        if (!val) return null;
+        if (typeof val === 'object') return val;
+        try { return JSON.parse(val); } catch(e) { return null; }
+    }
+    function showUeToast(message, type) {
+        var toast = document.getElementById('gtiUeToast');
+        toast.className = 'gti-ue-toast ' + (type || 'success');
+        toast.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i> ' + message;
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 3500);
+    }
+    // ====== EDIT MODAL ======
+    var _editCurrentStep = 1; var _editTotalSteps = 5; var _editCurrentEq = null;
+    function openEditModal(eq) {
+        _editCurrentEq = eq; _editCurrentStep = 1;
+        var overlay = document.getElementById('gtiEditOverlay');
+        overlay.classList.add('show'); document.body.style.overflow = 'hidden';
+        document.getElementById('edit-field-id').value = eq.id;
+        var steps = overlay.querySelectorAll('.gti-ae-step');
+        var lines = overlay.querySelectorAll('.gti-ae-step-line');
+        var contents = overlay.querySelectorAll('.gti-ae-step-content');
+        steps.forEach(function(s) { s.classList.remove('active', 'completed'); });
+        lines.forEach(function(l) { l.classList.remove('active'); });
+        contents.forEach(function(c) { c.classList.remove('active'); });
+        steps[0].classList.add('active'); contents[0].classList.add('active');
+        var form = document.getElementById('gti-edit-form');
+        populateField(form, 'name', eq.name);
+        populateField(form, 'equipment_code', eq.equipment_code);
+        populateField(form, 'category', eq.category);
+        populateField(form, 'brand', eq.brand);
+        populateField(form, 'model', eq.model);
+        populateField(form, 'year', eq.year);
+        populateField(form, 'hours', eq.hours);
+        populateField(form, 'condition_status', eq.condition_status);
+        populateField(form, 'type', eq.type);
+        populateField(form, 'location', eq.location);
+        populateField(form, 'status', eq.status);
+        populateField(form, 'description', eq.description);
+        // Step 2 — Specs
+        var specs = parseJson(eq.specifications);
+        if (specs) { for (var k in specs) { if (specs.hasOwnProperty(k)) populateField(form, k, specs[k]); } }
+        // Step 3 — Pricing
+        populateField(form, 'selling_price', eq.selling_price ? Number(eq.selling_price).toLocaleString('id-ID') : '');
+        populateField(form, 'rental_price', eq.rental_price ? Number(eq.rental_price).toLocaleString('id-ID') : '');
+        populateField(form, 'price_type', eq.price_type);
+        // Step 4 — Images
+        var previewEl = document.getElementById('gti-edit-upload-preview');
+        var placeholderEl = document.getElementById('gti-edit-upload-placeholder');
+        var previewImg = document.getElementById('gti-edit-preview-img');
+        if (eq.main_image) { previewImg.src = eq.main_image; placeholderEl.style.display = 'none'; previewEl.style.display = ''; }
+        else { previewImg.src = ''; placeholderEl.style.display = ''; previewEl.style.display = 'none'; }
+        // Step 5 — Additional
+        populateField(form, 'last_service_date', eq.last_service_date);
+        populateField(form, 'registration_number', eq.registration_number);
+        populateField(form, 'insurance_status', eq.insurance_status);
+        populateField(form, 'notes', eq.notes);
+    }
+    function closeEditModal() {
+        document.getElementById('gtiEditOverlay').classList.remove('show');
+        document.body.style.overflow = ''; _editCurrentEq = null;
+    }
+    function editGoStep(step) { if (step > _editCurrentStep + 1) return; editShowStep(step); }
+    function editNextStep() { if (_editCurrentStep < _editTotalSteps) editShowStep(_editCurrentStep + 1); }
+    function editPrevStep() { if (_editCurrentStep > 1) editShowStep(_editCurrentStep - 1); }
+    function editShowStep(step) {
+        var overlay = document.getElementById('gtiEditOverlay');
+        var steps = overlay.querySelectorAll('.gti-ae-step');
+        var lines = overlay.querySelectorAll('.gti-ae-step-line');
+        var contents = overlay.querySelectorAll('.gti-ae-step-content');
+        steps.forEach(function(s, i) { s.classList.remove('active', 'completed'); if (i + 1 < step) s.classList.add('completed'); else if (i + 1 === step) s.classList.add('active'); });
+        lines.forEach(function(l, i) { l.classList.toggle('active', i + 1 < step); });
+        contents.forEach(function(c) { c.classList.remove('active'); });
+        var target = overlay.querySelector('.gti-ae-step-content[data-step="' + step + '"]');
+        if (target) target.classList.add('active');
+        _editCurrentStep = step;
+    }
+    function handleEditSubmit(e) {
+        if (e) e.preventDefault();
+        var form = document.getElementById('gti-edit-form');
+        var submitBtn = document.getElementById('gti-edit-submit');
+        if (!form || !submitBtn) return;
+        var formData = new FormData(form);
+        if (!formData.has('action')) formData.append('action', 'gti_save_equipment');
+        if (!formData.has('nonce')) formData.append('nonce', gtiAjax.nonce);
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.text().then(function(text) { try { return JSON.parse(text); } catch(e) { throw new Error('Server returned non-JSON response'); } }); })
+            .then(function(data) {
+                submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                if (data.success) { showUeToast(data.data.message || 'Equipment updated!', 'success'); closeEditModal(); setTimeout(function() { window.location.reload(); }, 1200); }
+                else { showUeToast(data.data.message || 'Failed to save', 'error'); }
+            })
+            .catch(function(err) {
+                submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                showUeToast('An error occurred: ' + (err.message || 'Unknown'), 'error');
+            });
+    }
+    // ====== DELETE MODAL ======
+    var _deleteCurrentEq = null;
+    function openDeleteModal(eq) {
+        _deleteCurrentEq = eq;
+        document.getElementById('delete-eq-name').textContent = eq.name || '\u2014';
+        document.getElementById('delete-eq-code').textContent = eq.equipment_code || '\u2014';
+        var thumb = document.getElementById('delete-eq-thumb');
+        if (eq.main_image) { thumb.innerHTML = '<img src="' + eq.main_image + '" alt="">'; }
+        else { thumb.innerHTML = '<i class="fas fa-truck"></i>'; }
+        var confirmBtn = document.getElementById('gti-delete-confirm-btn');
+        confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+        document.getElementById('gtiDeleteOverlay').classList.add('show');
+    }
+    function closeDeleteModal() { document.getElementById('gtiDeleteOverlay').classList.remove('show'); _deleteCurrentEq = null; }
+    function handleDeleteConfirm(e) {
+        e.preventDefault(); if (!_deleteCurrentEq) return;
+        var confirmBtn = document.getElementById('gti-delete-confirm-btn');
+        confirmBtn.disabled = true; confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+        var formData = new FormData();
+        formData.append('action', 'gti_delete_equipment');
+        formData.append('nonce', gtiAjax.nonce);
+        formData.append('id', _deleteCurrentEq.id);
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.text().then(function(text) { try { return JSON.parse(text); } catch(e) { if (r.ok) return { success: true, data: { message: 'Equipment deleted' } }; throw e; } }); })
+            .then(function(data) {
+                if (data.success) {
+                    showUeToast(data.data.message || 'Equipment deleted', 'success');
+                    var deletedId = _deleteCurrentEq ? _deleteCurrentEq.id : null;
+                    closeDeleteModal();
+                    if (deletedId) { var row = document.querySelector('tr[data-eq-id="' + deletedId + '"]'); if (row) { row.style.transition = 'opacity 0.3s, transform 0.3s'; row.style.opacity = '0'; row.style.transform = 'translateX(20px)'; setTimeout(function() { row.remove(); }, 350); } }
+                } else { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete'; showUeToast(data.data.message || 'Failed to delete', 'error'); }
+            })
+            .catch(function() { confirmBtn.disabled = false; confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete'; showUeToast('An error occurred while deleting', 'error'); });
+    }
+    // ====== PUBLISH ======
+    function handlePublishEquipment(eq) {
+        var btn = document.getElementById('drawer-btn-publish');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+        var formData = new FormData();
+        formData.append('action', 'gti_publish_equipment');
+        formData.append('nonce', gtiAjax.nonce);
+        formData.append('id', eq.id);
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish';
+                if (data.success) { showUeToast(data.data.message || 'Equipment published', 'success'); setTimeout(function() { window.location.reload(); }, 1200); }
+                else { showUeToast(data.data.message || 'Failed to publish', 'error'); }
+            })
+            .catch(function() { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish'; showUeToast('An error occurred', 'error'); });
+    }
+    // ====== IMAGE UPLOADS ======
+    function initEditImageUploads() {
+        var mainUpload = document.getElementById('gti-edit-main-upload');
+        var mainInput = document.getElementById('gti-edit-main-image');
+        var mainPlaceholder = document.getElementById('gti-edit-upload-placeholder');
+        var mainPreview = document.getElementById('gti-edit-upload-preview');
+        var previewImg = document.getElementById('gti-edit-preview-img');
+        var removeImg = document.getElementById('gti-edit-remove-img');
+        if (mainUpload && mainInput) {
+            mainUpload.addEventListener('click', function(e) { if (e.target.closest('.gti-ae-remove-img')) return; mainInput.click(); });
+            mainInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = function(ev) { previewImg.src = ev.target.result; mainPlaceholder.style.display = 'none'; mainPreview.style.display = ''; };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        if (removeImg) {
+            removeImg.addEventListener('click', function(e) { e.stopPropagation(); mainInput.value = ''; previewImg.src = ''; mainPlaceholder.style.display = ''; mainPreview.style.display = 'none'; });
+        }
     }
     </script>
 </body>
