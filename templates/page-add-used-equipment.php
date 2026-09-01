@@ -21,7 +21,7 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css">
+    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css?v=<?php echo GTI_VERSION; ?>">
 </head>
 <body class="gti-body">
     <div class="gti-wrapper">
@@ -964,7 +964,7 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
                             <button type="button" class="gti-ae-btn gti-ae-btn-next" id="gti-ae-next">
                                 Next <i class="fas fa-arrow-right"></i>
                             </button>
-                            <button type="submit" class="gti-ae-btn gti-ae-btn-submit" id="gti-ae-submit" style="display:none;">
+                            <button type="button" class="gti-ae-btn gti-ae-btn-submit" id="gti-ae-submit" style="display:none;">
                                 <i class="fas fa-check"></i> Add Equipment
                             </button>
                         </div>
@@ -974,6 +974,13 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
         </main>
     </div>
 
-    <script src="<?php echo GTI_CHILD_URL; ?>/assets/js/add-equipment.js"></script>
+    <script>
+        var gtiAjax = gtiAjax || {
+            ajaxurl: '<?php echo esc_js(admin_url('admin-ajax.php')); ?>',
+            nonce: '<?php echo esc_js(wp_create_nonce('gti_nonce')); ?>',
+            version: '<?php echo esc_js(GTI_VERSION); ?>'
+        };
+    </script>
+    <script src="<?php echo GTI_CHILD_URL; ?>/assets/js/add-equipment.js?v=<?php echo GTI_VERSION; ?>"></script>
 </body>
 </html>

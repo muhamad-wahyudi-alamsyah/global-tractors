@@ -208,9 +208,9 @@
             toggleWarranty();
         }
 
-        // Form submit
-        if (form) {
-            form.addEventListener('submit', handleSubmit);
+        // Form submit — bind to button click (not form submit, since button is type="button")
+        if (submitBtn) {
+            submitBtn.addEventListener('click', handleSubmit);
         }
     }
 
@@ -433,19 +433,13 @@
         e.preventDefault();
 
         var formData = new FormData(form);
+        formData.append('action', 'gti_save_equipment');
+        formData.append('nonce', gtiAjax.nonce);
         formData.append('draft', '1');
 
         draftBtn.disabled = true;
         draftBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-        // Simulate AJAX call (replace with actual endpoint)
-        setTimeout(function() {
-            showToast('Draft saved successfully!', 'success');
-            draftBtn.disabled = false;
-            draftBtn.innerHTML = '<i class="fas fa-save"></i> Save as Draft';
-        }, 1000);
-
-        /* Uncomment when AJAX endpoint is ready:
         fetch(gtiAjax.ajaxurl, {
             method: 'POST',
             body: formData
@@ -461,11 +455,10 @@
             draftBtn.innerHTML = '<i class="fas fa-save"></i> Save as Draft';
         })
         .catch(function() {
-            showToast('An error occurred', 'error');
+            showToast('An error occurred while saving draft', 'error');
             draftBtn.disabled = false;
             draftBtn.innerHTML = '<i class="fas fa-save"></i> Save as Draft';
         });
-        */
     }
 
     function handleSubmit(e) {
@@ -474,26 +467,15 @@
         if (!validateStep(currentStep)) return;
 
         var formData = new FormData(form);
+        formData.append('action', 'gti_save_equipment');
+        formData.append('nonce', gtiAjax.nonce);
+
         var submitBtnEl = document.getElementById('gti-ae-submit');
 
         // Disable button
         submitBtnEl.disabled = true;
         submitBtnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-        // Simulate AJAX call (replace with actual endpoint)
-        // For now, just show success
-        setTimeout(function() {
-            showToast('Equipment added successfully!', 'success');
-            submitBtnEl.disabled = false;
-            submitBtnEl.innerHTML = '<i class="fas fa-check"></i> Add Equipment';
-
-            // Redirect after short delay
-            setTimeout(function() {
-                window.location.href = form.querySelector('.gti-ae-btn-cancel').href;
-            }, 1500);
-        }, 1000);
-
-        /* Uncomment when AJAX endpoint is ready:
         fetch(gtiAjax.ajaxurl, {
             method: 'POST',
             body: formData
@@ -506,17 +488,16 @@
                     window.location.href = data.data.redirect || form.querySelector('.gti-ae-btn-cancel').href;
                 }, 1500);
             } else {
-                showToast(data.data.message || 'Failed to save', 'error');
+                showToast(data.data.message || 'Failed to save equipment', 'error');
                 submitBtnEl.disabled = false;
                 submitBtnEl.innerHTML = '<i class="fas fa-check"></i> Add Equipment';
             }
         })
         .catch(function() {
-            showToast('An error occurred', 'error');
+            showToast('An error occurred while saving', 'error');
             submitBtnEl.disabled = false;
             submitBtnEl.innerHTML = '<i class="fas fa-check"></i> Add Equipment';
         });
-        */
     }
 
     function showToast(message, type) {

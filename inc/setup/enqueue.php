@@ -45,6 +45,18 @@ function gti_enqueue_dashboard_styles() {
         'nonce' => wp_create_nonce('gti_nonce'),
         'version' => GTI_VERSION,
     ]);
+
+    // ── Add Equipment page assets ──────────────────────────────────────────
+    $current_page = get_query_var('gti_page');
+    if ( $current_page === 'add-equipment' ) {
+        wp_enqueue_script(
+            'gti-add-equipment',
+            GTI_CHILD_URL . '/assets/js/add-equipment.js',
+            [ 'gti-dashboard' ],
+            GTI_VERSION,
+            true
+        );
+    }
 }
 
 // ── Frontend: Search Card Assets ─────────────────────────────────────────

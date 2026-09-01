@@ -39,15 +39,21 @@ require_once GTI_CHILD_DIR . '/database/dummy-customers.php';
 add_action('init', 'gti_insert_dummy_customers', 10);
 require_once GTI_CHILD_DIR . '/database/dummy-news-articles.php';
 add_action('init', 'gti_insert_dummy_news_articles', 10);
-require_once GTI_CHILD_DIR . '/database/dummy-equipment.php';
-add_action('init', 'gti_insert_dummy_equipment', 10);
+// require_once GTI_CHILD_DIR . '/database/dummy-equipment.php';
+// add_action('init', 'gti_insert_dummy_equipment', 10);
 // ── Shortcodes ─────────────────────────────────────────────────────────
 require_once GTI_CHILD_DIR . '/inc/shortcodes/search-card.php';
 require_once GTI_CHILD_DIR . '/inc/shortcodes/equipment-filter.php';
 // ── AJAX handlers ────────────────────────────────────────────────────────────
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-equipment-filter.php';
-
+// ── GTI Ajax class (equipment, spare parts, customers, etc.) ────────────
+require_once GTI_CHILD_DIR . '/includes/class-gti-ajax.php';
+add_action('init', function() {
+    if (class_exists('GTI_Ajax')) {
+        GTI_Ajax::init();
+    }
+});
 // ── Enqueue parent + child styles ────────────────────────────────────────────
 add_action('wp_enqueue_scripts', 'gti_enqueue_parent_style');
 function gti_enqueue_parent_style() {

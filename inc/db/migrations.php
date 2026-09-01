@@ -16,6 +16,8 @@ function gti_run_migrations() {
     $current_version = get_option( GTI_DB_VERSION_KEY, '0.0.0' );
     
     if ( version_compare( $current_version, GTI_DB_VERSION, '>=' ) ) {
+        // Still run incremental migrations even if version is up to date
+        gti_run_incremental_migrations();
         return;
     }
     
@@ -43,4 +45,18 @@ function gti_run_migrations() {
         gti_table( 'version' ),
         [ 'version' => GTI_DB_VERSION ]
     );
+
+    // Run incremental migrations
+    gti_run_incremental_migrations();
+}
+
+/**
+ * Run incremental migrations that add columns/tables without version bumps.
+ */
+function gti_run_incremental_migrations() {
+    // Migration: Add equipment columns for multi-step form
+    require_once __DIR__ . '/migration-add-equipment-columns.php';
+    if ( function_exists( 'gti_migration_add_equipment_columns' ) ) {
+        gti_migration_add_equipment_columns();
+    }
 }
