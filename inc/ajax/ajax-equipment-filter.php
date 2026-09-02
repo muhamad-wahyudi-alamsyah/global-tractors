@@ -13,8 +13,28 @@ add_action( 'wp_ajax_gti_filter_equipment', 'gti_ajax_filter_equipment' );
 add_action( 'wp_ajax_nopriv_gti_filter_equipment', 'gti_ajax_filter_equipment' );
 
 function gti_ajax_filter_equipment() {
-    check_ajax_referer( 'gti_equipment_filter', 'nonce' );
+    $data_type = sanitize_text_field( wp_unslash( $_POST['data_type'] ?? 'used' ) );
 
+    // Validate nonce based on data type
+    switch ( $data_type ) {
+        case 'rental':
+            check_ajax_referer( 'gti_rental_equipment_filter', 'nonce' );
+            break;
+        case 'spare_parts':
+            check_ajax_referer( 'gti_spare_parts_filter', 'nonce' );
+            break;
+        default:
+            check_ajax_referer( 'gti_used_equipment_filter', 'nonce' );
+            break;
+    }
+
+    // ── Spare Parts ──
+    if ( $data_type === 'spare_parts' ) {
+        gti_ajax_filter_spare_parts();
+        return;
+    }
+
+    // ── Equipment (used / rental) ──
     global $wpdb;
     $table = $wpdb->prefix . 'gti_equipment';
 
@@ -44,6 +64,13 @@ function gti_ajax_filter_equipment() {
     // Build WHERE
     $where   = [ 'deleted_at IS NULL' ];
     $params  = [];
+
+    // Filter by equipment type (used / rental)
+    $valid_types = [ 'used', 'rental' ];
+    if ( in_array( $data_type, $valid_types, true ) ) {
+        $where[]  = 'type = %s';
+        $params[] = $data_type;
+    }
 
     // Categories (multi)
     if ( ! empty( $categories ) ) {
@@ -166,6 +193,165 @@ function gti_ajax_filter_equipment() {
             'status'        => $display_status,
             'image'         => $image,
             'is_wishlisted' => false,
+        ];
+    }
+
+    $total_pages = max( 1, ceil( $total / $per_page ) );
+
+    wp_send_json_success( [
+        'items'      => $items,
+        'total'      => $total,
+        'totalPages' => $total_pages,
+        'page'       => $page,
+        'perPage'    => $per_page,
+    ] );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AJAX Handler — Spare Parts Filter
+// ═══════════════════════════════════════════════════════════════════════════
+
+add_action( 'wp_ajax_gti_filter_spare_parts', 'gti_ajax_filter_spare_parts' );
+add_action( 'wp_ajax_nopriv_gti_filter_spare_parts', 'gti_ajax_filter_spare_parts' );
+
+function gti_ajax_filter_spare_parts() {
+    check_ajax_referer( 'gti_spare_parts_filter', 'nonce' );
+
+    global $wpdb;
+    $table = $wpdb->prefix . 'gti_spare_parts';
+
+    $per_page   = absint( $_POST['per_page'] ?? 12 );
+    $page       = max( 1, absint( $_POST['page'] ?? 1 ) );
+    $sort_by    = sanitize_text_field( wp_unslash( $_POST['sort_by'] ?? 'newest' ) );
+
+    // Filter params
+    $categories = array_map( 'sanitize_text_field', wp_unslash( $_POST['categories'] ?? [] ) );
+    $brands     = array_map( 'sanitize_text_field', wp_unslash( $_POST['brands'] ?? [] ) );
+    $suppliers  = array_map( 'sanitize_text_field', wp_unslash( $_POST['suppliers'] ?? [] ) );
+    $locations  = array_map( 'sanitize_text_field', wp_unslash( $_POST['locations'] ?? [] ) );
+    $stock_statuses = array_map( 'sanitize_text_field', wp_unslash( $_POST['stock_statuses'] ?? [] ) );
+    $min_price  = floatval( $_POST['min_price'] ?? 0 );
+    $max_price  = floatval( $_POST['max_price'] ?? 0 );
+
+    // Check table exists
+    $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+    if ( ! $table_exists ) {
+        wp_send_json_success( [ 'items' => [], 'total' => 0, 'totalPages' => 0, 'page' => $page, 'perPage' => $per_page ] );
+    }
+
+    // Build WHERE
+    $where  = [];
+    $params = [];
+
+    // Categories
+    if ( ! empty( $categories ) ) {
+        $placeholders = implode( ',', array_fill( 0, count( $categories ), '%s' ) );
+        $where[]      = "LOWER(category) IN ({$placeholders})";
+        $params       = array_merge( $params, array_map( 'strtolower', $categories ) );
+    }
+
+    // Brand
+    if ( ! empty( $brands ) ) {
+        $placeholders = implode( ',', array_fill( 0, count( $brands ), '%s' ) );
+        $where[]      = "brand IN ({$placeholders})";
+        $params       = array_merge( $params, $brands );
+    }
+
+    // Supplier
+    if ( ! empty( $suppliers ) ) {
+        $placeholders = implode( ',', array_fill( 0, count( $suppliers ), '%s' ) );
+        $where[]      = "supplier IN ({$placeholders})";
+        $params       = array_merge( $params, $suppliers );
+    }
+
+    // Location
+    if ( ! empty( $locations ) ) {
+        $placeholders = implode( ',', array_fill( 0, count( $locations ), '%s' ) );
+        $where[]      = "location IN ({$placeholders})";
+        $params       = array_merge( $params, $locations );
+    }
+
+    // Stock status filter
+    if ( ! empty( $stock_statuses ) ) {
+        $stock_clauses = [];
+        foreach ( $stock_statuses as $st ) {
+            switch ( $st ) {
+                case 'in_stock':
+                    $stock_clauses[] = '(stock > minimum_stock)';
+                    break;
+                case 'low_stock':
+                    $stock_clauses[] = '(stock > 0 AND stock <= minimum_stock)';
+                    break;
+                case 'out_of_stock':
+                    $stock_clauses[] = '(stock <= 0)';
+                    break;
+            }
+        }
+        if ( ! empty( $stock_clauses ) ) {
+            $where[] = '(' . implode( ' OR ', $stock_clauses ) . ')';
+        }
+    }
+
+    // Price range
+    if ( $min_price > 0 ) {
+        $where[]  = 'unit_price >= %f';
+        $params[] = $min_price;
+    }
+    if ( $max_price > 0 ) {
+        $where[]  = 'unit_price <= %f';
+        $params[] = $max_price;
+    }
+
+    $where_sql = ! empty( $where ) ? implode( ' AND ', $where ) : '1=1';
+
+    // Sorting
+    switch ( $sort_by ) {
+        case 'price-low':   $order_sql = 'unit_price ASC'; break;
+        case 'price-high':  $order_sql = 'unit_price DESC'; break;
+        case 'name-asc':    $order_sql = 'name ASC'; break;
+        case 'name-desc':   $order_sql = 'name DESC'; break;
+        default:            $order_sql = 'created_at DESC';
+    }
+
+    // Count total
+    $count_sql = "SELECT COUNT(*) FROM {$table} WHERE {$where_sql}";
+    $total     = ! empty( $params ) ? (int) $wpdb->get_var( $wpdb->prepare( $count_sql, $params ) ) : (int) $wpdb->get_var( $count_sql );
+
+    // Fetch page
+    $offset      = ( $page - 1 ) * $per_page;
+    $data_sql    = "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY {$order_sql} LIMIT %d OFFSET %d";
+    $data_params = $params;
+    $data_params[] = $per_page;
+    $data_params[] = $offset;
+    $rows = $wpdb->get_results( $wpdb->prepare( $data_sql, $data_params ) );
+
+    $items = [];
+    foreach ( $rows as $row ) {
+        $stock     = (int) $row->stock;
+        $min_stock = (int) $row->minimum_stock;
+
+        if ( $stock <= 0 ) {
+            $display_status = 'out_of_stock';
+        } elseif ( $stock <= $min_stock ) {
+            $display_status = 'low_stock';
+        } else {
+            $display_status = 'in_stock';
+        }
+
+        $items[] = [
+            'id'            => (int) $row->id,
+            'name'          => $row->name ?: 'Spare Part',
+            'part_number'   => $row->part_number ?: '',
+            'category'      => strtolower( $row->category ?: 'others' ),
+            'brand'         => $row->brand ?: '',
+            'description'   => $row->description ?: '',
+            'stock'         => $stock,
+            'minimum_stock' => $min_stock,
+            'unit_price'    => $row->unit_price ?: '',
+            'supplier'      => $row->supplier ?: '',
+            'location'      => $row->location ?: '',
+            'image'         => $row->image ?: '',
+            'status'        => $display_status,
         ];
     }
 

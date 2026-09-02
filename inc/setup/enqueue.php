@@ -113,8 +113,13 @@ add_action('wp_enqueue_scripts', 'gti_enqueue_equipment_filter_assets');
 function gti_enqueue_equipment_filter_assets() {
     global $post;
 
-    // Only load when the shortcode is present on the page
-    if ( is_a($post, 'WP_Post') && has_shortcode($post->post_content, 'gti_equipment_filter') ) {
+    // Only load when any of the filter shortcodes are present on the page
+    $has_filter_shortcode = is_a($post, 'WP_Post') && (
+        has_shortcode($post->post_content, 'gti_used_equipment_filter') ||
+        has_shortcode($post->post_content, 'gti_rental_equipment_filter') ||
+        has_shortcode($post->post_content, 'gti_spare_parts_filter')
+    );
+    if ( $has_filter_shortcode ) {
         // Google Fonts (Inter)
         if (!wp_style_is('gti-google-fonts', 'enqueued')) {
             wp_enqueue_style(

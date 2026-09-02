@@ -83,6 +83,12 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
+    <script>
+        var gtiAjax = {
+            ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+            nonce: '<?php echo wp_create_nonce('gti_nonce'); ?>'
+        };
+    </script>
     <style>
         /* Completed status badge — teal */
         .gti-badge-status.completed { background: #ccfbf1; color: #0d9488; }
@@ -101,10 +107,12 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
         .gti-ue-filter select { border: 1px solid #d1d5db; }
         .gti-ue-btn-reset { border: 1px solid #d1d5db; text-decoration: none; }
         .gti-ue-btn-reset:hover { border-color: #d1d5db; }
-        .gti-ue-table-card { border: 1px solid #e5e7eb; overflow: hidden; }
+        .gti-ue-table-card { border: 1px solid #e5e7eb; overflow: visible; }
         .gti-ue-action-toggle { border: 1px solid #e5e7eb; }
         .gti-ue-action-toggle:hover { border-color: #d1d5db; }
         .gti-ue-action-dropdown { border: 1px solid #e5e7eb; }
+        /* Action menu overflow fix */
+        .gti-ue-action-dropdown { z-index: 100; position: fixed; width: max-content; white-space: nowrap; }
         .gti-ue-action-item { cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
         .gti-ue-page-btn { border: 1px solid #e5e7eb; }
         .gti-ue-page-btn:hover:not(:disabled) { border-color: #d1d5db; }
@@ -923,7 +931,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
                     <!-- Header -->
                     <div class="gti-drawer-header">
                         <div class="gti-drawer-header-left">
-                            <h2 id="drawer-quot-id">RFQ-0000-0000</h2>
+                            <h2 id="drawer-quot-id">-</h2>
                             <span class="gti-drawer-status" id="drawer-status-badge">New</span>
                         </div>
                         <button type="button" class="gti-drawer-close" onclick="closeDetailDrawer()">
@@ -1007,7 +1015,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
                                 <div class="gti-drawer-pic-card" id="drawer-pic-card">
                                     <div class="gti-drawer-pic-avatar-placeholder" id="drawer-pic-avatar">A</div>
                                     <div class="gti-drawer-pic-info">
-                                        <span class="gti-drawer-pic-name" id="drawer-pic-name">Andi Pratama</span>
+                                        <span class="gti-drawer-pic-name" id="drawer-pic-name">-</span>
                                         <span class="gti-drawer-pic-role">Sales Representative</span>
                                     </div>
                                 </div>
@@ -1021,7 +1029,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
                                         <i class="fas fa-file-pdf"></i>
                                     </div>
                                     <div class="gti-drawer-attachment-info">
-                                        <span class="gti-drawer-attachment-name" id="drawer-attachment-name">Request_Detail.pdf</span>
+                                        <span class="gti-drawer-attachment-name" id="drawer-attachment-name">-</span>
                                         <span class="gti-drawer-attachment-meta">Click to download</span>
                                     </div>
                                 </a>
@@ -1100,20 +1108,30 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
             var toggle = e.target.closest('.gti-ue-action-toggle');
             if (toggle) {
                 e.preventDefault();
+                e.stopPropagation();
                 var menu = toggle.closest('.gti-ue-action-menu');
                 var dropdown = menu.querySelector('.gti-ue-action-dropdown');
                 var isOpen = dropdown.classList.contains('show');
-
-                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) {
-                    d.classList.remove('show');
-                });
-
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
                 if (!isOpen) {
+                    // Position dropdown relative to viewport, outside parent containers
+                    var rect = toggle.getBoundingClientRect();
+                    var ddWidth = 160;
+                    var ddHeight = 110;
+                    var top = rect.bottom + 4;
+                    var left = rect.right - ddWidth;
+                    // Prevent overflow below viewport
+                    if (top + ddHeight > window.innerHeight) {
+                        top = rect.top - ddHeight - 4;
+                    }
+                    // Prevent overflow left of viewport
+                    if (left < 8) left = 8;
+                    dropdown.style.top = top + 'px';
+                    dropdown.style.left = left + 'px';
                     dropdown.classList.add('show');
                 }
                 return;
             }
-
             if (!e.target.closest('.gti-ue-action-menu')) {
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) {
                     d.classList.remove('show');
@@ -1181,7 +1199,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
             items = JSON.parse(quot.items || '[]');
         } catch(e) {}
 
-        document.getElementById('drawer-quot-id').textContent = quot.quotation_id || 'RFQ-0000-0000';
+        document.getElementById('drawer-quot-id').textContent = quot.quotation_id || '-';
         var badge = document.getElementById('drawer-status-badge');
         var statusLabel = (quot.status || 'new').replace('_', ' ');
         badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
@@ -1200,7 +1218,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
         document.getElementById('drawer-valid-until').textContent = quot.valid_until ? formatDateID(quot.valid_until) : '-';
         document.getElementById('drawer-payment-terms').textContent = quot.payment_terms ? quot.payment_terms + ' Days' : '30 Days';
         document.getElementById('drawer-delivery-location').textContent = quot.delivery_location || '-';
-        document.getElementById('drawer-notes').textContent = quot.additional_notes || quot.notes || 'Mohon penawaran terbaik untuk kebutuhan project kami di site.';
+        document.getElementById('drawer-notes').textContent = quot.additional_notes || quot.notes || '-';
 
         // Summary
         document.getElementById('drawer-total-items').textContent = items.length + ' Item' + (items.length !== 1 ? 's' : '');
@@ -1212,7 +1230,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
         document.getElementById('drawer-pic-name').textContent = picName;
 
         // Attachment (placeholder)
-        var attachmentName = quot.attachment_name || 'Request_Detail.pdf';
+        var attachmentName = quot.attachment_name || '-';
         document.getElementById('drawer-attachment-name').textContent = attachmentName;
         document.getElementById('drawer-attachment').href = quot.attachment_url || '#';
 
@@ -1289,6 +1307,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
         .then(function(r) { return r.json(); })
         .then(function(res) {
             if (res.success) {
+                // Email is auto-sent via server hook, just reload
                 location.reload();
             } else {
                 alert(res.data?.message || 'Failed to update status');

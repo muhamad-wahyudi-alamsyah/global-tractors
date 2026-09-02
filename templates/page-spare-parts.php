@@ -73,6 +73,7 @@ $total_parts = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
 $in_stock = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'in_stock'");
 $low_stock = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'low_stock'");
 $out_of_stock = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'out_of_stock'");
+$draft_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'draft'");
 $inventory_value = (float) $wpdb->get_var("SELECT SUM(stock * unit_price) FROM {$table}");
 
 // Categories and brands for filters
@@ -121,7 +122,6 @@ $_gti_sp_fmt = function($amount) {
         .gti-ue-table .col-price { font-size: 13px; font-weight: 600; color: #374151; }
 
         /* Table column widths */
-        .gti-ue-table .col-checkbox { width: 36px; }
         .gti-ue-table .col-image { width: 44px; }
         .gti-ue-table .col-partnum { width: 140px; text-align: center; padding-left: 20px; padding-right: 12px; }
         .gti-ue-table .col-partname { width: 160px; }
@@ -200,6 +200,7 @@ $_gti_sp_fmt = function($amount) {
         .gti-drawer-status.status-in_stock { background: #d1fae5; color: #047857; }
         .gti-drawer-status.status-low_stock { background: #fef3c7; color: #b45309; }
         .gti-drawer-status.status-out_of_stock { background: #fee2e2; color: #b91c1c; }
+        .gti-drawer-status.status-draft { background: #e0e7ff; color: #4338ca; }
         .gti-drawer-close {
             width: 32px; height: 32px; border-radius: 6px;
             border: 1px solid #e5e7eb; background: #fff; cursor: pointer;
@@ -279,6 +280,7 @@ $_gti_sp_fmt = function($amount) {
             border-color: #F5A623; font-weight: 600;
         }
         .gti-drawer-btn-primary:hover { background: #e6991a; }
+        .gti-drawer-btn-publish:hover { background: #047857 !important; }
         .gti-drawer-btn-icon {
             width: 36px; height: 36px; padding: 0; justify-content: center;
         }
@@ -643,6 +645,7 @@ $_gti_sp_fmt = function($amount) {
                                 <option value="in_stock" <?php selected($status_filter, 'in_stock'); ?>>In Stock</option>
                                 <option value="low_stock" <?php selected($status_filter, 'low_stock'); ?>>Low Stock</option>
                                 <option value="out_of_stock" <?php selected($status_filter, 'out_of_stock'); ?>>Out of Stock</option>
+                                <option value="draft" <?php selected($status_filter, 'draft'); ?>>Draft</option>
                             </select>
                         </div>
                         <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-ue-btn-reset">
@@ -659,7 +662,6 @@ $_gti_sp_fmt = function($amount) {
                     <table class="gti-ue-table">
                         <thead>
                             <tr>
-                                <th class="col-checkbox"><input type="checkbox"></th>
                                 <th class="col-image">Image</th>
                                 <th class="col-partnum">Part Number</th>
                                 <th class="col-partname">Part Name</th>
@@ -675,7 +677,7 @@ $_gti_sp_fmt = function($amount) {
                         <tbody>
                             <?php if (empty($spare_parts)): ?>
                                 <tr>
-                                    <td colspan="11" style="text-align: center; padding: 60px 20px;">
+                                    <td colspan="10" style="text-align: center; padding: 60px 20px;">
                                         <div style="color: #9ca3af;">
                                             <i class="fas fa-cogs" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                                             <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No spare parts found</p>
@@ -692,7 +694,6 @@ $_gti_sp_fmt = function($amount) {
                             <?php else: ?>
                                 <?php foreach ($spare_parts as $part): ?>
                                     <tr data-sp-id="<?php echo esc_attr($part->id); ?>" data-sp='<?php echo esc_attr(json_encode($part)); ?>'>
-                                        <td class="col-checkbox"><input type="checkbox"></td>
                                         <td class="col-image">
                                             <div class="gti-ue-thumb">
                                                 <?php if (!empty($part->image)): ?>
@@ -721,6 +722,9 @@ $_gti_sp_fmt = function($amount) {
                                             } elseif ($part->status === 'out_of_stock') {
                                                 $status_class = 'sold';
                                                 $status_label = 'Out of Stock';
+                                            } elseif ($part->status === 'draft') {
+                                                $status_class = 'draft';
+                                                $status_label = 'Draft';
                                             }
                                             ?>
                                             <span class="gti-badge-status <?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_label); ?></span>
@@ -860,6 +864,7 @@ $_gti_sp_fmt = function($amount) {
         <div class="gti-drawer-footer">
             <button type="button" class="gti-drawer-btn gti-drawer-btn-primary" id="drawer-btn-edit"><i class="fas fa-edit"></i> Edit</button>
             <span class="gti-drawer-footer-spacer"></span>
+            <button type="button" class="gti-drawer-btn" id="drawer-btn-publish" style="display:none;background:#059669;color:#fff;border-color:#059669;font-weight:600;"><i class="fas fa-check-circle"></i> Publish</button>
             <button type="button" class="gti-drawer-btn" id="drawer-btn-delete" style="color:#b91c1c;border-color:#fca5a5;"><i class="fas fa-trash"></i> Delete</button>
         </div>
     </div>
@@ -1063,6 +1068,10 @@ $_gti_sp_fmt = function($amount) {
         document.getElementById('drawer-btn-edit').addEventListener('click', function() {
             if (_currentDrawerSp) openEditModal(_currentDrawerSp);
         });
+        // Drawer Publish button
+        document.getElementById('drawer-btn-publish').addEventListener('click', function() {
+            if (_currentDrawerSp) handlePublishSparePart(_currentDrawerSp);
+        });
         // Drawer Delete button
         document.getElementById('drawer-btn-delete').addEventListener('click', function() {
             if (_currentDrawerSp) openDeleteModal(_currentDrawerSp);
@@ -1094,7 +1103,7 @@ $_gti_sp_fmt = function($amount) {
         setText('drawer-part-number', sp.part_number);
         setText('drawer-partnum', sp.part_number);
         var badge = document.getElementById('drawer-status-badge');
-        var statusMap = { 'in_stock':'In Stock', 'low_stock':'Low Stock', 'out_of_stock':'Out of Stock' };
+        var statusMap = { 'in_stock':'In Stock', 'low_stock':'Low Stock', 'out_of_stock':'Out of Stock', 'draft':'Draft' };
         var sl = statusMap[sp.status] || sp.status || 'In Stock';
         badge.textContent = sl; badge.className = 'gti-drawer-status status-' + (sp.status || 'in_stock');
         setText('drawer-name', sp.name);
@@ -1110,6 +1119,11 @@ $_gti_sp_fmt = function($amount) {
         setText('drawer-description', sp.description);
         setText('drawer-created', formatDate(sp.created_at));
         setText('drawer-updated', formatDate(sp.updated_at));
+        // Show/hide Publish button based on status
+        var publishBtn = document.getElementById('drawer-btn-publish');
+        if (publishBtn) {
+            publishBtn.style.display = (sp.status === 'draft') ? '' : 'none';
+        }
         // Highlight active row
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
         var activeRow = document.querySelector('.gti-ue-table tbody tr[data-sp-id="' + sp.id + '"]');
@@ -1172,6 +1186,43 @@ $_gti_sp_fmt = function($amount) {
         toast.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i> ' + message;
         toast.classList.add('show'); setTimeout(function() { toast.classList.remove('show'); }, 3500);
     }
+    // ================================================================
+    //  PUBLISH SPARE PART — Change draft to in_stock
+    // ================================================================
+    function handlePublishSparePart(sp) {
+        var btn = document.getElementById('drawer-btn-publish');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+
+        var formData = new FormData();
+        formData.append('action', 'gti_publish_spare_part');
+        formData.append('nonce', gtiAjax.nonce);
+        formData.append('id', sp.id);
+        // Determine appropriate status based on stock
+        var newStatus = 'in_stock';
+        if ((sp.stock || 0) <= 0) newStatus = 'out_of_stock';
+        else if ((sp.stock || 0) <= (sp.minimum_stock || 10)) newStatus = 'low_stock';
+        formData.append('status', newStatus);
+
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish';
+                if (data.success) {
+                    showUeToast(data.data.message || 'Spare part published', 'success');
+                    setTimeout(function() { window.location.reload(); }, 1200);
+                } else {
+                    showUeToast(data.data.message || 'Failed to publish', 'error');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish';
+                showUeToast('An error occurred while publishing', 'error');
+            });
+    }
+
     // ====== EDIT MODAL ======
     var _editCurrentEq = null;
     function openEditModal(sp) {

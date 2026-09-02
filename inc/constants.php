@@ -22,6 +22,14 @@ define( 'GTI_ROLE_CUSTOMER', 'gti_customer' );
 // URL base dashboard
 define( 'GTI_DASHBOARD_BASE', 'dashboard' );
 
+// FluentForms → Request Equipment sync
+// Ganti 0 dengan ID form FluentForms yang digunakan untuk request equipment
+define( 'GTI_FLUENTFORM_REQUEST_FORM_ID', 3 );
+
+// FluentForms → Sell Equipment sync
+// Ganti 0 dengan ID form FluentForms yang digunakan untuk sell equipment
+define( 'GTI_FLUENTFORM_SELL_FORM_ID', 4 );
+
 // Rate limit
 define( 'GTI_RL_LOGIN_MAX',       5 );
 define( 'GTI_RL_LOGIN_WINDOW',    900 );   // 15 menit

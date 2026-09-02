@@ -48,3 +48,5 @@ require_once GTI_CHILD_DIR . '/inc/ajax/ajax-login.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-register.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-profile.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-orders.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/ajax-customer-quotation.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/ajax-email-notifications.php';

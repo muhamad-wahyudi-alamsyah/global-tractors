@@ -10,13 +10,28 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
-// Handle form submission
+// Auto-generate spare part code
+global $wpdb;
+$sp_table = $wpdb->prefix . 'gti_spare_parts';
+$sp_year = date('Y');
+$sp_cat_abbrev_map = [
+    'Filter'        => 'FLT', 'Belt'          => 'BLT', 'Brake'         => 'BRK',
+    'Engine'        => 'ENG', 'Hydraulic'     => 'HYD', 'Seal'          => 'SEL',
+    'Undercarriage' => 'UND', 'Cooling'       => 'CLG', 'Electrical'    => 'ELT',
+    'Other'         => 'OTH',
+];
+$gti_next_sp_code = 'SP-GEN-' . $sp_year . '-001';
+$gti_sp_cat_map_json = wp_json_encode($sp_cat_abbrev_map);
+
+// Handle form submission (kept as fallback — primary path is AJAX via gti_save_spare_part)
 global $wpdb;
 $table = $wpdb->prefix . 'gti_spare_parts';
 $success = false;
 $error = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp_verify_nonce($_POST['gti_sp_nonce'], 'gti_save_spare_part')) {
+// Note: Form submission is now handled via AJAX (gti_save_spare_part).
+// This POST handler is kept only as a fallback for non-JS environments.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && wp_verify_nonce($_POST['gti_sp_nonce'], 'gti_save_spare_part') && empty($_POST['action'])) {
     $part_number = sanitize_text_field($_POST['part_number'] ?? '');
     $name = sanitize_text_field($_POST['name'] ?? '');
     $category = sanitize_text_field($_POST['category'] ?? '');
@@ -65,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css">
+    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css?v=<?php echo GTI_VERSION; ?>">
 </head>
 <body class="gti-body">
     <div class="gti-wrapper">
@@ -190,7 +205,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
                 <?php endif; ?>
 
                 <!-- Form -->
-                <form class="gti-ae-form" method="post" enctype="multipart/form-data">
+                <form class="gti-ae-form" id="gti-sp-form" method="post" enctype="multipart/form-data">
                     <?php wp_nonce_field('gti_save_spare_part', 'gti_sp_nonce'); ?>
 
                     <!-- Part Information -->
@@ -202,7 +217,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field">
                                     <label>Part Number <span class="required">*</span></label>
-                                    <input type="text" name="part_number" placeholder="e.g., SP-KOM-001" required value="<?php echo esc_attr($_POST['part_number'] ?? ''); ?>">
+                                    <input type="text" name="part_number" value="<?php echo esc_attr($gti_next_sp_code); ?>" readonly required style="background:#f9fafb;cursor:not-allowed;">
+                                    <small style="color:#6b7280;font-size:11px;margin-top:4px;display:block;">Auto-generated • will change when category is selected</small>
                                 </div>
                                 <div class="gti-ae-field">
                                     <label>Part Name <span class="required">*</span></label>
@@ -315,10 +331,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
                         <div></div>
                         <div class="gti-ae-form-nav-right">
                             <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-ae-btn gti-ae-btn-cancel">Cancel</a>
-                            <button type="submit" class="gti-ae-btn gti-ae-btn-draft">
+                            <button type="button" class="gti-ae-btn gti-ae-btn-draft" id="gti-sp-draft">
                                 <i class="fas fa-save"></i> Save as Draft
                             </button>
-                            <button type="submit" class="gti-ae-btn gti-ae-btn-submit">
+                            <button type="button" class="gti-ae-btn gti-ae-btn-submit" id="gti-sp-submit">
                                 <i class="fas fa-check"></i> Add Spare Part
                             </button>
                         </div>
@@ -329,6 +345,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
     </div>
 
     <script>
+    var gtiAjax = gtiAjax || {
+        ajaxurl: '<?php echo esc_js(admin_url('admin-ajax.php')); ?>',
+        nonce: '<?php echo esc_js(wp_create_nonce('gti_nonce')); ?>',
+        version: '<?php echo esc_js(GTI_VERSION); ?>'
+    };
     document.addEventListener('DOMContentLoaded', function() {
         // Collapse Menu
         var collapseBtn = document.getElementById('gti-collapse-btn');
@@ -359,6 +380,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
                 }
             });
         });
+
+        // Auto-generate spare part code on category change
+        var spCatMap = <?php echo $gti_sp_cat_map_json; ?>;
+        var spCatSelect = document.querySelector('select[name="category"]');
+        var spCodeInput = document.querySelector('input[name="part_number"]');
+        if (spCatSelect && spCodeInput) {
+            function generateSpCode(catVal) {
+                if (!catVal) return;
+                var abbr = spCatMap[catVal] || 'GEN';
+                var year = new Date().getFullYear();
+                var fd = new FormData();
+                fd.append('action', 'gti_get_next_spare_part_code');
+                fd.append('nonce', gtiAjax.nonce);
+                fd.append('category', catVal);
+                fetch(gtiAjax.ajaxurl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.success && d.data && d.data.code) {
+                            spCodeInput.value = d.data.code;
+                        } else {
+                            var ts = Date.now().toString().slice(-4);
+                            spCodeInput.value = 'SP-' + abbr + '-' + year + '-' + ts;
+                        }
+                    })
+                    .catch(function() {
+                        var ts = Date.now().toString().slice(-4);
+                        spCodeInput.value = 'SP-' + abbr + '-' + year + '-' + ts;
+                    });
+            }
+            spCatSelect.addEventListener('change', function() {
+                generateSpCode(this.value);
+            });
+        }
 
         // Image Upload
         var uploadArea = document.getElementById('gti-ae-upload-area');
@@ -419,6 +473,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_sp_nonce']) && wp
                 uploadArea.style.display = '';
             });
         }
+
+        // === AJAX Form Submission ===
+        var spForm = document.getElementById('gti-sp-form');
+        var spSubmitBtn = document.getElementById('gti-sp-submit');
+        var spDraftBtn = document.getElementById('gti-sp-draft');
+
+        function showSpToast(message, type) {
+            var toast = document.getElementById('gti-sp-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'gti-sp-toast';
+                toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:5000;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;transform:translateY(120%);opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
+                document.body.appendChild(toast);
+            }
+            var bgColor = type === 'error' ? '#991b1b' : type === 'warning' ? '#92400e' : '#059669';
+            var icon = type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-check-circle';
+            toast.style.background = bgColor;
+            toast.style.color = '#fff';
+            toast.innerHTML = '<i class="fas ' + icon + '"></i> ' + message;
+            toast.classList.add('show');
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+            setTimeout(function() {
+                toast.style.transform = 'translateY(120%)';
+                toast.style.opacity = '0';
+            }, 3500);
+        }
+
+        function handleSpSubmit(isDraft) {
+            if (!spForm) return;
+            var btn = isDraft ? spDraftBtn : spSubmitBtn;
+
+            // Client-side validation for required fields
+            var requiredFields = spForm.querySelectorAll('[required]');
+            var firstInvalid = null;
+            requiredFields.forEach(function(field) {
+                field.style.borderColor = '';
+                if (!field.value || field.value.trim() === '') {
+                    field.style.borderColor = '#ef4444';
+                    if (!firstInvalid) firstInvalid = field;
+                }
+            });
+            if (firstInvalid) {
+                firstInvalid.focus();
+                showSpToast('Please fill in all required fields', 'error');
+                return;
+            }
+
+            var origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            var formData = new FormData(spForm);
+            formData.append('action', 'gti_save_spare_part');
+            formData.append('nonce', gtiAjax.nonce);
+            if (isDraft) {
+                // Override status directly to ensure draft status is saved
+                formData.set('status', 'draft');
+            }
+
+            fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
+                .then(function(r) {
+                    return r.text().then(function(text) {
+                        try { return JSON.parse(text); }
+                        catch(e) { console.error('Spare part save: non-JSON', text); throw new Error('Server returned non-JSON'); }
+                    });
+                })
+                .then(function(data) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    if (data.success) {
+                        showSpToast(data.data.message || 'Spare part saved successfully!', 'success');
+                        setTimeout(function() {
+                            window.location.href = data.data.redirect || '<?php echo esc_js(gti_dashboard_url('spare-parts')); ?>';
+                        }, 1200);
+                    } else {
+                        showSpToast(data.data.message || 'Failed to save spare part', 'error');
+                    }
+                })
+                .catch(function(err) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    showSpToast('An error occurred: ' + (err.message || 'Unknown error'), 'error');
+                });
+        }
+
+        if (spSubmitBtn) spSubmitBtn.addEventListener('click', function() { handleSpSubmit(false); });
+        if (spDraftBtn) spDraftBtn.addEventListener('click', function() { handleSpSubmit(true); });
     });
     </script>
 </body>

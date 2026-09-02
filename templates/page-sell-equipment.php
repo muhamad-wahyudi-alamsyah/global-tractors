@@ -90,6 +90,12 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
+    <script>
+        var gtiAjax = {
+            ajaxurl: '<?php echo admin_url('admin-ajax.php'); ?>',
+            nonce: '<?php echo wp_create_nonce('gti_nonce'); ?>'
+        };
+    </script>
     <style>
         /* ====== Stat Cards — Shrink ====== */
         .gti-ue-stats-row .gti-ue-stat-card { padding: 14px 16px; }
@@ -101,10 +107,12 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
         .gti-ue-filter select { border: 1px solid #d1d5db; }
         .gti-ue-btn-reset { border: 1px solid #d1d5db; text-decoration: none; }
         .gti-ue-btn-reset:hover { border-color: #d1d5db; }
-        .gti-ue-table-card { border: 1px solid #e5e7eb; overflow: hidden; }
+        .gti-ue-table-card { border: 1px solid #e5e7eb; overflow: visible; }
         .gti-ue-action-toggle { border: 1px solid #e5e7eb; }
         .gti-ue-action-toggle:hover { border-color: #d1d5db; }
         .gti-ue-action-dropdown { border: 1px solid #e5e7eb; }
+        /* Action menu overflow fix */
+        .gti-ue-action-dropdown { z-index: 100; position: fixed; width: max-content; white-space: nowrap; }
         .gti-ue-action-item { cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
         .gti-ue-page-btn { border: 1px solid #e5e7eb; }
         .gti-ue-page-btn:hover:not(:disabled) { border-color: #d1d5db; }
@@ -989,20 +997,30 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
             var toggle = e.target.closest('.gti-ue-action-toggle');
             if (toggle) {
                 e.preventDefault();
+                e.stopPropagation();
                 var menu = toggle.closest('.gti-ue-action-menu');
                 var dropdown = menu.querySelector('.gti-ue-action-dropdown');
                 var isOpen = dropdown.classList.contains('show');
-
-                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) {
-                    d.classList.remove('show');
-                });
-
+                document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
                 if (!isOpen) {
+                    // Position dropdown relative to viewport, outside parent containers
+                    var rect = toggle.getBoundingClientRect();
+                    var ddWidth = 160;
+                    var ddHeight = 110;
+                    var top = rect.bottom + 4;
+                    var left = rect.right - ddWidth;
+                    // Prevent overflow below viewport
+                    if (top + ddHeight > window.innerHeight) {
+                        top = rect.top - ddHeight - 4;
+                    }
+                    // Prevent overflow left of viewport
+                    if (left < 8) left = 8;
+                    dropdown.style.top = top + 'px';
+                    dropdown.style.left = left + 'px';
                     dropdown.classList.add('show');
                 }
                 return;
             }
-
             if (!e.target.closest('.gti-ue-action-menu')) {
                 document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) {
                     d.classList.remove('show');
@@ -1065,7 +1083,7 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
         _currentDrawerSell = sell;
 
         // Title & status
-        document.getElementById('drawer-sell-title').textContent = sell.equipment_name || 'Sell Request';
+        document.getElementById('drawer-sell-title').textContent = sell.equipment_name || '-';
         var badge = document.getElementById('drawer-status-badge');
         var statusLabel = (sell.status || 'new').replace('_', ' ');
         badge.textContent = statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
@@ -1187,6 +1205,7 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
         .then(function(r) { return r.json(); })
         .then(function(res) {
             if (res.success) {
+                // Email is auto-sent via server hook, just reload
                 location.reload();
             } else {
                 alert(res.data?.message || 'Failed to update status');

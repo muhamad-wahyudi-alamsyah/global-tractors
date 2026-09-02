@@ -77,7 +77,7 @@
       });
     }
 
-    // ═══ INQUIRY FORM ═══════════════════════════════════════════════════
+    // ═══ INQUIRY FORM → REQUEST QUOTATION ══════════════════════════════
     var form = document.getElementById('gti-ed-inquiry-form');
     if (form) {
       form.addEventListener('submit', function (e) {
@@ -85,29 +85,74 @@
 
         var name    = form.querySelector('[name="ed_name"]');
         var phone   = form.querySelector('[name="ed_phone"]');
+        var email   = form.querySelector('[name="ed_email"]');
         var message = form.querySelector('[name="ed_message"]');
         var submitBtn = form.querySelector('.gti-ed-form-submit');
 
+        // Validate required fields
         if (!name || !name.value.trim()) { name.focus(); return; }
         if (!phone || !phone.value.trim()) { phone.focus(); return; }
+        if (!email || !email.value.trim()) { email.focus(); return; }
 
-        // Build WhatsApp message
-        var brand = wrapper.dataset.brand || '';
-        var model = wrapper.dataset.model || '';
-        var unitName = brand + ' ' + model;
-        var text = 'Halo GTI, saya tertarik dengan unit *' + unitName.trim() + '*.\n\n';
-        if (message && message.value.trim()) {
-          text += message.value.trim() + '\n\n';
+        // Email format check
+        var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRe.test(email.value.trim())) { email.focus(); return; }
+
+        // Gather data
+        var equipmentName = wrapper.dataset.name || (wrapper.dataset.brand + ' ' + wrapper.dataset.model) || '';
+        var nonceField = form.querySelector('[name="gti_quot_nonce"]');
+        var nonce = (nonceField ? nonceField.value : '') || wrapper.dataset.nonce || '';
+
+        // Build FormData
+        var fd = new FormData();
+        fd.append('action', 'gti_customer_submit_quotation');
+        fd.append('gti_quot_nonce', nonce);
+        fd.append('name', name.value.trim());
+        fd.append('company', (form.querySelector('[name="ed_company"]') || {}).value || '');
+        fd.append('phone', phone.value.trim());
+        fd.append('email', email.value.trim());
+        fd.append('message', message ? message.value.trim() : '');
+        fd.append('equipment_id', wrapper.dataset.id || '');
+        fd.append('equipment_name', equipmentName);
+
+        // Disable button + show loading
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
         }
-        text += 'Nama: ' + (name ? name.value.trim() : '-') + '\n';
-        text += 'Telepon: ' + (phone ? phone.value.trim() : '-');
 
-        var waNumber = wrapper.dataset.wa || '6281234567890';
-        var waUrl = 'https://wa.me/' + waNumber + '?text=' + encodeURIComponent(text);
-        window.open(waUrl, '_blank');
-
-        // Reset
-        form.reset();
+        // AJAX POST
+        fetch('/wp-admin/admin-ajax.php', {
+          method: 'POST',
+          body: fd,
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res.success) {
+            // Success — show confirmation
+            var custEmail = email ? email.value.trim() : '';
+            form.innerHTML =
+              '<div style="text-align:center;padding:24px 0;">' +
+                '<i class="fas fa-check-circle" style="font-size:48px;color:#10B981;margin-bottom:12px;display:block;"></i>' +
+                '<h3 style="margin:0 0 8px;color:#1a1f36;">Quotation Submitted!</h3>' +
+                '<p style="margin:0 0 4px;color:#6b7280;">ID: <strong>' + (res.data.quotation_id || '') + '</strong></p>' +
+                '<p style="margin:0;color:#6b7280;">Tim kami akan segera menghubungi Anda melalui email <strong>' + custEmail + '</strong>.</p>' +
+              '</div>';
+          } else {
+            alert(res.data ? res.data.message : 'Terjadi kesalahan. Silakan coba lagi.');
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> SEND MESSAGE';
+            }
+          }
+        })
+        .catch(function () {
+          alert('Gagal mengirim. Periksa koneksi internet Anda.');
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> SEND MESSAGE';
+          }
+        });
       });
     }
 

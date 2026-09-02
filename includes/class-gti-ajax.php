@@ -18,10 +18,13 @@ class GTI_Ajax {
         add_action('wp_ajax_gti_delete_equipment', array(__CLASS__, 'delete_equipment'));
         add_action('wp_ajax_gti_publish_equipment', array(__CLASS__, 'publish_equipment'));
         add_action('wp_ajax_gti_get_equipment', array(__CLASS__, 'get_equipment'));
+        add_action('wp_ajax_gti_get_next_code', array(__CLASS__, 'get_next_code'));
         
         // Spare Parts AJAX
         add_action('wp_ajax_gti_save_spare_part', array(__CLASS__, 'save_spare_part'));
         add_action('wp_ajax_gti_delete_spare_part', array(__CLASS__, 'delete_spare_part'));
+        add_action('wp_ajax_gti_publish_spare_part', array(__CLASS__, 'publish_spare_part'));
+        add_action('wp_ajax_gti_get_next_spare_part_code', array(__CLASS__, 'get_next_spare_part_code'));
         
         // Requests AJAX
         add_action('wp_ajax_gti_update_request_status', array(__CLASS__, 'update_request_status'));
@@ -421,42 +424,109 @@ class GTI_Ajax {
         
         exit;
     }
-    
+
+    /**
+     * Get Next Equipment Code — auto-generate based on category abbreviation + sequence number.
+     *
+     * Returns a code like GTI-EXC-2026-003 for the given category.
+     */
+    public static function get_next_code() {
+        while (ob_get_level()) { ob_end_clean(); }
+        self::verify_nonce();
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_equipment';
+
+        $category = sanitize_text_field($_POST['category'] ?? '');
+        $year     = date('Y');
+
+        $cat_abbrev = [
+            'Excavator'    => 'EXC', 'Bulldozer'    => 'BLD', 'Wheel Loader' => 'WLD',
+            'Dump Truck'   => 'DMP', 'Motor Grader' => 'MGR', 'Crane'        => 'CRN',
+            'Compactor'    => 'CMP',
+        ];
+        $abbr = $cat_abbrev[$category] ?? 'GEN';
+
+        $prefix = "GTI-{$abbr}-{$year}-";
+
+        // Find the highest existing sequence number for this prefix
+        $like = $wpdb->esc_like($prefix) . '%';
+        $max_code = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT equipment_code FROM {$table} WHERE equipment_code LIKE %s AND deleted_at IS NULL ORDER BY id DESC LIMIT 1",
+                $like
+            )
+        );
+
+        $seq = 1;
+        if ($max_code) {
+            $last_num = (int) substr($max_code, strrpos($max_code, '-') + 1);
+            $seq = $last_num + 1;
+        }
+
+        $code = $prefix . str_pad($seq, 3, '0', STR_PAD_LEFT);
+
+        wp_send_json_success(['code' => $code]);
+        exit;
+    }
+
     /**
      * Save Spare Part
      */
     public static function save_spare_part() {
+        while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
         
         $id = intval($_POST['id'] ?? 0);
-        $stock = intval($_POST['stock']);
+        $is_draft = !empty($_POST['draft']);
+        $stock = intval($_POST['stock'] ?? 0);
         $minimum_stock = intval($_POST['minimum_stock'] ?? 10);
         
-        // Determine status based on stock
-        if ($stock == 0) {
-            $status = 'out_of_stock';
-        } elseif ($stock <= $minimum_stock) {
-            $status = 'low_stock';
+        // Determine status: draft takes priority, then form status, then stock-based
+        if ($is_draft) {
+            $status = 'draft';
         } else {
-            $status = 'in_stock';
+            $form_status = sanitize_text_field($_POST['status'] ?? '');
+            if ($form_status) {
+                $status = $form_status;
+            } elseif ($stock == 0) {
+                $status = 'out_of_stock';
+            } elseif ($stock <= $minimum_stock) {
+                $status = 'low_stock';
+            } else {
+                $status = 'in_stock';
+            }
+        }
+
+        // Handle image upload
+        $image_url = '';
+        if (!empty($_FILES['image']['name']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $upload = wp_upload_bits($_FILES['image']['name'], null, file_get_contents($_FILES['image']['tmp_name']));
+            if (!empty($upload['url'])) {
+                $image_url = $upload['url'];
+            }
         }
         
         $data = array(
-            'part_number'   => sanitize_text_field($_POST['part_number']),
-            'name'          => sanitize_text_field($_POST['name']),
-            'category'      => sanitize_text_field($_POST['category']),
-            'brand'         => sanitize_text_field($_POST['brand']),
-            'description'   => wp_kses_post($_POST['description']),
+            'part_number'   => sanitize_text_field($_POST['part_number'] ?? ''),
+            'name'          => sanitize_text_field($_POST['name'] ?? ''),
+            'category'      => sanitize_text_field($_POST['category'] ?? ''),
+            'brand'         => sanitize_text_field($_POST['brand'] ?? ''),
+            'description'   => wp_kses_post($_POST['description'] ?? ''),
             'stock'         => $stock,
             'minimum_stock' => $minimum_stock,
-            'unit_price'    => floatval($_POST['unit_price']),
-            'supplier'      => sanitize_text_field($_POST['supplier']),
-            'location'      => sanitize_text_field($_POST['location']),
+            'unit_price'    => floatval($_POST['unit_price'] ?? 0),
+            'supplier'      => sanitize_text_field($_POST['supplier'] ?? ''),
+            'location'      => sanitize_text_field($_POST['location'] ?? ''),
             'status'        => $status,
         );
+
+        if ($image_url) {
+            $data['image'] = $image_url;
+        }
         
         if ($id > 0) {
             $result = $wpdb->update($table, $data, array('id' => $id));
@@ -467,9 +537,13 @@ class GTI_Ajax {
         
         if ($result !== false) {
             self::log_activity($id > 0 ? 'update' : 'create', 'spare_part', $id);
-            wp_send_json_success(array('message' => 'Spare part saved', 'id' => $id));
+            wp_send_json_success(array(
+                'message'  => $is_draft ? 'Draft saved successfully' : 'Spare part saved successfully',
+                'id'       => $id,
+                'redirect' => gti_dashboard_url('spare-parts'),
+            ));
         } else {
-            wp_send_json_error(array('message' => 'Failed to save spare part'));
+            wp_send_json_error(array('message' => 'Failed to save spare part. Please try again.'));
         }
         
         exit;
@@ -496,7 +570,72 @@ class GTI_Ajax {
         
         exit;
     }
-    
+
+    /**
+     * Publish Spare Part (change status from draft to in_stock)
+     */
+    public static function publish_spare_part() {
+        while (ob_get_level()) { ob_end_clean(); }
+        self::verify_nonce();
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_spare_parts';
+        $id = intval($_POST['id'] ?? 0);
+        $status = sanitize_text_field($_POST['status'] ?? 'in_stock');
+        $result = $wpdb->update($table, array('status' => $status), array('id' => $id));
+        if ($result !== false) {
+            wp_send_json_success(array('message' => 'Spare part published successfully'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to publish spare part'));
+        }
+        exit;
+    }
+
+    /**
+     * Get Next Spare Part Code — auto-generate based on category abbreviation + sequence number.
+     *
+     * Returns a code like SP-FLT-2026-003 for the given category.
+     */
+    public static function get_next_spare_part_code() {
+        while (ob_get_level()) { ob_end_clean(); }
+        self::verify_nonce();
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_spare_parts';
+
+        $category = sanitize_text_field($_POST['category'] ?? '');
+        $year     = date('Y');
+
+        $cat_abbrev = [
+            'Filter' => 'FLT', 'Belt' => 'BLT', 'Brake' => 'BRK',
+            'Engine' => 'ENG', 'Hydraulic' => 'HYD', 'Seal' => 'SEL',
+            'Undercarriage' => 'UND', 'Cooling' => 'CLG', 'Electrical' => 'ELT',
+            'Other' => 'OTH',
+        ];
+        $abbr = $cat_abbrev[$category] ?? 'GEN';
+
+        $prefix = "SP-{$abbr}-{$year}-";
+
+        // Find the highest existing sequence number for this prefix
+        $like = $wpdb->esc_like($prefix) . '%';
+        $max_code = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT part_number FROM {$table} WHERE part_number LIKE %s ORDER BY id DESC LIMIT 1",
+                $like
+            )
+        );
+
+        $seq = 1;
+        if ($max_code) {
+            $last_num = (int) substr($max_code, strrpos($max_code, '-') + 1);
+            $seq = $last_num + 1;
+        }
+
+        $code = $prefix . str_pad($seq, 3, '0', STR_PAD_LEFT);
+
+        wp_send_json_success(['code' => $code]);
+        exit;
+    }
+
     /**
      * Update Request Status
      */
@@ -509,6 +648,12 @@ class GTI_Ajax {
         $id = intval($_POST['id']);
         $status = sanitize_text_field($_POST['status']);
         
+        // Get current record BEFORE updating (for email)
+        $current = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id),
+            ARRAY_A
+        );
+        
         $result = $wpdb->update(
             $table,
             array('status' => $status),
@@ -517,6 +662,12 @@ class GTI_Ajax {
         
         if ($result !== false) {
             self::log_activity('status_change', 'request', $id, array('new_status' => $status));
+            
+            // Send email notification to customer
+            if ($current && ($current['status'] ?? '') !== $status && !empty($current['customer_email'])) {
+                self::send_status_email('request', $status, $current);
+            }
+            
             wp_send_json_success(array('message' => 'Status updated'));
         } else {
             wp_send_json_error(array('message' => 'Failed to update status'));
@@ -602,6 +753,12 @@ class GTI_Ajax {
         $id = intval($_POST['id']);
         $status = sanitize_text_field($_POST['status']);
         
+        // Get current record BEFORE updating (for email)
+        $current = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id),
+            ARRAY_A
+        );
+        
         $result = $wpdb->update(
             $table,
             array('status' => $status),
@@ -610,6 +767,12 @@ class GTI_Ajax {
         
         if ($result !== false) {
             self::log_activity('status_change', 'quotation', $id, array('new_status' => $status));
+            
+            // Send email notification to customer
+            if ($current && ($current['status'] ?? '') !== $status && !empty($current['customer_email'])) {
+                self::send_status_email('quotation', $status, $current);
+            }
+            
             wp_send_json_success(array('message' => 'Status updated'));
         } else {
             wp_send_json_error(array('message' => 'Failed to update status'));
@@ -656,6 +819,12 @@ class GTI_Ajax {
         $id = intval($_POST['id']);
         $status = sanitize_text_field($_POST['status']);
         
+        // Get current record BEFORE updating (for email)
+        $current = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id),
+            ARRAY_A
+        );
+        
         $result = $wpdb->update(
             $table,
             array('status' => $status),
@@ -664,6 +833,12 @@ class GTI_Ajax {
         
         if ($result !== false) {
             self::log_activity('status_change', 'sell_request', $id, array('new_status' => $status));
+            
+            // Send email notification to customer
+            if ($current && ($current['status'] ?? '') !== $status && !empty($current['customer_email'])) {
+                self::send_status_email('sell', $status, $current);
+            }
+            
             wp_send_json_success(array('message' => 'Status updated'));
         } else {
             wp_send_json_error(array('message' => 'Failed to update status'));
@@ -825,6 +1000,114 @@ class GTI_Ajax {
                 'entity_type' => $entity_type,
                 'entity_id'   => $entity_id,
                 'details'     => wp_json_encode($details),
+            )
+        );
+    }
+    
+    /**
+     * Send status change email notification to customer
+     *
+     * @param string $type    'request', 'quotation', or 'sell'
+     * @param string $status  New status value
+     * @param array  $data    Full row data from DB
+     */
+    private static function send_status_email($type, $status, $data) {
+        global $wpdb;
+        
+        $customer_name  = $data['customer_name'] ?? 'Customer';
+        $customer_email = $data['customer_email'] ?? '';
+        
+        if (empty($customer_email)) return;
+        
+        // Reference ID
+        $ref_id = '';
+        if ($type === 'request')   $ref_id = $data['request_id'] ?? '';
+        if ($type === 'quotation') $ref_id = $data['quotation_id'] ?? '';
+        if ($type === 'sell')      $ref_id = $data['equipment_name'] ?? '';
+        
+        // Subject map
+        $subjects = array(
+            'request_new'            => 'Pesanan Anda Telah Diterima - ' . $ref_id,
+            'request_processing'     => 'Pesanan Anda Sedang Diproses - ' . $ref_id,
+            'request_proposal_sent'  => 'Proposal Telah Dikirim - ' . $ref_id,
+            'request_closed'         => 'Pesanan Selesai - ' . $ref_id,
+            'quotation_new'          => 'Quotation Request Diterima - ' . $ref_id,
+            'quotation_processing'   => 'Quotation Sedang Disusun - ' . $ref_id,
+            'quotation_waiting_customer' => 'Quotation Telah Dikirim - ' . $ref_id,
+            'quotation_approved'     => 'Quotation Disetujui - ' . $ref_id,
+            'quotation_rejected'     => 'Quotation Belum Dapat Diproses - ' . $ref_id,
+            'quotation_completed'    => 'Transaksi Selesai - ' . $ref_id,
+            'sell_new'               => 'Tawaran Equipment Diterima - ' . $ref_id,
+            'sell_processing'        => 'Tawaran Sedang Direview - ' . $ref_id,
+            'sell_approved'          => 'Tawaran Diterima - ' . $ref_id,
+            'sell_rejected'          => 'Tawaran Belum Dapat Diterima - ' . $ref_id,
+            'sell_completed'         => 'Transaksi Selesai - ' . $ref_id,
+        );
+        
+        $key = $type . '_' . $status;
+        $subject = $subjects[$key] ?? 'Status Update - ' . $ref_id;
+        
+        // Message map
+        $messages = array(
+            'request_new'           => array('Pesanan Telah Diterima', 'Pesanan Anda dengan nomor <strong>' . $ref_id . '</strong> telah kami terima dan akan segera kami proses.', 'Tim kami akan menghubungi Anda dalam 1-2 hari kerja.'),
+            'request_processing'    => array('Pesanan Sedang Diproses', 'Pesanan Anda dengan nomor <strong>' . $ref_id . '</strong> sedang kami proses.', 'Kami akan menghubungi Anda segera jika ada update.'),
+            'request_proposal_sent' => array('Proposal Telah Dikirim', 'Proposal untuk pesanan <strong>' . $ref_id . '</strong> telah kami kirim ke email Anda.', 'Silakan cek email Anda untuk detail penawaran.'),
+            'request_closed'        => array('Pesanan Selesai', 'Pesanan <strong>' . $ref_id . '</strong> telah selesai diproses.', 'Terima kasih atas kepercayaan Anda.'),
+            'quotation_new'              => array('Quotation Request Diterima', 'Quotation request Anda dengan nomor <strong>' . $ref_id . '</strong> telah kami terima.', 'Tim kami akan segera menyiapkan quotation.'),
+            'quotation_processing'       => array('Quotation Sedang Disusun', 'Quotation Anda dengan nomor <strong>' . $ref_id . '</strong> sedang kami susun.', 'Tim kami sedang menyiapkan penawaran terbaik untuk Anda.'),
+            'quotation_waiting_customer' => array('Quotation Telah Dikirim', 'Quotation dengan nomor <strong>' . $ref_id . '</strong> telah kami kirim ke email Anda.', 'Silakan cek email Anda untuk detail penawaran.'),
+            'quotation_approved'         => array('Quotation Disetujui', 'Quotation <strong>' . $ref_id . '</strong> telah disetujui.', 'Tim kami akan segera memproses pesanan Anda.'),
+            'quotation_rejected'         => array('Quotation Belum Dapat Diproses', 'Mohon maaf, untuk saat ini kami belum dapat memproses permintaan Anda.', 'Jika ada yang bisa kami bantu di masa mendatang, silakan hubungi kami.'),
+            'quotation_completed'        => array('Transaksi Selesai', 'Transaksi untuk quotation <strong>' . $ref_id . '</strong> telah selesai.', 'Terima kasih atas kepercayaan Anda.'),
+            'sell_new'        => array('Tawaran Diterima', 'Tawaran Anda untuk equipment <strong>' . $ref_id . '</strong> telah kami terima.', 'Tim kami akan segera mereview tawaran Anda.'),
+            'sell_processing' => array('Tawaran Sedang Direview', 'Tawaran Anda untuk equipment <strong>' . $ref_id . '</strong> sedang kami review.', 'Kami akan menghubungi Anda segera.'),
+            'sell_approved'   => array('Tawaran Diterima', 'Tawaran Anda untuk equipment <strong>' . $ref_id . '</strong> telah diterima.', 'Kami akan menghubungi Anda untuk langkah selanjutnya.'),
+            'sell_rejected'   => array('Tawaran Belum Dapat Diterima', 'Mohon maaf, untuk saat ini kami belum dapat menerima tawaran Anda.', 'Terima kasih atas tawaran Anda.'),
+            'sell_completed'  => array('Transaksi Selesai', 'Transaksi pembelian equipment <strong>' . $ref_id . '</strong> telah selesai.', 'Terima kasih atas kepercayaan Anda.'),
+        );
+        
+        $msg = $messages[$key] ?? array('Status Update', 'Status pesanan Anda telah diperbarui.', '');
+        $current_date = date('d M Y, H:i');
+        $site_name = get_bloginfo('name');
+        $site_url  = home_url();
+        
+        $body = '<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:20px;"><tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+  <tr><td style="background:#F5A623;padding:30px;text-align:center;"><h1 style="color:#1a1f36;margin:0;font-size:24px;">PT Global Tractors Indonesia</h1></td></tr>
+  <tr><td style="padding:40px 30px;">
+    <h2 style="color:#1a1f36;margin:0 0 20px;font-size:20px;">' . $msg[0] . '</h2>
+    <p style="color:#374151;line-height:1.6;margin:0 0 15px;">Halo ' . esc_html($customer_name) . ',</p>
+    <p style="color:#374151;line-height:1.6;margin:0 0 15px;">' . $msg[1] . '</p>
+    <p style="color:#374151;line-height:1.6;margin:0 0 15px;">' . $msg[2] . '</p>
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
+    <p style="color:#6b7280;font-size:12px;margin:0;">Tanggal: ' . $current_date . '<br>Ref: ' . $ref_id . '</p>
+  </td></tr>
+  <tr><td style="background:#f9fafb;padding:20px 30px;text-align:center;border-top:1px solid #e5e7eb;">
+    <p style="color:#6b7280;font-size:12px;margin:0 0 10px;">' . $site_name . '<br><a href="' . $site_url . '" style="color:#F5A623;text-decoration:none;">' . $site_url . '</a></p>
+    <p style="color:#9ca3af;font-size:11px;margin:0;">Email ini dikirim otomatis.</p>
+  </td></tr>
+</table></td></tr></table>
+</body></html>';
+        
+        $headers = array(
+            'Content-Type: text/html; charset=UTF-8',
+            'From: ' . $site_name . ' <' . get_option('admin_email') . '>',
+        );
+        
+        wp_mail($customer_email, $subject, $body, $headers);
+        
+        // Log to email_logs table
+        $wpdb->insert(
+            $wpdb->prefix . 'gti_email_logs',
+            array(
+                'type'            => $type,
+                'related_id'      => $data['id'] ?? 0,
+                'status'          => $status,
+                'recipient_email' => $customer_email,
+                'subject'         => $subject,
             )
         );
     }

@@ -130,6 +130,7 @@ $_gti_re_status_badge = function($status) {
         .gti-ue-action-dropdown { border: 1px solid #e5e7eb; }
         .gti-ue-page-btn { border: 1px solid #e5e7eb; }
         .gti-ue-page-btn:hover:not(:disabled) { border-color: #d1d5db; }
+        .gti-ue-table { width: 100%; table-layout: fixed; }
         .gti-ue-table thead th { font-size: 13px; font-weight: 600; color: #374151; text-transform: none; letter-spacing: normal; padding: 13px 16px; }
         .gti-ue-table td { font-size: 14px; color: #374151; padding: 14px 16px; }
         .gti-ue-table .col-category { font-size: 13px; font-weight: 600; color: #374151; }
@@ -722,7 +723,6 @@ $_gti_re_status_badge = function($status) {
                     <table class="gti-ue-table">
                         <thead>
                             <tr>
-                                <th class="col-checkbox"><input type="checkbox"></th>
                                 <th class="col-image">Image</th>
                                 <th class="col-name">Equipment Name</th>
                                 <th class="col-category">Category</th>
@@ -737,7 +737,7 @@ $_gti_re_status_badge = function($status) {
                         <tbody>
                             <?php if (empty($equipments)): ?>
                                 <tr>
-                                    <td colspan="10" style="text-align: center; padding: 60px 20px;">
+                                    <td colspan="9" style="text-align: center; padding: 60px 20px;">
                                         <div style="color: #9ca3af;">
                                             <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                                             <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No equipment found</p>
@@ -750,7 +750,6 @@ $_gti_re_status_badge = function($status) {
                             <?php else: ?>
                                 <?php foreach ($equipments as $eq): ?>
                                     <tr data-eq-id="<?php echo esc_attr($eq->id); ?>" data-eq='<?php echo esc_attr(json_encode($eq)); ?>'>
-                                        <td class="col-checkbox"><input type="checkbox"></td>
                                         <td class="col-image">
                                             <div class="gti-ue-thumb">
                                                 <?php if (!empty($eq->main_image)): ?>
