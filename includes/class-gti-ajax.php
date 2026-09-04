@@ -170,6 +170,12 @@ class GTI_Ajax {
         $rental_price  = floatval( $_POST['rental_price'] ?? 0 );
         $price         = $selling_price > 0 ? $selling_price : $rental_price;
 
+        // ── Operating hours ────────────────────────────────────────────────
+        // Both inputs arrive as '' when left blank, so `??` never falls through —
+        // compare against '' instead, otherwise operator_hours is silently dropped.
+        $hours_input    = trim( (string) ( $_POST['hours'] ?? '' ) );
+        $operator_hours = trim( (string) ( $_POST['operator_hours'] ?? '' ) );
+
         // ── Determine type from equipment_type or type ──────────────────────
         $type = sanitize_text_field( $_POST['type'] ?? '' );
         if ( $type === '' ) {
@@ -187,7 +193,8 @@ class GTI_Ajax {
             'model'            => sanitize_text_field( $_POST['model'] ?? '' ),
             'year'             => intval( $_POST['year'] ?? 0 ),
             'condition_status' => sanitize_text_field( $_POST['condition_status'] ?? '' ),
-            'hours'            => intval( $_POST['hours'] ?? $_POST['operator_hours'] ?? 0 ),
+            'hours'            => intval( $hours_input !== '' ? $hours_input : $operator_hours ),
+            'operator_hours'   => $operator_hours !== '' ? intval( $operator_hours ) : '',
             'engine'           => sanitize_text_field( $_POST['engine'] ?? '' ),
             'engine_power'     => sanitize_text_field( $_POST['engine_power'] ?? '' ),
             'origin_country'   => sanitize_text_field( $_POST['origin_country'] ?? '' ),
@@ -216,9 +223,8 @@ class GTI_Ajax {
             'buyer_notes'         => sanitize_textarea_field( $_POST['buyer_notes'] ?? '' ),
 
             // Warranty
-            'warranty_info' => ! empty( $_POST['warranty_available'] ) && $_POST['warranty_available'] === 'yes'
-                ? sanitize_text_field( $_POST['warranty_period'] ?? '' )
-                : '',
+            'warranty_available' => sanitize_text_field( $_POST['warranty_available'] ?? '' ),
+            'warranty_period'    => sanitize_text_field( $_POST['warranty_period'] ?? '' ),
 
             // Description
             'description'           => wp_kses_post( $_POST['description'] ?? '' ),
@@ -264,6 +270,7 @@ class GTI_Ajax {
             'detailed_description', 'equipment_history',
             'location_country', 'location_province', 'location_city',
             'detailed_address', 'map_location', 'location_notes',
+            'warranty_available', 'warranty_period',
         ];
         foreach ( $optional as $key ) {
             if ( isset( $data[ $key ] ) && $data[ $key ] === '' ) {

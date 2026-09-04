@@ -283,6 +283,8 @@ $gti_ajax_url = admin_url('admin-ajax.php');
                                 <h3><i class="fas fa-clipboard-list"></i> Basic Information</h3>
                             </div>
                             <div class="gti-ae-card-body">
+                                <!-- operating_weight & bucket_capacity live in Step 2 (Specifications).
+                                     Never duplicate a name= within this form: FormData sends both and PHP keeps the last one. -->
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field">
                                         <label>Equipment Type</label>
@@ -291,14 +293,6 @@ $gti_ajax_url = admin_url('admin-ajax.php');
                                             <option value="used">Used Equipment</option>
                                             <option value="rental">Rental Equipment</option>
                                         </select>
-                                    </div>
-                                    <div class="gti-ae-field">
-                                        <label>Operating Weight</label>
-                                        <input type="text" name="operating_weight" placeholder="e.g., 20 ton">
-                                    </div>
-                                    <div class="gti-ae-field">
-                                        <label>Bucket Capacity</label>
-                                        <input type="text" name="bucket_capacity" placeholder="e.g., 1.0 m³">
                                     </div>
                                 </div>
                                 <div class="gti-ae-form-grid">
@@ -359,11 +353,8 @@ $gti_ajax_url = admin_url('admin-ajax.php');
                                         <input type="text" name="engine_model" placeholder="e.g., QSB6.7-C150">
                                     </div>
                                 </div>
+                                <!-- engine_power lives in Step 1 (General Information) — do not duplicate it here. -->
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field">
-                                        <label>Engine Power</label>
-                                        <input type="text" name="engine_power" placeholder="e.g., 155 HP">
-                                    </div>
                                     <div class="gti-ae-field">
                                         <label>Displacement</label>
                                         <input type="text" name="displacement" placeholder="e.g., 6.7 L">
@@ -570,27 +561,10 @@ $gti_ajax_url = admin_url('admin-ajax.php');
                                             <option value="under_maintenance">Under Maintenance</option>
                                         </select>
                                     </div>
-                                    <div class="gti-ae-field">
-                                        <label>Stock Number (Internal)</label>
-                                        <input type="text" name="stock_number" placeholder="e.g., GTI-EXC-2024-001">
-                                    </div>
-                                    <div class="gti-ae-field">
-                                        <label>Condition</label>
-                                        <select name="condition">
-                                            <option value="">-- Select Condition --</option>
-                                            <option value="new">New</option>
-                                            <option value="excellent">Excellent</option>
-                                            <option value="good">Good</option>
-                                            <option value="fair">Fair</option>
-                                            <option value="needs_repair">Needs Repair</option>
-                                        </select>
-                                    </div>
                                 </div>
+                                <!-- stock_number, condition_status and location are captured in Step 1 — duplicating them here
+                                     silently overwrote the Step 1 values on submit. -->
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field">
-                                        <label>Location</label>
-                                        <input type="text" name="location" placeholder="e.g., Jakarta, Indonesia">
-                                    </div>
                                     <div class="gti-ae-field">
                                         <label>Ready to Use</label>
                                         <select name="ready_to_use">

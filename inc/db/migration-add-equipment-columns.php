@@ -33,7 +33,9 @@ function gti_migration_add_equipment_columns() {
         'stock_number'       => "ALTER TABLE {$table} ADD COLUMN stock_number VARCHAR(100) NULL AFTER availability_status",
         'ready_to_use'       => "ALTER TABLE {$table} ADD COLUMN ready_to_use VARCHAR(20) NULL AFTER stock_number",
         'service_history'    => "ALTER TABLE {$table} ADD COLUMN service_history VARCHAR(50) NULL AFTER ready_to_use",
-        'buyer_notes'        => "ALTER TABLE {$table} ADD COLUMN buyer_notes TEXT NULL AFTER service_history",
+        'warranty_available' => "ALTER TABLE {$table} ADD COLUMN warranty_available VARCHAR(20) NULL AFTER service_history",
+        'warranty_period'    => "ALTER TABLE {$table} ADD COLUMN warranty_period VARCHAR(255) NULL AFTER warranty_available",
+        'buyer_notes'        => "ALTER TABLE {$table} ADD COLUMN buyer_notes TEXT NULL AFTER warranty_period",
 
         // Engine & Serial
         'serial_number'      => "ALTER TABLE {$table} ADD COLUMN serial_number VARCHAR(100) NULL AFTER hours",

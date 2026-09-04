@@ -235,6 +235,60 @@ class GTI_Activator {
             }
         }
 
+        // Equipment: columns added after the original 1.0.0 schema above.
+        // dbDelta() will not add them on its own, and the live database was migrated by hand,
+        // so a fresh install would silently drop every field from form steps 2-5.
+        // Keep this map in sync whenever the add/edit form gains a stored field.
+        if (version_compare($db_version, '1.2.0', '<')) {
+            $equipment_columns = array(
+                'availability_status'  => "VARCHAR(50)",
+                'stock_number'         => "VARCHAR(100)",
+                'ready_to_use'         => "VARCHAR(20)",
+                'service_history'      => "VARCHAR(50)",
+                'buyer_notes'          => "TEXT",
+                'selling_price'        => "DECIMAL(15,2)",
+                'rental_price'         => "DECIMAL(15,2)",
+                'vat_included'         => "VARCHAR(10)",
+                'currency'             => "VARCHAR(10)",
+                'price_valid_until'    => "DATE",
+                'location_country'     => "VARCHAR(100)",
+                'location_province'    => "VARCHAR(100)",
+                'location_city'        => "VARCHAR(100)",
+                'detailed_address'     => "TEXT",
+                'map_location'         => "VARCHAR(500)",
+                'location_notes'       => "TEXT",
+                'detailed_description' => "TEXT",
+                'equipment_history'    => "TEXT",
+                'previous_usage'       => "VARCHAR(255)",
+                'working_condition'    => "VARCHAR(50)",
+                'maintenance_record'   => "VARCHAR(50)",
+                'ownership'            => "VARCHAR(50)",
+                'operator_hours'       => "INT",
+                'features'             => "LONGTEXT",
+                'documents'            => "LONGTEXT",
+                'video_url'            => "VARCHAR(500)",
+                'serial_number'        => "VARCHAR(100)",
+                'engine'               => "VARCHAR(255)",
+                'engine_power'         => "VARCHAR(50)",
+                'origin_country'       => "VARCHAR(100)",
+                'operating_weight'     => "VARCHAR(50)",
+                'bucket_capacity'      => "VARCHAR(50)",
+                'warranty_available'   => "VARCHAR(20)",
+                'warranty_period'      => "VARCHAR(255)",
+            );
+
+            $existing = $wpdb->get_col("SHOW COLUMNS FROM {$table_equipment}");
+            foreach ($equipment_columns as $column => $definition) {
+                if (!in_array($column, $existing, true)) {
+                    $wpdb->query("ALTER TABLE {$table_equipment} ADD COLUMN `{$column}` {$definition}");
+                }
+            }
+
+            // price_type was an ENUM('sale','monthly_rental'); the form also submits
+            // 'rental', 'sale_and_rental' and 'price_on_ask', which that ENUM rejects.
+            $wpdb->query("ALTER TABLE {$table_equipment} MODIFY COLUMN price_type VARCHAR(50)");
+        }
+
         // Seed dummy request equipment data if table is empty
         $req_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_requests}");
         if ($req_count === 0) {
@@ -276,7 +330,7 @@ class GTI_Activator {
         }
 
         // Store table version
-        update_option('gti_db_version', '1.1.0');
+        update_option('gti_db_version', '1.2.0');
     }
     
     /**

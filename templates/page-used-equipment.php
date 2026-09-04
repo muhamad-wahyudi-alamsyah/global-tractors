@@ -1116,8 +1116,6 @@ $_gti_eq_status_badge = function($status) {
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Equipment Type</label><select name="type"><option value="">Select Type</option><option value="used">Used Equipment</option><option value="rental">Rental Equipment</option></select></div>
-                                    <div class="gti-ae-field"><label>Operating Weight</label><input type="text" name="operating_weight"></div>
-                                    <div class="gti-ae-field"><label>Bucket Capacity</label><input type="text" name="bucket_capacity"></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Location</label><select name="location"><option value="">Select Location</option><option value="Jakarta">Jakarta</option><option value="Balikpapan">Balikpapan</option><option value="Surabaya">Surabaya</option><option value="Bandung">Bandung</option><option value="Medan">Medan</option><option value="Makassar">Makassar</option></select></div>
@@ -1141,7 +1139,6 @@ $_gti_eq_status_badge = function($status) {
                                     <div class="gti-ae-field"><label>Engine Model</label><input type="text" name="engine_model"></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Engine Power</label><input type="text" name="engine_power"></div>
                                     <div class="gti-ae-field"><label>Displacement</label><input type="text" name="displacement"></div>
                                     <div class="gti-ae-field"><label>No. of Cylinders</label><input type="number" name="cylinders"></div>
                                 </div>
@@ -1208,11 +1205,11 @@ $_gti_eq_status_badge = function($status) {
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Availability Status</label><select name="availability_status"><option value="">-- Select Status --</option><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option><option value="in_transit">In Transit</option><option value="under_maintenance">Under Maintenance</option></select></div>
-                                    <div class="gti-ae-field"><label>Stock Number (Internal)</label><input type="text" name="stock_number"></div>
-                                    <div class="gti-ae-field"><label>Condition</label><select name="condition"><option value="">-- Select Condition --</option><option value="new">New</option><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="needs_repair">Needs Repair</option></select></div>
                                 </div>
+                                <!-- stock_number, condition_status, location, operating_weight, bucket_capacity and engine_power
+                                     are each defined exactly once in this form. A repeated name= is sent twice by FormData and
+                                     PHP keeps only the last value, which silently wiped the earlier step's input. -->
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Location</label><input type="text" name="location"></div>
                                     <div class="gti-ae-field"><label>Ready to Use</label><select name="ready_to_use"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option><option value="after_service">After Service</option></select></div>
                                     <div class="gti-ae-field"><label>Service History</label><select name="service_history"><option value="">-- Select --</option><option value="full">Full Service History</option><option value="partial">Partial Service History</option><option value="none">No Service History</option></select></div>
                                 </div>
@@ -1813,7 +1810,6 @@ $_gti_eq_status_badge = function($status) {
         populateField(form, 'price_valid_until', eq.price_valid_until);
         // Step 3 — Availability
         populateField(form, 'availability_status', eq.availability_status);
-        populateField(form, 'condition', eq.condition);
         populateField(form, 'ready_to_use', eq.ready_to_use);
         populateField(form, 'service_history', eq.service_history);
         populateField(form, 'warranty_available', eq.warranty_available);
