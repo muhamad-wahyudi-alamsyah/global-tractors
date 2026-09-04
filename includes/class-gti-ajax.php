@@ -212,6 +212,7 @@ class GTI_Ajax {
             'currency'          => sanitize_text_field( $_POST['currency'] ?? 'IDR' ),
             'vat_included'      => sanitize_text_field( $_POST['vat_included'] ?? '' ),
             'price_valid_until' => sanitize_text_field( $_POST['price_valid_until'] ?? '' ) ?: null,
+            'negotiable'        => sanitize_text_field( $_POST['negotiable'] ?? '' ),
 
             // Status & Availability
             'status'              => $is_draft ? 'draft' : sanitize_text_field( $_POST['status'] ?? $_POST['availability_status'] ?? 'available' ),
@@ -270,7 +271,7 @@ class GTI_Ajax {
             'detailed_description', 'equipment_history',
             'location_country', 'location_province', 'location_city',
             'detailed_address', 'map_location', 'location_notes',
-            'warranty_available', 'warranty_period',
+            'warranty_available', 'warranty_period', 'negotiable',
         ];
         foreach ( $optional as $key ) {
             if ( isset( $data[ $key ] ) && $data[ $key ] === '' ) {

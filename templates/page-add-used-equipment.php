@@ -529,6 +529,14 @@ $gti_ajax_url = admin_url('admin-ajax.php');
                                         <label>Price Valid Until</label>
                                         <input type="date" name="price_valid_until">
                                     </div>
+                                    <div class="gti-ae-field">
+                                        <label>Negotiable</label>
+                                        <select name="negotiable">
+                                            <option value="">-- Select --</option>
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div class="gti-ae-price-guidelines">
                                     <i class="fas fa-info-circle"></i>

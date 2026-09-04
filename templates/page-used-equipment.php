@@ -1197,6 +1197,7 @@ $_gti_eq_status_badge = function($status) {
                                     <div class="gti-ae-field"><label>VAT Included?</label><select name="vat_included"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option></select></div>
                                     <div class="gti-ae-field"><label>Currency</label><select name="currency"><option value="IDR">IDR (Rp)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select></div>
                                     <div class="gti-ae-field"><label>Price Valid Until</label><input type="date" name="price_valid_until"></div>
+                                    <div class="gti-ae-field"><label>Negotiable</label><select name="negotiable"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option></select></div>
                                 </div>
                             </div>
                         </div>
@@ -1587,7 +1588,7 @@ $_gti_eq_status_badge = function($status) {
         setText('drawer-vat', eq.vat_included ? eq.vat_included.charAt(0).toUpperCase() + eq.vat_included.slice(1) : null);
         setText('drawer-currency', eq.currency);
         setText('drawer-price-valid-until', eq.price_valid_until ? formatDateShort(eq.price_valid_until) : null);
-        setText('drawer-negotiable', eq.negotiable ? 'Yes' : 'No');
+        setText('drawer-negotiable', eq.negotiable ? eq.negotiable.charAt(0).toUpperCase() + eq.negotiable.slice(1) : null);
         setText('drawer-availability-status', eq.availability_status ? eq.availability_status.charAt(0).toUpperCase() + eq.availability_status.slice(1).replace(/_/g,' ') : null);
         setText('drawer-ready-to-use', eq.ready_to_use ? eq.ready_to_use.charAt(0).toUpperCase() + eq.ready_to_use.slice(1).replace(/_/g,' ') : null);
         var shMap = { 'full':'Full Service History', 'partial':'Partial Service History', 'none':'No Service History' };
@@ -1808,6 +1809,7 @@ $_gti_eq_status_badge = function($status) {
         populateField(form, 'vat_included', eq.vat_included);
         populateField(form, 'currency', eq.currency || 'IDR');
         populateField(form, 'price_valid_until', eq.price_valid_until);
+        populateField(form, 'negotiable', eq.negotiable);
         // Step 3 — Availability
         populateField(form, 'availability_status', eq.availability_status);
         populateField(form, 'ready_to_use', eq.ready_to_use);

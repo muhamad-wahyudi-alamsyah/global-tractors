@@ -27,6 +27,7 @@ function gti_migration_add_equipment_columns() {
         'vat_included'       => "ALTER TABLE {$table} ADD COLUMN vat_included VARCHAR(10) NULL AFTER rental_price",
         'currency'           => "ALTER TABLE {$table} ADD COLUMN currency VARCHAR(10) DEFAULT 'IDR' AFTER vat_included",
         'price_valid_until'  => "ALTER TABLE {$table} ADD COLUMN price_valid_until DATE NULL AFTER currency",
+        'negotiable'         => "ALTER TABLE {$table} ADD COLUMN negotiable VARCHAR(10) NULL AFTER price_valid_until",
 
         // Additional status
         'availability_status' => "ALTER TABLE {$table} ADD COLUMN availability_status VARCHAR(50) NULL AFTER status",
