@@ -1070,35 +1070,51 @@ class GTI_Ajax {
         $current_date = date('d M Y, H:i');
         $site_name = get_bloginfo('name');
         $site_url  = home_url();
+
+        // Use plain text body to test if HTML is causing delivery issues
+        $body = "==================================================\n";
+        $body .= $site_name . "\n";
+        $body .= "==================================================\n\n";
+        $body .= $msg[0] . "\n\n";
+        $body .= "Halo " . esc_html($customer_name) . ",\n\n";
+        $body .= $msg[1] . "\n\n";
+        $body .= $msg[2] . "\n\n";
+        $body .= "--------------------------------------------------\n";
+        $body .= "Tanggal: " . $current_date . "\n";
+        $body .= "Ref: " . $ref_id . "\n";
+        $body .= "--------------------------------------------------\n\n";
+        $body .= "Email ini dikirim otomatis dari " . $site_name . "\n";
+        $body .= "Kunjungi: " . $site_url . "\n";
         
-        $body = '<!DOCTYPE html>
-<html><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f4f4;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:20px;"><tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
-  <tr><td style="background:#F5A623;padding:30px;text-align:center;"><h1 style="color:#1a1f36;margin:0;font-size:24px;">PT Global Tractors Indonesia</h1></td></tr>
-  <tr><td style="padding:40px 30px;">
-    <h2 style="color:#1a1f36;margin:0 0 20px;font-size:20px;">' . $msg[0] . '</h2>
-    <p style="color:#374151;line-height:1.6;margin:0 0 15px;">Halo ' . esc_html($customer_name) . ',</p>
-    <p style="color:#374151;line-height:1.6;margin:0 0 15px;">' . $msg[1] . '</p>
-    <p style="color:#374151;line-height:1.6;margin:0 0 15px;">' . $msg[2] . '</p>
-    <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">
-    <p style="color:#6b7280;font-size:12px;margin:0;">Tanggal: ' . $current_date . '<br>Ref: ' . $ref_id . '</p>
-  </td></tr>
-  <tr><td style="background:#f9fafb;padding:20px 30px;text-align:center;border-top:1px solid #e5e7eb;">
-    <p style="color:#6b7280;font-size:12px;margin:0 0 10px;">' . $site_name . '<br><a href="' . $site_url . '" style="color:#F5A623;text-decoration:none;">' . $site_url . '</a></p>
-    <p style="color:#9ca3af;font-size:11px;margin:0;">Email ini dikirim otomatis.</p>
-  </td></tr>
-</table></td></tr></table>
-</body></html>';
-        
+        $admin_email = get_option('admin_email');
+
+        // RFC 2047 encode subject if it contains non-ASCII characters
+        $encoded_subject = $subject;
+        if (preg_match('/[^\x20-\x7E]/', $subject)) {
+            $encoded_subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
+        }
+
         $headers = array(
-            'Content-Type: text/html; charset=UTF-8',
-            'From: ' . $site_name . ' <' . get_option('admin_email') . '>',
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . $site_name . ' <' . $admin_email . '>',
+            'Reply-To: ' . $admin_email,
+            'Return-Path: ' . $admin_email,
+            'X-Mailer: Global-Tractors/1.0',
         );
-        
-        wp_mail($customer_email, $subject, $body, $headers);
-        
+
+        // Debug: log email details before sending
+        $debug_file = WP_CONTENT_DIR . '/uploads/gti-mail-debug.log';
+        $timestamp = date('[Y-m-d H:i:s]');
+        $debug_details = $timestamp . ' [' . $type . ':' . $status . '] To=' . $customer_email . ' Subject=' . substr($subject, 0, 50) . ' BodyLen=' . strlen($body) . ' HeadersCount=' . count($headers) . "\n";
+        error_log($debug_details, 3, $debug_file);
+
+        $mail_result = wp_mail($customer_email, $encoded_subject, $body, $headers);
+
+        // Log result
+        $timestamp = date('[Y-m-d H:i:s]');
+        $log_msg = $timestamp . ' [' . $type . ':' . $status . '] To=' . $customer_email . ' RefId=' . $ref_id . ' Result=' . ($mail_result ? 'SENT' : 'FAILED') . "\n";
+        error_log($log_msg, 3, $debug_file);
+
         // Log to email_logs table
         $wpdb->insert(
             $wpdb->prefix . 'gti_email_logs',
@@ -1108,9 +1124,26 @@ class GTI_Ajax {
                 'status'          => $status,
                 'recipient_email' => $customer_email,
                 'subject'         => $subject,
-            )
+                'sent_status'     => $mail_result ? 'sent' : 'failed',
+            ),
+            array('%s', '%d', '%s', '%s', '%s', '%s')
         );
     }
+}
+
+// Capture mail errors for diagnostics
+if (!function_exists('gti_capture_mail_error')) {
+    function gti_capture_mail_error($result) {
+        if (!$result || ($result instanceof \WP_Error)) {
+            $debug_file = WP_CONTENT_DIR . '/uploads/gti-mail-debug.log';
+            $timestamp = date('[Y-m-d H:i:s]');
+            $error_msg = is_wp_error($result) ? $result->get_error_message() : 'wp_mail() returned false';
+            $log_line = $timestamp . ' [MAIL_ERROR] ' . $error_msg . "\n";
+            error_log($log_line, 3, $debug_file);
+        }
+        return $result;
+    }
+    add_filter('wp_mail_failed', 'gti_capture_mail_error', 10, 1);
 }
 
 // Initialize AJAX handlers
