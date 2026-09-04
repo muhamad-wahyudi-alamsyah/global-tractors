@@ -167,7 +167,6 @@ $locations = $wpdb->get_col("SELECT DISTINCT location FROM {$table_name} WHERE l
 
         /* Prevent main from overflowing */
         .gti-main {
-            overflow: hidden;
             min-width: 0;
         }
 

@@ -164,7 +164,7 @@ $_gti_re_status_badge = function($status) {
         }
         .gti-drawer-body { overflow-y: visible; }
         .gti-drawer .gti-drawer-close { display: none; }
-        .gti-main { overflow: hidden; min-width: 0; }
+        .gti-main { min-width: 0; }
         .gti-drawer-backdrop {
             display: none; position: fixed; inset: 0;
             background: rgba(0,0,0,0.4); z-index: 1000;

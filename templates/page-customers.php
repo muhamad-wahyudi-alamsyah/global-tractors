@@ -122,7 +122,7 @@ function gti_customer_initials($name) {
         .gti-drawer { width: 320px; max-width: calc(33vw - 100px); flex-shrink: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; display: flex; flex-direction: column; height: fit-content; }
         .gti-drawer-body { overflow-y: visible; }
         .gti-drawer .gti-drawer-close { display: none; }
-        .gti-main { overflow: hidden; min-width: 0; }
+        .gti-main { min-width: 0; }
 
         /* ====== Drawer Backdrop (only for <1200px) ====== */
         .gti-drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }

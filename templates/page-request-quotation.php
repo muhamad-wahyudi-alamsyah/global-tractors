@@ -161,9 +161,7 @@ $pics = $wpdb->get_col("SELECT DISTINCT sales_pic FROM {$table_name} WHERE sales
             display: none;
         }
 
-        /* Prevent main from overflowing */
         .gti-main {
-            overflow: hidden;
             min-width: 0;
         }
 

@@ -161,7 +161,6 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
         }
 
         .gti-main {
-            overflow: hidden;
             min-width: 0;
         }
 

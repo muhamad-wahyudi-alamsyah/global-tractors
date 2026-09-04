@@ -210,7 +210,7 @@ ksort($unique_months);
         /* ====== Right Drawer ====== */
         .gti-content { display: flex; gap: 24px; align-items: flex-start; }
         .gti-content-left { flex: 1; min-width: 0; min-width: 0; }
-        .gti-main { overflow: hidden; min-width: 0; }
+        .gti-main { min-width: 0; }
         .gti-drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
         .gti-drawer-backdrop.show { display: block; opacity: 1; }
 
