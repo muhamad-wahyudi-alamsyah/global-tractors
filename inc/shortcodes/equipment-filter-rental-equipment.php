@@ -537,6 +537,17 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
     $description    = $item['description'] ?: '';
     $equipment_code = $item['equipment_code'] ?: '';
 
+    // Helper functions
+    $fmt_rupiah = function( $val ) {
+        if ( ! $val ) return '—';
+        return 'Rp ' . number_format( (float) $val, 0, ',', '.' );
+    };
+    $fmt_date = function( $dateStr ) {
+        if ( ! $dateStr ) return '—';
+        $d = new DateTime( $dateStr );
+        return $d->format( 'd M Y' );
+    };
+
     $status_class = 'ready';
     $status_label = 'READY STOCK';
     if ( isset( $item['status'] ) ) {
@@ -554,6 +565,13 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
     if ( ! empty( $item['image'] ) ) {
         $gallery_images[] = $item['image'];
     }
+    if ( ! empty( $item['images'] ) ) {
+        $parsed_imgs = json_decode( $item['images'], true );
+        if ( is_array( $parsed_imgs ) ) {
+            $gallery_images = array_merge( $gallery_images, $parsed_imgs );
+        }
+    }
+    $gallery_images = array_unique( $gallery_images );
     $max_thumbs = 5;
     $display_gallery = array_slice( $gallery_images, 0, $max_thumbs );
 
@@ -667,45 +685,326 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
             </div>
         </section>
 
-        <!-- ═══ DETAIL SECTION ═══ -->
-        <section class="gti-ed-detail-section">
-            <div class="gti-ed-detail-grid">
-                <div class="gti-ed-specs-block">
-                    <h2 class="gti-ed-section-title">SPECIFICATIONS</h2>
-                    <div class="gti-ed-spec-table">
-                        <div class="gti-ed-spec-row"><span class="label">Brand</span><span class="value"><?php echo esc_html( $brand ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Model</span><span class="value"><?php echo esc_html( $model ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Type</span><span class="value"><?php echo esc_html( $category ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Year</span><span class="value"><?php echo esc_html( $year ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Condition</span><span class="value"><?php echo esc_html( $condition ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Working Hours</span><span class="value"><?php echo esc_html( $hours ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Location</span><span class="value"><?php echo esc_html( $location ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Unit Code</span><span class="value"><?php echo esc_html( $equipment_code ); ?></span></div>
-                        <?php if ( $price ) : ?>
-                        <div class="gti-ed-spec-row"><span class="label">Monthly Rate</span><span class="value">Rp <?php echo esc_html( number_format( (float) $price, 0, ',', '.' ) ); ?>/month</span></div>
-                        <?php endif; ?>
+        <!-- ═══ QUICK INFO (3 COLUMNS) ═══ -->
+        <section class="gti-ed-detail-section" style="margin-bottom: 32px;">
+            <style>
+                .gti-ed-quick-grid { display: grid; grid-template-columns: 1.8fr 0.8fr; gap: 32px; }
+                .gti-ed-quick-block { border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; }
+
+                /* Inline tabs styling */
+                .gti-ed-quick-tabs { display: flex; gap: 4px; border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+                .gti-ed-quick-tabs h3 { font-size: 13px; font-weight: 600; color: #6b7280; margin: 0; padding: 6px 12px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; white-space: nowrap; position: relative; }
+                .gti-ed-quick-tabs h3:hover { color: #1a1f36; }
+                .gti-ed-quick-tabs h3.active { color: #F5A623; border-bottom: 2px solid #F5A623; }
+
+                /* Specifications 2-column layout with aligned values */
+                .gti-ed-specs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 35px; }
+                .gti-ed-spec-item-quick { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+                .gti-ed-spec-item-quick:last-child { border-bottom: none; }
+                .gti-ed-spec-label-quick { font-size: 12px; color: #6b7280; font-weight: 500; }
+                .gti-ed-spec-value-quick { font-size: 13px; color: #1a1f36; font-weight: 600; text-align: right; }
+
+                /* Features list - compact */
+                .gti-ed-features-list { list-style: none; padding: 0; margin: 0; width: fit-content; display: flex; flex-direction: column; gap: 4px; }
+                .gti-ed-feature-item-quick { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; color: #374151; white-space: nowrap; }
+                .gti-ed-feature-item-quick i { color: #F5A623; font-size: 14px; flex-shrink: 0; }
+
+                /* Why Buy grid 2 columns x 3 rows */
+                .gti-ed-why-items { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+                .gti-ed-why-item-quick { display: flex; flex-direction: column; align-items: center; text-align: center; }
+                .gti-ed-why-icon-quick { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: #FEF3E2; border-radius: 8px; margin-bottom: 8px; }
+                .gti-ed-why-icon-quick i { font-size: 24px; color: #F5A623; }
+                .gti-ed-why-text-quick { font-size: 12px; color: #374151; font-weight: 500; line-height: 1.4; }
+
+                /* Tab content visibility */
+                .gti-ed-quick-content { display: none; padding-top: 16px; margin-top: 16px; border-top: 1px solid #e5e7eb; }
+                .gti-ed-quick-content.active { display: block; }
+
+                .gti-ed-quick-subtitle {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #6b7280;
+                    text-transform: uppercase;
+                    letter-spacing: 0.3px;
+                    margin: 20px 0 10px;
+                }
+
+                .gti-ed-quick-subtitle:first-child {
+                    margin-top: 0;
+                }
+
+                .gti-ed-quick-description {
+                    margin-top: 16px;
+                }
+
+                .gti-ed-quick-description .gti-ed-spec-value-quick {
+                    display: block;
+                    margin-top: 6px;
+                }
+
+                .gti-ed-spec-value-quick.text-msg {
+                    text-align: left;
+                }
+
+                @media (max-width: 1200px) { .gti-ed-quick-grid { grid-template-columns: 1fr; gap: 24px; } }
+                @media (max-width: 768px) {
+                    .gti-ed-specs-grid { flex-direction: column; }
+                    .gti-ed-why-items { grid-template-columns: repeat(2, 1fr); }
+                    .gti-ed-quick-tabs { overflow-x: auto; }
+                }
+            </style>
+            <div class="gti-ed-quick-grid">
+                <!-- SPECIFICATIONS -->
+                <div class="gti-ed-quick-block">
+                    <div class="gti-ed-quick-tabs" id="gti-quick-tabs">
+                        <h3 class="active" onclick="gtiQuickTabSwitch('info', event)">Info</h3>
+                        <h3 onclick="gtiQuickTabSwitch('specs', event)">Specs</h3>
+                        <h3 onclick="gtiQuickTabSwitch('pricing', event)">Pricing</h3>
+                        <h3 onclick="gtiQuickTabSwitch('more', event)">More</h3>
+                    </div>
+
+                    <!-- Info Content -->
+                    <div class="gti-ed-quick-content active" data-tab="info">
+
+                        <!-- General Information -->
+                        <h4 class="gti-ed-quick-subtitle">General Information</h4>
+
+                        <div class="gti-ed-specs-grid">
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Name</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['title'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Equipment Code</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['equipment_code'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Category</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['category'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Brand</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['brand'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Model</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['model'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Year</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['year'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Hours</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['hours'] ?: '—' ); ?>
+                                </span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Condition</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['condition'] ?: '—' ); ?></span>
+                            </div>
+
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Location</span>
+                                <span class="gti-ed-spec-value-quick">
+                                    <?php echo esc_html( $item['location'] ?: '—' ); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Specs Content -->
+                    <div class="gti-ed-quick-content" data-tab="specs">
+                        <h4 class="gti-ed-quick-subtitle">Technical Specifications</h4>
+                        <div class="gti-ed-specs-grid">
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Brand</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['brand'] ?: '—' ); ?></span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Model</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['model'] ?: '—' ); ?></span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Year</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['year'] ?: '—' ); ?></span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Hours</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['hours'] ?: '—' ); ?></span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Condition</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['condition'] ?: '—' ); ?></span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Category</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['category'] ?: '—' ); ?></span>
+                            </div>
+                        </div>
+
+                        <h4 class="gti-ed-quick-subtitle">Features</h4>
+                        <?php
+                        $features = ['Ready to Rent', 'Well Maintained', 'Full Support'];
+                        echo '<ul class="gti-ed-features-list">';
+                        foreach ($features as $feat) {
+                            echo '<li class="gti-ed-feature-item-quick"><i class="fas fa-check-circle"></i>' . esc_html($feat) . '</li>';
+                        }
+                        echo '</ul>';
+                        ?>
+                    </div>
+
+                    <!-- Pricing Content -->
+                    <div class="gti-ed-quick-content" data-tab="pricing">
+                        <h4 class="gti-ed-quick-subtitle">Rental Pricing</h4>
+                        <div class="gti-ed-specs-grid">
+                            <?php if ( $item['price'] ) : ?>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Monthly Rate</span>
+                                <span class="gti-ed-spec-value-quick">Rp <?php echo esc_html( number_format( (float) $item['price'], 0, ',', '.' ) ); ?>/mo</span>
+                            </div>
+                            <?php endif; ?>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Availability</span>
+                                <span class="gti-ed-spec-value-quick" style="color: #10b981;">Available</span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Rental Terms</span>
+                                <span class="gti-ed-spec-value-quick">Flexible</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- More Content -->
+                    <div class="gti-ed-quick-content" data-tab="more">
+                        <h4 class="gti-ed-quick-subtitle">Equipment Information</h4>
+                        <div class="gti-ed-specs-grid">
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Equipment Code</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['equipment_code'] ?: '—' ); ?></span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Location</span>
+                                <span class="gti-ed-spec-value-quick"><?php echo esc_html( $item['location'] ?: '—' ); ?></span>
+                            </div>
+                        </div>
+
+                        <h4 class="gti-ed-quick-subtitle">Rental Support</h4>
+                        <div class="gti-ed-specs-grid">
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Maintenance</span>
+                                <span class="gti-ed-spec-value-quick">Included</span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Support</span>
+                                <span class="gti-ed-spec-value-quick">24/7</span>
+                            </div>
+                            <div class="gti-ed-spec-item-quick">
+                                <span class="gti-ed-spec-label-quick">Delivery</span>
+                                <span class="gti-ed-spec-value-quick">Available</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="gti-ed-features-block">
-                    <h2 class="gti-ed-section-title">FEATURES</h2>
-                    <?php foreach ( $features as $feat ) : ?>
-                        <div class="gti-ed-feature-item"><i class="fas fa-check-circle"></i><span><?php echo esc_html( $feat ); ?></span></div>
-                    <?php endforeach; ?>
-                </div>
+                <!-- FEATURES Column -->
+                <div class="gti-ed-quick-side">
+                    <div class="gti-ed-quick-block">
+                        <h3 style="font-size: 16px; font-weight: 700; color: #1a1f36; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Features</h3>
+                        <?php
+                        $feature_items = [
+                            'Ready to Rent' => true,
+                            'Well Maintained' => true,
+                            'Full Support Included' => true,
+                            'Flexible Rental Terms' => true,
+                            'Fast Delivery Available' => true,
+                        ];
 
-                <div class="gti-ed-why-block">
-                    <h2 class="gti-ed-section-title">WHY RENT FROM GTI?</h2>
-                    <div class="gti-ed-why-grid">
-                        <div class="gti-ed-why-item"><div class="gti-ed-why-icon"><i class="fas fa-shield-alt"></i></div><span class="gti-ed-why-text">All Units Inspected</span></div>
-                        <div class="gti-ed-why-item"><div class="gti-ed-why-icon"><i class="fas fa-medal"></i></div><span class="gti-ed-why-text">Quality Assurance</span></div>
-                        <div class="gti-ed-why-item"><div class="gti-ed-why-icon"><i class="fas fa-box"></i></div><span class="gti-ed-why-text">Flexible Rental Terms</span></div>
-                        <div class="gti-ed-why-item"><div class="gti-ed-why-icon"><i class="fas fa-truck"></i></div><span class="gti-ed-why-text">Nationwide Delivery</span></div>
-                        <div class="gti-ed-why-item"><div class="gti-ed-why-icon"><i class="fas fa-headset"></i></div><span class="gti-ed-why-text">Maintenance Included</span></div>
-                        <div class="gti-ed-why-item"><div class="gti-ed-why-icon"><i class="fas fa-tag"></i></div><span class="gti-ed-why-text">Competitive Rates</span></div>
+                        if ( $feature_items ) {
+                            echo '<ul class="gti-ed-features-list">';
+                            $count = 0;
+                            foreach ( $feature_items as $label => $status ) {
+                                if ( $status && $count < 5 ) {
+                                    echo '<li class="gti-ed-feature-item-quick"><i class="fas fa-check-circle"></i>' . esc_html( $label ) . '</li>';
+                                    $count++;
+                                }
+                            }
+                            echo '</ul>';
+                        }
+                        ?>
+                    </div>
+
+                    <!-- WHY RENT FROM GTI Column -->
+                    <div class="gti-ed-quick-block">
+                        <h3 style="font-size: 16px; font-weight: 700; color: #1a1f36; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;">Why Rent From GTI?</h3>
+                        <div class="gti-ed-why-items">
+                            <div class="gti-ed-why-item-quick">
+                                <div class="gti-ed-why-icon-quick"><i class="fas fa-shield-alt"></i></div>
+                                <div class="gti-ed-why-text-quick">All Units Inspected</div>
+                            </div>
+                            <div class="gti-ed-why-item-quick">
+                                <div class="gti-ed-why-icon-quick"><i class="fas fa-medal"></i></div>
+                                <div class="gti-ed-why-text-quick">Quality Assurance</div>
+                            </div>
+                            <div class="gti-ed-why-item-quick">
+                                <div class="gti-ed-why-icon-quick"><i class="fas fa-box"></i></div>
+                                <div class="gti-ed-why-text-quick">Flexible Rental Terms</div>
+                            </div>
+                            <div class="gti-ed-why-item-quick">
+                                <div class="gti-ed-why-icon-quick"><i class="fas fa-truck"></i></div>
+                                <div class="gti-ed-why-text-quick">Nationwide Delivery</div>
+                            </div>
+                            <div class="gti-ed-why-item-quick">
+                                <div class="gti-ed-why-icon-quick"><i class="fas fa-headset"></i></div>
+                                <div class="gti-ed-why-text-quick">Maintenance Included</div>
+                            </div>
+                            <div class="gti-ed-why-item-quick">
+                                <div class="gti-ed-why-icon-quick"><i class="fas fa-tag"></i></div>
+                                <div class="gti-ed-why-text-quick">Competitive Rates</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <script>
+            function gtiQuickTabSwitch(tab, e) {
+                e.preventDefault();
+                // Update tab buttons
+                document.querySelectorAll('#gti-quick-tabs h3').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                e.target.classList.add('active');
+
+                // Update content visibility
+                document.querySelectorAll('.gti-ed-quick-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                const activeContent = document.querySelector('.gti-ed-quick-content[data-tab="' + tab + '"]');
+                if (activeContent) activeContent.classList.add('active');
+            }
+            </script>
         </section>
 
         <!-- ═══ RELATED PRODUCTS ═══ -->
@@ -778,6 +1077,90 @@ function gti_rental_render_related_card( $item ) {
     <?php
 }
 
+function gti_rental_map_complete_row( $row ) {
+    $image = '';
+    if ( ! empty( $row->main_image ) ) {
+        $image = $row->main_image;
+    } elseif ( ! empty( $row->images ) ) {
+        $imgs = json_decode( $row->images, true );
+        if ( is_array( $imgs ) && ! empty( $imgs[0] ) ) {
+            $image = $imgs[0];
+        }
+    }
+
+    $status = $row->status ?: 'available';
+    switch ( strtolower( $status ) ) {
+        case 'sold':        $display_status = 'sold'; break;
+        case 'coming_soon': case 'coming-soon': $display_status = 'coming_soon'; break;
+        default:            $display_status = 'ready_stock';
+    }
+
+    return [
+        'id'                      => (int) $row->id,
+        'equipment_code'          => $row->equipment_code ?: '',
+        'title'                   => $row->name ?: 'Equipment',
+        'url'                     => '#',
+        'category'                => strtolower( $row->category ?: 'others' ),
+        'brand'                   => $row->brand ?: '',
+        'model'                   => $row->model ?: '',
+        'type'                    => $row->category ?: '',
+        'year'                    => $row->year ?: '',
+        'price'                   => $row->price ?: '',
+        'hours'                   => $row->hours ?: '',
+        'location'                => $row->location ?: '',
+        'condition'               => $row->condition_status ?: '',
+        'status'                  => $display_status,
+        'image'                   => $image,
+        'description'             => $row->description ?: '',
+        'is_wishlisted'           => false,
+        // Complete fields for detailed view
+        'serial_number'           => isset( $row->serial_number ) ? $row->serial_number : '',
+        'engine'                  => isset( $row->engine ) ? $row->engine : '',
+        'engine_power'            => isset( $row->engine_power ) ? $row->engine_power : '',
+        'origin_country'          => isset( $row->origin_country ) ? $row->origin_country : '',
+        'operating_weight'        => isset( $row->operating_weight ) ? $row->operating_weight : '',
+        'bucket_capacity'         => isset( $row->bucket_capacity ) ? $row->bucket_capacity : '',
+        'stock_number'            => isset( $row->stock_number ) ? $row->stock_number : '',
+        'rental_price'            => $row->price ?: '',
+        'selling_price'           => isset( $row->selling_price ) ? $row->selling_price : '',
+        'price_type'              => isset( $row->price_type ) ? $row->price_type : '',
+        'vat_included'            => isset( $row->vat_included ) ? $row->vat_included : '',
+        'currency'                => isset( $row->currency ) ? $row->currency : 'IDR',
+        'price_valid_until'       => isset( $row->price_valid_until ) ? $row->price_valid_until : '',
+        'negotiable'              => isset( $row->negotiable ) ? $row->negotiable : '',
+        'availability_status'     => isset( $row->availability_status ) ? $row->availability_status : '',
+        'ready_to_use'            => isset( $row->ready_to_use ) ? $row->ready_to_use : '',
+        'service_history'         => isset( $row->service_history ) ? $row->service_history : '',
+        'warranty_available'      => isset( $row->warranty_available ) ? $row->warranty_available : '',
+        'warranty_period'         => isset( $row->warranty_period ) ? $row->warranty_period : '',
+        'buyer_notes'             => isset( $row->buyer_notes ) ? $row->buyer_notes : '',
+        'images'                  => isset( $row->images ) ? $row->images : '',
+        'video_url'               => isset( $row->video_url ) ? $row->video_url : '',
+        'video_file'              => isset( $row->video_file ) ? $row->video_file : '',
+        'video_file_name'         => isset( $row->video_file_name ) ? $row->video_file_name : '',
+        'specifications'          => isset( $row->specifications ) ? $row->specifications : '',
+        'features'                => isset( $row->features ) ? $row->features : '',
+        'previous_usage'          => isset( $row->previous_usage ) ? $row->previous_usage : '',
+        'working_condition'       => isset( $row->working_condition ) ? $row->working_condition : '',
+        'maintenance_record'      => isset( $row->maintenance_record ) ? $row->maintenance_record : '',
+        'ownership'               => isset( $row->ownership ) ? $row->ownership : '',
+        'operator_hours'          => isset( $row->operator_hours ) ? $row->operator_hours : '',
+        'last_service_date'       => isset( $row->last_service_date ) ? $row->last_service_date : '',
+        'equipment_history'       => isset( $row->equipment_history ) ? $row->equipment_history : '',
+        'detailed_description'    => isset( $row->detailed_description ) ? $row->detailed_description : '',
+        'documents'               => isset( $row->documents ) ? $row->documents : '',
+        'location_country'        => isset( $row->location_country ) ? $row->location_country : '',
+        'location_province'       => isset( $row->location_province ) ? $row->location_province : '',
+        'location_city'           => isset( $row->location_city ) ? $row->location_city : '',
+        'detailed_address'        => isset( $row->detailed_address ) ? $row->detailed_address : '',
+        'map_location'            => isset( $row->map_location ) ? $row->map_location : '',
+        'location_notes'          => isset( $row->location_notes ) ? $row->location_notes : '',
+        'created_at'              => isset( $row->created_at ) ? $row->created_at : '',
+        'updated_at'              => isset( $row->updated_at ) ? $row->updated_at : '',
+        'notes'                   => isset( $row->notes ) ? $row->notes : '',
+    ];
+}
+
 function gti_rental_get_equipment_by_id( $id ) {
     global $wpdb;
     $table = $wpdb->prefix . 'gti_equipment';
@@ -786,42 +1169,7 @@ function gti_rental_get_equipment_by_id( $id ) {
     if ( $table_exists ) {
         $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND type = 'rental' AND deleted_at IS NULL", $id ) );
         if ( $row ) {
-            $image = '';
-            if ( ! empty( $row->main_image ) ) {
-                $image = $row->main_image;
-            } elseif ( ! empty( $row->images ) ) {
-                $imgs = json_decode( $row->images, true );
-                if ( is_array( $imgs ) && ! empty( $imgs[0] ) ) {
-                    $image = $imgs[0];
-                }
-            }
-
-            $status = $row->status ?: 'available';
-            switch ( strtolower( $status ) ) {
-                case 'sold':        $display_status = 'sold'; break;
-                case 'coming_soon': case 'coming-soon': $display_status = 'coming_soon'; break;
-                default:            $display_status = 'ready_stock';
-            }
-
-            return [
-                'id'             => (int) $row->id,
-                'equipment_code' => $row->equipment_code ?: '',
-                'title'          => $row->name ?: 'Equipment',
-                'url'            => '#',
-                'category'       => strtolower( $row->category ?: 'others' ),
-                'brand'          => $row->brand ?: '',
-                'model'          => $row->model ?: '',
-                'type'           => $row->category ?: '',
-                'year'           => $row->year ?: '',
-                'price'          => $row->price ?: '',
-                'hours'          => $row->hours ?: '',
-                'location'       => $row->location ?: '',
-                'condition'      => $row->condition_status ?: '',
-                'status'         => $display_status,
-                'image'          => $image,
-                'description'    => $row->description ?: '',
-                'is_wishlisted'  => false,
-            ];
+            return gti_rental_map_complete_row( $row );
         }
     }
 
@@ -851,7 +1199,7 @@ function gti_rental_get_related_equipment( $current, $limit = 8 ) {
         if ( $category ) {
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
+                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
                     $category, $current_id, $limit
                 )
             );
@@ -866,7 +1214,7 @@ function gti_rental_get_related_equipment( $current, $limit = 8 ) {
             $placeholders = implode( ',', array_fill( 0, count( $existing_ids ), '%d' ) );
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
+                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
                     array_merge( $existing_ids, [ $limit - count( $items ) ] )
                 )
             );

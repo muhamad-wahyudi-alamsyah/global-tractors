@@ -891,11 +891,19 @@ $_gti_re_status_badge = function($status) {
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Model</span><span class="gti-drawer-value" id="drawer-model">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Year</span><span class="gti-drawer-value" id="drawer-year">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Hours</span><span class="gti-drawer-value" id="drawer-hours">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Serial Number</span><span class="gti-drawer-value" id="drawer-serial-number">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Condition</span><span class="gti-drawer-value" id="drawer-condition">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Status</span><span class="gti-drawer-value" id="drawer-status-text">-</span></div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-engine"></i> Engine & Origin</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Engine</span><span class="gti-drawer-value" id="drawer-engine">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Engine Power</span><span class="gti-drawer-value" id="drawer-engine-power">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Origin</span><span class="gti-drawer-value" id="drawer-origin">-</span></div>
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-clipboard-list"></i> Basic Information</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Type</span><span class="gti-drawer-value" id="drawer-type">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Operating Weight</span><span class="gti-drawer-value" id="drawer-operating-weight">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Bucket Capacity</span><span class="gti-drawer-value" id="drawer-bucket-capacity">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Location</span><span class="gti-drawer-value" id="drawer-location">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Stock Number</span><span class="gti-drawer-value" id="drawer-stock-number">-</span></div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
                         <span class="gti-drawer-label">Description</span>
                         <span class="gti-drawer-value is-message" id="drawer-description">-</span>
@@ -906,19 +914,33 @@ $_gti_re_status_badge = function($status) {
             <div class="gti-drawer-section" data-section="specs">
                 <div class="gti-drawer-section-title"><i class="fas fa-cogs"></i> Technical Specifications</div>
                     <div id="drawer-specs-list"><div class="gti-drawer-row"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No specifications available</span></div></div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-sliders-h"></i> Features & Configurations</div>
+                    <div id="drawer-features-list" class="gti-drawer-features"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;width:100%;display:block;">No features</span></div>
             </div>
 
             <!-- Section: 3 - Pricing & Status -->
             <div class="gti-drawer-section" data-section="pricing">
                 <div class="gti-drawer-section-title"><i class="fas fa-tag"></i> Pricing Information</div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Rental Price</span><span class="gti-drawer-value" id="drawer-price">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Selling Price</span><span class="gti-drawer-value" id="drawer-selling-price">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Rental Price</span><span class="gti-drawer-value" id="drawer-rental-price">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Price Type</span><span class="gti-drawer-value" id="drawer-price-type">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">VAT Included</span><span class="gti-drawer-value" id="drawer-vat">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Currency</span><span class="gti-drawer-value" id="drawer-currency">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Price Valid Until</span><span class="gti-drawer-value" id="drawer-price-valid-until">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Negotiable</span><span class="gti-drawer-value" id="drawer-negotiable">-</span></div>
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-clipboard-check"></i> Availability</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Availability</span><span class="gti-drawer-value" id="drawer-availability-status">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty</span><span class="gti-drawer-value" id="drawer-warranty">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Ready to Use</span><span class="gti-drawer-value" id="drawer-ready-to-use">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Service History</span><span class="gti-drawer-value" id="drawer-service-history">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty Available</span><span class="gti-drawer-value" id="drawer-warranty-avail">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty Period</span><span class="gti-drawer-value" id="drawer-warranty-period">-</span></div>
+                    <div class="gti-drawer-row" style="flex-direction:column;">
+                        <span class="gti-drawer-label">Buyer Notes</span>
+                        <span class="gti-drawer-value is-message" id="drawer-buyer-notes">-</span>
+                    </div>
             </div>
 
-            <!-- Section: 4 - Media (Images) -->
+            <!-- Section: 4 - Media (Images + Video) -->
             <div class="gti-drawer-section" data-section="media">
                 <div class="gti-drawer-section-title"><i class="fas fa-images"></i> Images</div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
@@ -929,14 +951,41 @@ $_gti_re_status_badge = function($status) {
                         <span class="gti-drawer-label">Gallery</span>
                         <div id="drawer-gallery" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No images</span></div>
                     </div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-video"></i> Video</div>
+                    <div class="gti-drawer-row" style="flex-direction:column;">
+                        <div id="drawer-video"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No video</span></div>
+                    </div>
             </div>
 
             <!-- Section: 5 - Additional (History, Docs, Location, System) -->
             <div class="gti-drawer-section" data-section="additional">
                 <div class="gti-drawer-section-title"><i class="fas fa-history"></i> Equipment History</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Previous Usage</span><span class="gti-drawer-value" id="drawer-previous-usage">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Working Condition</span><span class="gti-drawer-value" id="drawer-working-condition">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Maintenance Record</span><span class="gti-drawer-value" id="drawer-maintenance-record">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Ownership</span><span class="gti-drawer-value" id="drawer-ownership">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Operator Hours</span><span class="gti-drawer-value" id="drawer-operator-hours">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Last Service Date</span><span class="gti-drawer-value" id="drawer-last-service">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Registration</span><span class="gti-drawer-value" id="drawer-registration">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Insurance</span><span class="gti-drawer-value" id="drawer-insurance">-</span></div>
+                    <div class="gti-drawer-row" style="flex-direction:column;">
+                        <span class="gti-drawer-label">Equipment History</span>
+                        <span class="gti-drawer-value is-message" id="drawer-equipment-history">-</span>
+                    </div>
+                    <div class="gti-drawer-row" style="flex-direction:column;">
+                        <span class="gti-drawer-label">Detailed Description</span>
+                        <span class="gti-drawer-value is-message" id="drawer-detailed-description">-</span>
+                    </div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-file-alt"></i> Documents</div>
+                    <div id="drawer-documents-list" class="gti-drawer-docs"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;width:100%;display:block;">No documents</span></div>
+                <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-map-marker-alt"></i> Location Details</div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Country</span><span class="gti-drawer-value" id="drawer-location-country">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Province</span><span class="gti-drawer-value" id="drawer-location-province">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">City</span><span class="gti-drawer-value" id="drawer-location-city">-</span></div>
+                    <div class="gti-drawer-row" style="flex-direction:column;">
+                        <span class="gti-drawer-label">Address</span>
+                        <span class="gti-drawer-value is-message" id="drawer-address">-</span>
+                    </div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Map Link</span><span class="gti-drawer-value" id="drawer-map-location">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label">Location Notes</span><span class="gti-drawer-value" id="drawer-location-notes">-</span></div>
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-database"></i> System</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Created</span><span class="gti-drawer-value" id="drawer-created">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Updated</span><span class="gti-drawer-value" id="drawer-updated">-</span></div>
@@ -1282,17 +1331,36 @@ $_gti_re_status_badge = function($status) {
         setText('drawer-model', eq.model);
         setText('drawer-year', eq.year);
         setText('drawer-hours', eq.hours ? number_format(eq.hours) + ' Hours' : null);
+        setText('drawer-serial-number', eq.serial_number);
         setText('drawer-condition', eq.condition_status);
         setText('drawer-status-text', sl);
+        // Engine & Origin
+        setText('drawer-engine', eq.engine);
+        setText('drawer-engine-power', eq.engine_power);
+        setText('drawer-origin', eq.origin);
+        // Basic Information
         setText('drawer-type', eq.type);
+        setText('drawer-operating-weight', eq.operating_weight);
+        setText('drawer-bucket-capacity', eq.bucket_capacity);
         setText('drawer-location', eq.location);
+        setText('drawer-stock-number', eq.stock_number);
         setText('drawer-description', eq.description);
         // Pricing
-        setText('drawer-price', eq.price ? formatRupiah(eq.price) + '/bln' : null);
+        setText('drawer-selling-price', eq.selling_price ? formatRupiah(eq.selling_price) : null);
+        setText('drawer-rental-price', eq.rental_price ? formatRupiah(eq.rental_price) + '/bln' : null);
         var ptMap = { 'monthly_rental':'Monthly Rental', 'daily_rental':'Daily Rental', 'sale':'For Sale' };
         setText('drawer-price-type', ptMap[eq.price_type] || eq.price_type);
+        setText('drawer-vat', eq.vat_included ? 'Yes' : (eq.vat_included === false ? 'No' : null));
+        setText('drawer-currency', eq.currency);
+        setText('drawer-price-valid-until', formatDate(eq.price_valid_until));
+        setText('drawer-negotiable', eq.negotiable ? 'Yes' : (eq.negotiable === false ? 'No' : null));
+        // Availability
         setText('drawer-availability-status', eq.status ? eq.status.charAt(0).toUpperCase() + eq.status.slice(1) : null);
-        setText('drawer-warranty', eq.warranty_info);
+        setText('drawer-ready-to-use', eq.ready_to_use ? 'Yes' : (eq.ready_to_use === false ? 'No' : null));
+        setText('drawer-service-history', eq.service_history);
+        setText('drawer-warranty-avail', eq.warranty_available ? 'Yes' : (eq.warranty_available === false ? 'No' : null));
+        setText('drawer-warranty-period', eq.warranty_period);
+        setText('drawer-buyer-notes', eq.buyer_notes);
         // Images
         var mainImgUrl = eq.main_image || '';
         var mainImgEl = document.getElementById('drawer-main-image');
@@ -1303,6 +1371,10 @@ $_gti_re_status_badge = function($status) {
         var galleryEl = document.getElementById('drawer-gallery');
         if (galleryUrls.length > 0) { galleryEl.innerHTML = galleryUrls.map(function(src){ return '<img src="' + src + '" alt="Gallery" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb;">'; }).join(''); }
         else { galleryEl.innerHTML = '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No images</span>'; }
+        // Video
+        var videoEl = document.getElementById('drawer-video');
+        if (eq.video_url) { videoEl.innerHTML = '<div style="position:relative;width:100%;padding-bottom:56.25%;"><iframe style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;" src="' + eq.video_url + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>'; }
+        else { videoEl.innerHTML = '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No video</span>'; }
         // Specs
         var specsHtml = ''; var specs = null;
         if (eq.specifications) { try { specs = typeof eq.specifications === 'string' ? JSON.parse(eq.specifications) : eq.specifications; } catch(e){} }
@@ -1310,10 +1382,33 @@ $_gti_re_status_badge = function($status) {
             for (var key in specs) { if (specs.hasOwnProperty(key)) specsHtml += '<div class="gti-drawer-row"><span class="gti-drawer-label">' + key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g,' ') + '</span><span class="gti-drawer-value">' + specs[key] + '</span></div>'; }
         }
         document.getElementById('drawer-specs-list').innerHTML = specsHtml || '<div class="gti-drawer-row"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No specifications available</span></div>';
-        // Additional
+        // Features
+        var featuresHtml = ''; var features = null;
+        if (eq.features) { try { features = typeof eq.features === 'string' ? JSON.parse(eq.features) : eq.features; } catch(e){} }
+        if (features && Array.isArray(features)) { featuresHtml = features.map(function(f){ return '<span class="gti-drawer-feature-tag"><i class="fas fa-check"></i> ' + f + '</span>'; }).join(''); }
+        document.getElementById('drawer-features-list').innerHTML = featuresHtml || '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;width:100%;display:block;">No features</span>';
+        // Equipment History
+        setText('drawer-previous-usage', eq.previous_usage);
+        setText('drawer-working-condition', eq.working_condition);
+        setText('drawer-maintenance-record', eq.maintenance_record);
+        setText('drawer-ownership', eq.ownership);
+        setText('drawer-operator-hours', eq.operator_hours);
         setText('drawer-last-service', eq.last_service_date);
-        setText('drawer-registration', eq.registration_number);
-        setText('drawer-insurance', eq.insurance_status);
+        setText('drawer-equipment-history', eq.equipment_history);
+        setText('drawer-detailed-description', eq.detailed_description);
+        // Documents
+        var docsHtml = ''; var docs = null;
+        if (eq.documents) { try { docs = typeof eq.documents === 'string' ? JSON.parse(eq.documents) : eq.documents; } catch(e){} }
+        if (docs && Array.isArray(docs)) { docsHtml = docs.map(function(d){ return '<div class="gti-drawer-doc-item"><i class="fas fa-file-check"></i> <span>' + (d.name || 'Document') + '</span></div>'; }).join(''); }
+        document.getElementById('drawer-documents-list').innerHTML = docsHtml || '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;width:100%;display:block;">No documents</span>';
+        // Location Details
+        setText('drawer-location-country', eq.location_country);
+        setText('drawer-location-province', eq.location_province);
+        setText('drawer-location-city', eq.location_city);
+        setText('drawer-address', eq.address);
+        setText('drawer-map-location', eq.map_location);
+        setText('drawer-location-notes', eq.location_notes);
+        // System
         setText('drawer-created', formatDate(eq.created_at));
         setText('drawer-updated', formatDate(eq.updated_at));
         setText('drawer-notes', eq.notes);
@@ -1420,6 +1515,7 @@ $_gti_re_status_badge = function($status) {
         populateField(form, 'selling_price', eq.selling_price ? Number(eq.selling_price).toLocaleString('id-ID') : '');
         populateField(form, 'rental_price', eq.rental_price ? Number(eq.rental_price).toLocaleString('id-ID') : '');
         populateField(form, 'price_type', eq.price_type);
+        populateField(form, 'negotiable', eq.negotiable);
         // Step 4 — Images
         var previewEl = document.getElementById('gti-edit-upload-preview');
         var placeholderEl = document.getElementById('gti-edit-upload-placeholder');
