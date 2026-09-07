@@ -32,6 +32,12 @@ function gti_add_rewrite_rules() {
 add_filter('query_vars', 'gti_add_query_vars');
 function gti_add_query_vars($vars) {
     $vars[] = 'gti_page';
+    $vars[] = 'page_num';
+    $vars[] = 'search';
+    $vars[] = 'category';
+    $vars[] = 'brand';
+    $vars[] = 'status';
+    $vars[] = 'condition';
     return $vars;
 }
 

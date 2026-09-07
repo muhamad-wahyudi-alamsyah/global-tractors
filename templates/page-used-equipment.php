@@ -22,7 +22,7 @@ $status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) :
 $condition_filter = isset($_GET['condition']) ? sanitize_text_field($_GET['condition']) : '';
 
 // Pagination
-$paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+$paged = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset = ($paged - 1) * $per_page;
 
@@ -856,11 +856,10 @@ $_gti_eq_status_badge = function($status, $price_valid_until = null) {
                                 if ($brand) $query_params['brand'] = $brand;
                                 if ($status_filter) $query_params['status'] = $status_filter;
                                 if ($condition_filter) $query_params['condition'] = $condition_filter;
-                                $query_params['gti_page'] = 'used-equipment';
                                 $base_url = gti_dashboard_url('used-equipment');
                                 ?>
                                 <?php if ($paged > 1): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
                                 <?php endif; ?>
@@ -869,22 +868,22 @@ $_gti_eq_status_badge = function($status, $price_valid_until = null) {
                                 $end = min($total_pages, $paged + 2);
                                 ?>
                                 <?php if ($start > 1): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => 1]))); ?>" class="gti-ue-page-btn">1</a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => 1]))); ?>" class="gti-ue-page-btn">1</a>
                                     <?php if ($start > 2): ?><span class="gti-ue-page-dots">...</span><?php endif; ?>
                                 <?php endif; ?>
                                 <?php for ($i = $start; $i <= $end; $i++): ?>
                                     <?php if ($i == $paged): ?>
                                         <button class="gti-ue-page-btn active"><?php echo $i; ?></button>
                                     <?php else: ?>
-                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
+                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
                                     <?php endif; ?>
                                 <?php endfor; ?>
                                 <?php if ($end < $total_pages): ?>
                                     <?php if ($end < $total_pages - 1): ?><span class="gti-ue-page-dots">...</span><?php endif; ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
                                 <?php endif; ?>
                                 <?php if ($paged < $total_pages): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
                                 <?php endif; ?>
