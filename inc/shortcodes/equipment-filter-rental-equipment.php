@@ -13,6 +13,17 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+if ( ! function_exists( 'gti_is_price_valid' ) ) {
+    function gti_is_price_valid( $price_valid_until ) {
+        if ( empty( $price_valid_until ) ) {
+            return true;
+        }
+        $valid_until = strtotime( $price_valid_until );
+        $today = strtotime( current_time( 'Y-m-d' ) );
+        return $valid_until >= $today;
+    }
+}
+
 add_shortcode( 'gti_rental_equipment_filter', 'gti_render_rental_equipment_filter' );
 
 function gti_render_rental_equipment_filter( $atts = [] ) {
@@ -392,6 +403,10 @@ function gti_get_rental_equipment_data() {
 
     $items = [];
     foreach ( $rows as $row ) {
+        if ( ! gti_is_price_valid( $row->price_valid_until ) ) {
+            continue;
+        }
+
         $image = '';
         if ( ! empty( $row->main_image ) ) {
             $image = $row->main_image;

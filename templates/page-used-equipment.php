@@ -92,8 +92,24 @@ $_gti_eq_fmt = function($amount) {
     return 'Rp ' . number_format((float)$amount, 0, ',', '.');
 };
 
+// Helper function to check if price is valid
+if ( ! function_exists( 'gti_is_price_valid' ) ) {
+    function gti_is_price_valid( $price_valid_until ) {
+        if ( empty( $price_valid_until ) ) {
+            return true;
+        }
+        $valid_until = strtotime( $price_valid_until );
+        $today = strtotime( current_time( 'Y-m-d' ) );
+        return $valid_until >= $today;
+    }
+}
+
 // Status badge helper
-$_gti_eq_status_badge = function($status) {
+$_gti_eq_status_badge = function($status, $price_valid_until = null) {
+    if ( ! gti_is_price_valid( $price_valid_until ) ) {
+        return '<span class="gti-badge-status price-no-longer-valid">Expired</span>';
+    }
+
     $map = array(
         'available' => array('class' => 'available', 'label' => 'Available'),
         'sold' => array('class' => 'sold', 'label' => 'Sold'),
@@ -210,6 +226,7 @@ $_gti_eq_status_badge = function($status) {
         .gti-drawer-status.status-reserved { background: #fef3c7; color: #b45309; }
         .gti-drawer-status.status-rented { background: #fee2e2; color: #b91c1c; }
         .gti-drawer-status.status-draft { background: #e0e7ff; color: #4338ca; }
+        .gti-drawer-status.status-price-no-longer-valid { background: #fee2e2; color: #dc2626; }
         .gti-drawer-close {
             width: 32px; height: 32px; border-radius: 6px;
             border: 1px solid #e5e7eb; background: #fff; cursor: pointer;
@@ -808,7 +825,7 @@ $_gti_eq_status_badge = function($status) {
                                         </td>
                                         <td class="col-year"><?php echo esc_html($eq->year); ?></td>
                                         <td class="col-price"><?php echo esc_html($_gti_eq_fmt($eq->price)); ?></td>
-                                        <td class="col-status"><?php echo $_gti_eq_status_badge($eq->status); ?></td>
+                                        <td class="col-status"><?php echo $_gti_eq_status_badge($eq->status, $eq->price_valid_until); ?></td>
                                         <td class="col-actions">
                                             <div class="gti-ue-action-menu">
                                                 <button class="gti-ue-action-toggle" title="Actions"><i class="fas fa-ellipsis-v"></i></button>
@@ -1536,9 +1553,23 @@ $_gti_eq_status_badge = function($status) {
         document.getElementById('drawer-eq-code').textContent = eq.equipment_code || '-';
         var badge = document.getElementById('drawer-status-badge');
         var statusMap = { 'available':'Available', 'sold':'Sold', 'reserved':'Reserved', 'rented':'Rented', 'maintenance':'Maintenance', 'draft':'Draft' };
-        var sl = statusMap[eq.status] || eq.status || 'Available';
-        badge.textContent = sl;
-        badge.className = 'gti-drawer-status status-' + (eq.status || 'available');
+        var sl = '';
+        var isPriceValid = true;
+        if (eq.price_valid_until) {
+            var validDate = new Date(eq.price_valid_until);
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            isPriceValid = validDate >= today;
+        }
+        if (!isPriceValid) {
+            sl = 'Price No Longer Valid';
+            badge.textContent = sl;
+            badge.className = 'gti-drawer-status status-price-no-longer-valid';
+        } else {
+            sl = statusMap[eq.status] || eq.status || 'Available';
+            badge.textContent = sl;
+            badge.className = 'gti-drawer-status status-' + (eq.status || 'available');
+        }
         // === Section 1: Info ===
         setText('drawer-name', eq.name);
         setText('drawer-eq-code-info', eq.equipment_code);
