@@ -15,6 +15,8 @@ require_once get_stylesheet_directory() . '/inc/constants.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/url-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/format-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/template-loader.php';
+require_once GTI_CHILD_DIR . '/inc/helpers/equipment-taxonomy.php';
+require_once GTI_CHILD_DIR . '/inc/helpers/spare-parts-taxonomy.php';
 require_once GTI_CHILD_DIR . '/inc/user/user-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/user/user-meta.php';
 

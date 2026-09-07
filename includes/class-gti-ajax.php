@@ -499,20 +499,14 @@ class GTI_Ajax {
         $stock = intval($_POST['stock'] ?? 0);
         $minimum_stock = intval($_POST['minimum_stock'] ?? 10);
         
-        // Determine status: draft takes priority, then form status, then stock-based
-        if ($is_draft) {
+        // A form may only choose the publication state. The stock level is always
+        // derived, so the dashboard badge, the catalog card and the catalog
+        // filters can never disagree with the quantity actually on hand.
+        $form_status = sanitize_text_field($_POST['status'] ?? '');
+        if ($is_draft || 'draft' === $form_status) {
             $status = 'draft';
         } else {
-            $form_status = sanitize_text_field($_POST['status'] ?? '');
-            if ($form_status) {
-                $status = $form_status;
-            } elseif ($stock == 0) {
-                $status = 'out_of_stock';
-            } elseif ($stock <= $minimum_stock) {
-                $status = 'low_stock';
-            } else {
-                $status = 'in_stock';
-            }
+            $status = gti_spare_stock_status($stock, $minimum_stock);
         }
 
         // Handle image upload
@@ -594,7 +588,12 @@ class GTI_Ajax {
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
         $id = intval($_POST['id'] ?? 0);
-        $status = sanitize_text_field($_POST['status'] ?? 'in_stock');
+        // Derive from the stored quantities so publishing cannot mislabel stock.
+        $row = $wpdb->get_row($wpdb->prepare("SELECT stock, minimum_stock FROM {$table} WHERE id = %d", $id));
+        if (!$row) {
+            wp_send_json_error(array('message' => 'Spare part not found'));
+        }
+        $status = gti_spare_stock_status($row->stock, $row->minimum_stock);
         $result = $wpdb->update($table, array('status' => $status), array('id' => $id));
         if ($result !== false) {
             wp_send_json_success(array('message' => 'Spare part published successfully'));
@@ -619,13 +618,7 @@ class GTI_Ajax {
         $category = sanitize_text_field($_POST['category'] ?? '');
         $year     = date('Y');
 
-        $cat_abbrev = [
-            'Filter' => 'FLT', 'Belt' => 'BLT', 'Brake' => 'BRK',
-            'Engine' => 'ENG', 'Hydraulic' => 'HYD', 'Seal' => 'SEL',
-            'Undercarriage' => 'UND', 'Cooling' => 'CLG', 'Electrical' => 'ELT',
-            'Other' => 'OTH',
-        ];
-        $abbr = $cat_abbrev[$category] ?? 'GEN';
+        $abbr = gti_spare_part_category_abbr( $category );
 
         $prefix = "SP-{$abbr}-{$year}-";
 

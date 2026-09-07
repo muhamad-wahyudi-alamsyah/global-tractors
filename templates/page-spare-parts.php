@@ -19,9 +19,10 @@ $search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
 $category = isset($_GET['category']) ? sanitize_text_field($_GET['category']) : '';
 $brand = isset($_GET['brand']) ? sanitize_text_field($_GET['brand']) : '';
 $status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
+$supplier_filter = isset($_GET['supplier']) ? sanitize_text_field($_GET['supplier']) : '';
 
-// Pagination
-$paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+// Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
+$paged = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset = ($paged - 1) * $per_page;
 
@@ -30,8 +31,9 @@ $where = "WHERE 1=1";
 $params = array();
 
 if ($search) {
-    $where .= " AND (name LIKE %s OR part_number LIKE %s)";
+    $where .= " AND (name LIKE %s OR part_number LIKE %s OR brand LIKE %s)";
     $search_term = '%' . $wpdb->esc_like($search) . '%';
+    $params[] = $search_term;
     $params[] = $search_term;
     $params[] = $search_term;
 }
@@ -47,42 +49,66 @@ if ($status_filter) {
     $where .= " AND status = %s";
     $params[] = $status_filter;
 }
+if ($supplier_filter) {
+    $where .= " AND supplier = %s";
+    $params[] = $supplier_filter;
+}
 
 // Get total count
 $count_sql = "SELECT COUNT(*) FROM {$table} {$where}";
-if (!empty($params)) {
-    $total = (int) $wpdb->get_var($wpdb->prepare($count_sql, $params));
-} else {
-    $total = (int) $wpdb->get_var($count_sql);
-}
-$total_pages = ceil($total / $per_page);
+$total = !empty($params) ? (int) $wpdb->get_var($wpdb->prepare($count_sql, $params)) : (int) $wpdb->get_var($count_sql);
+$total_pages = (int) ceil($total / $per_page);
 
 // Get spare parts
-$data_sql = "SELECT * FROM {$table} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d";
-$data_params = $params;
-$data_params[] = $per_page;
-$data_params[] = $offset;
-if (!empty($data_params)) {
-    $spare_parts = $wpdb->get_results($wpdb->prepare($data_sql, $data_params));
-} else {
-    $spare_parts = $wpdb->get_results("SELECT * FROM {$table} ORDER BY created_at DESC LIMIT {$per_page} OFFSET {$offset}");
-}
+$spare_parts = $wpdb->get_results($wpdb->prepare(
+    "SELECT * FROM {$table} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d",
+    array_merge($params, array($per_page, $offset))
+));
 
 // Status counts
-$total_parts = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
-$in_stock = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'in_stock'");
-$low_stock = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'low_stock'");
-$out_of_stock = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'out_of_stock'");
-$draft_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'draft'");
-$inventory_value = (float) $wpdb->get_var("SELECT SUM(stock * unit_price) FROM {$table}");
+$status_counts = $wpdb->get_results("SELECT status, COUNT(*) as count FROM {$table} GROUP BY status");
+$status_count_map = array();
+foreach ($status_counts as $sc) {
+    $status_count_map[$sc->status] = (int) $sc->count;
+}
+$total_parts     = array_sum($status_count_map);
+$in_stock        = isset($status_count_map['in_stock']) ? $status_count_map['in_stock'] : 0;
+$low_stock       = isset($status_count_map['low_stock']) ? $status_count_map['low_stock'] : 0;
+$out_of_stock    = isset($status_count_map['out_of_stock']) ? $status_count_map['out_of_stock'] : 0;
+$draft_count     = isset($status_count_map['draft']) ? $status_count_map['draft'] : 0;
+$inventory_value = (float) $wpdb->get_var("SELECT SUM(stock * unit_price) FROM {$table} WHERE status != 'draft'");
 
-// Categories and brands for filters
+// Filter options
 $categories = $wpdb->get_col("SELECT DISTINCT category FROM {$table} WHERE category != '' ORDER BY category");
 $brands = $wpdb->get_col("SELECT DISTINCT brand FROM {$table} WHERE brand != '' ORDER BY brand");
+$suppliers = $wpdb->get_col("SELECT DISTINCT supplier FROM {$table} WHERE supplier IS NOT NULL AND supplier != '' ORDER BY supplier");
 
 // Format currency inline to avoid redeclaration errors
 $_gti_sp_fmt = function($amount) {
     return 'Rp ' . number_format((float)$amount, 0, ',', '.');
+};
+
+// Status label helper
+$_gti_sp_status_label = function($status) {
+    $map = array(
+        'in_stock'     => 'In Stock',
+        'low_stock'    => 'Low Stock',
+        'out_of_stock' => 'Out of Stock',
+        'draft'        => 'Draft',
+    );
+    return isset($map[$status]) ? $map[$status] : ucfirst(str_replace('_', ' ', (string) $status));
+};
+
+// Status badge helper
+$_gti_sp_status_badge = function($status) use ($_gti_sp_status_label) {
+    $map = array(
+        'in_stock'     => 'available',
+        'low_stock'    => 'reserved',
+        'out_of_stock' => 'sold',
+        'draft'        => 'draft',
+    );
+    $class = isset($map[$status]) ? $map[$status] : 'available';
+    return '<span class="gti-badge-status ' . esc_attr($class) . '">' . esc_html($_gti_sp_status_label($status)) . '</span>';
 };
 ?>
 <!DOCTYPE html>
@@ -102,6 +128,7 @@ $_gti_sp_fmt = function($amount) {
         .gti-ue-stats-row { flex-wrap: wrap; }
         .gti-ue-stats-row .gti-ue-stat-card:last-child { flex: 1.4; }
         .gti-ue-stat-value { font-size: 22px; word-break: break-all; }
+        .gti-ue-stat-icon.draft { background: #eef2ff; color: #4f46e5; }
 
         /* Border overrides to match request-equipment style */
         .gti-ue-stat-card { border: 1px solid #e5e7eb; }
@@ -109,7 +136,8 @@ $_gti_sp_fmt = function($amount) {
         .gti-ue-filter select { border: 1px solid #d1d5db; }
         .gti-ue-btn-reset { border: 1px solid #d1d5db; text-decoration: none; }
         .gti-ue-btn-reset:hover { border-color: #d1d5db; }
-        .gti-ue-table-card { border: 1px solid #e5e7eb; }
+        .gti-ue-table-card { border: 1px solid #e5e7eb; overflow: visible; }
+        .gti-ue-table { width: 100%; table-layout: fixed; }
         .gti-ue-action-toggle { border: 1px solid #e5e7eb; }
         .gti-ue-action-toggle:hover { border-color: #d1d5db; }
         .gti-ue-action-dropdown { border: 1px solid #e5e7eb; }
@@ -127,7 +155,8 @@ $_gti_sp_fmt = function($amount) {
         .gti-ue-table .col-partname { width: 160px; }
         .gti-ue-table .col-category { width: 80px; }
         .gti-ue-table .col-brand { width: 90px; }
-        .gti-ue-table .col-stock { width: 55px; text-align: center; }
+        .gti-ue-table .col-stock { width: 72px; text-align: center; }
+        .gti-ue-table td small { display: block; font-size: 11px; color: #9ca3af; margin-top: 2px; font-weight: 500; }
         .gti-ue-table .col-price { width: 95px; text-align: right; white-space: nowrap; }
         .gti-ue-table .col-totalval { width: 105px; text-align: right; white-space: nowrap; }
         .gti-ue-table .col-status { width: 120px; text-align: center; white-space: nowrap; }
@@ -229,6 +258,14 @@ $_gti_sp_fmt = function($amount) {
             font-size: 13px; font-weight: 500; color: #1a1f36;
             text-align: right; word-break: break-word;
         }
+        .gti-drawer-value.is-link { color: #2563eb; }
+        .gti-drawer-stock-tag {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+        }
+        .gti-drawer-stock-tag.level-ok { background: #d1fae5; color: #047857; }
+        .gti-drawer-stock-tag.level-low { background: #fef3c7; color: #b45309; }
+        .gti-drawer-stock-tag.level-out { background: #fee2e2; color: #b91c1c; }
         .gti-drawer-value.is-message {
             text-align: left; background: #f9fafb; padding: 10px 12px;
             border-radius: 8px; font-weight: 400; color: #374151;
@@ -313,50 +350,6 @@ $_gti_sp_fmt = function($amount) {
             .gti-ue-btn-view { display: none !important; }
         }
 
-        /* ====== Drawer Stepper ====== */
-        .gti-drawer-stepper {
-            display: flex; align-items: flex-start; justify-content: center;
-            gap: 0; margin: -24px -24px 20px -24px;
-            padding: 20px 16px 16px; border-bottom: 1px solid #f3f4f6;
-            flex-shrink: 0;
-        }
-        .gti-drawer-step {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 6px; cursor: pointer; flex-shrink: 0;
-        }
-        .gti-drawer-step-circle {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: #e5e7eb; color: #9ca3af;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 600; transition: all 0.25s ease;
-        }
-        .gti-drawer-step.active .gti-drawer-step-circle {
-            background: #F5A623; color: #1a1f36;
-            box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
-        }
-        .gti-drawer-step.completed .gti-drawer-step-circle {
-            background: #10b981; color: #fff;
-        }
-        .gti-drawer-step-label {
-            font-size: 10px; font-weight: 500; color: #9ca3af;
-            white-space: nowrap; transition: color 0.25s ease;
-            text-align: center; max-width: 56px;
-            overflow: hidden; text-overflow: ellipsis;
-        }
-        .gti-drawer-step.active .gti-drawer-step-label {
-            color: #1a1f36; font-weight: 600;
-        }
-        .gti-drawer-step.completed .gti-drawer-step-label { color: #10b981; }
-        .gti-drawer-step-line {
-            flex: 1; height: 2px; background: #e5e7eb;
-            margin: 0 4px; margin-top: 14px;
-            min-width: 12px; max-width: 28px;
-            transition: background 0.25s ease;
-        }
-        .gti-drawer-step-line.active { background: #10b981; }
-        .gti-drawer-section[data-section] { display: none; }
-        .gti-drawer-section[data-section].active { display: block; }
-
         /* ====== Fullscreen Edit Modal ====== */
         .gti-ue-edit-overlay {
             display: none; position: fixed; inset: 0; z-index: 2000;
@@ -382,8 +375,19 @@ $_gti_sp_fmt = function($amount) {
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
         }
         .gti-ue-edit-header-left { display: flex; align-items: center; gap: 12px; }
-        .gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; }
+        .gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         .gti-ue-edit-header h2 i { color: #F5A623; }
+        /* Compact stepper inside header */
+        .gti-ue-edit-header .gti-ae-stepper-card {
+            margin: 0; background: none; border: none; box-shadow: none;
+            border-radius: 0; overflow: visible;
+            flex: 0 1 auto; height: fit-content; width: fit-content;
+        }
+        .gti-ue-edit-header .gti-ae-stepper { gap: 0; padding: 0; margin: 0; justify-content: center; }
+        .gti-ue-edit-header .gti-ae-step { cursor: pointer; gap: 4px; }
+        .gti-ue-edit-header .gti-ae-step-circle { width: 24px; height: 24px; font-size: 11px; font-weight: 600; }
+        .gti-ue-edit-header .gti-ae-step-label { font-size: 10px; font-weight: 500; }
+        .gti-ue-edit-header .gti-ae-step-line { margin-top: 11px; min-width: 8px; max-width: 20px; height: 2px; }
         .gti-ue-edit-close {
             width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb;
             background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
@@ -411,6 +415,23 @@ $_gti_sp_fmt = function($amount) {
         }
         .gti-ue-edit-footer .gti-ae-btn-submit:hover { background: #e6991a; }
         .gti-ue-edit-footer .gti-ae-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Reuse existing stepper/form styles inside the edit modal */
+        .gti-ue-edit-body .gti-ae-step-content { display: none; }
+        .gti-ue-edit-body .gti-ae-step-content.active { display: block; }
+        .gti-ue-edit-body .gti-ae-step-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb;
+        }
+        .gti-ue-edit-body .gti-ae-step-nav button {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev { border: 1px solid #e5e7eb; background: #fff; color: #374151; }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev:hover { background: #f9fafb; }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-next { border: 1px solid #F5A623; background: #F5A623; color: #1a1f36; font-weight: 600; }
+        .gti-ue-edit-body .gti-ae-step-nav .gti-ae-next:hover { background: #e6991a; }
 
         /* ====== Delete Confirmation Modal ====== */
         .gti-ue-delete-overlay {
@@ -477,6 +498,7 @@ $_gti_sp_fmt = function($amount) {
         .gti-ue-toast.show { transform: translateY(0); opacity: 1; }
         .gti-ue-toast.success { background: #059669; color: #fff; }
         .gti-ue-toast.error { background: #991b1b; color: #fff; }
+        .gti-ue-toast.warning { background: #92400e; color: #fff; }
     </style>
 </head>
 <body class="gti-body">
@@ -607,6 +629,13 @@ $_gti_sp_fmt = function($amount) {
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
+                        <div class="gti-ue-stat-icon draft"><i class="fas fa-file-pen"></i></div>
+                        <div class="gti-ue-stat-info">
+                            <p class="gti-ue-stat-label">Draft</p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html($draft_count); ?></p>
+                        </div>
+                    </div>
+                    <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon"><i class="fas fa-coins"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Inventory Value</p>
@@ -648,6 +677,14 @@ $_gti_sp_fmt = function($amount) {
                                 <option value="draft" <?php selected($status_filter, 'draft'); ?>>Draft</option>
                             </select>
                         </div>
+                        <div class="gti-ue-filter">
+                            <select name="supplier" onchange="this.form.submit()">
+                                <option value="">All Suppliers</option>
+                                <?php foreach ($suppliers as $sup): ?>
+                                    <option value="<?php echo esc_attr($sup); ?>" <?php selected($supplier_filter, $sup); ?>><?php echo esc_html($sup); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
                         <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-ue-btn-reset">
                             <i class="fas fa-rotate-right"></i> Reset
                         </a>
@@ -682,7 +719,7 @@ $_gti_sp_fmt = function($amount) {
                                             <i class="fas fa-cogs" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                                             <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No spare parts found</p>
                                             <p style="font-size: 14px;">
-                                                <?php if ($search || $category || $brand || $status_filter): ?>
+                                                <?php if ($search || $category || $brand || $status_filter || $supplier_filter): ?>
                                                     Try adjusting your filters
                                                 <?php else: ?>
                                                     Get started by adding your first spare part
@@ -704,31 +741,19 @@ $_gti_sp_fmt = function($amount) {
                                             </div>
                                         </td>
                                         <td class="col-partnum"><strong><?php echo esc_html($part->part_number); ?></strong></td>
-                                        <td class="col-partname"><?php echo esc_html($part->name); ?></td>
+                                        <td class="col-partname">
+                                            <strong><?php echo esc_html($part->name); ?></strong>
+                                            <?php if (!empty($part->supplier)): ?><br><small><?php echo esc_html($part->supplier); ?></small><?php endif; ?>
+                                        </td>
                                         <td class="col-category"><?php echo esc_html($part->category); ?></td>
                                         <td class="col-brand"><?php echo esc_html($part->brand); ?></td>
                                         <td class="col-stock">
-                                            <strong><?php echo esc_html($part->stock); ?></strong>
+                                            <strong><?php echo esc_html(number_format((int) $part->stock, 0, ',', '.')); ?></strong><br>
+                                            <small>min. <?php echo esc_html(number_format((int) $part->minimum_stock, 0, ',', '.')); ?></small>
                                         </td>
                                         <td class="col-price"><?php echo esc_html($_gti_sp_fmt($part->unit_price)); ?></td>
                                         <td class="col-totalval"><strong><?php echo esc_html($_gti_sp_fmt($part->stock * $part->unit_price)); ?></strong></td>
-                                        <td class="col-status">
-                                            <?php
-                                            $status_class = 'available';
-                                            $status_label = 'In Stock';
-                                            if ($part->status === 'low_stock') {
-                                                $status_class = 'reserved';
-                                                $status_label = 'Low Stock';
-                                            } elseif ($part->status === 'out_of_stock') {
-                                                $status_class = 'sold';
-                                                $status_label = 'Out of Stock';
-                                            } elseif ($part->status === 'draft') {
-                                                $status_class = 'draft';
-                                                $status_label = 'Draft';
-                                            }
-                                            ?>
-                                            <span class="gti-badge-status <?php echo esc_attr($status_class); ?>"><?php echo esc_html($status_label); ?></span>
-                                        </td>
+                                        <td class="col-status"><?php echo $_gti_sp_status_badge($part->status); ?></td>
                                         <td class="col-actions">
                                             <div class="gti-ue-action-menu">
                                                 <button class="gti-ue-action-toggle" title="Actions"><i class="fas fa-ellipsis-v"></i></button>
@@ -753,46 +778,40 @@ $_gti_sp_fmt = function($amount) {
                             </div>
                             <div class="gti-ue-pagination-controls">
                                 <?php
-                                $base_url = '?';
-                                if ($search) $base_url .= 'search=' . urlencode($search) . '&';
-                                if ($category) $base_url .= 'category=' . urlencode($category) . '&';
-                                if ($brand) $base_url .= 'brand=' . urlencode($brand) . '&';
-                                if ($status_filter) $base_url .= 'status=' . urlencode($status_filter) . '&';
+                                $query_params = array();
+                                if ($search) $query_params['search'] = $search;
+                                if ($category) $query_params['category'] = $category;
+                                if ($brand) $query_params['brand'] = $brand;
+                                if ($status_filter) $query_params['status'] = $status_filter;
+                                if ($supplier_filter) $query_params['supplier'] = $supplier_filter;
+                                $base_url = gti_dashboard_url('spare-parts');
                                 ?>
-
                                 <?php if ($paged > 1): ?>
-                                    <a href="<?php echo $base_url; ?>paged=<?php echo $paged - 1; ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
                                 <?php endif; ?>
-
                                 <?php
                                 $start = max(1, $paged - 2);
                                 $end = min($total_pages, $paged + 2);
-                                if ($start > 1): ?>
-                                    <a href="<?php echo $base_url; ?>paged=1" class="gti-ue-page-btn">1</a>
-                                    <?php if ($start > 2): ?>
-                                        <span class="gti-ue-page-dots">...</span>
-                                    <?php endif; ?>
+                                ?>
+                                <?php if ($start > 1): ?>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => 1]))); ?>" class="gti-ue-page-btn">1</a>
+                                    <?php if ($start > 2): ?><span class="gti-ue-page-dots">...</span><?php endif; ?>
                                 <?php endif; ?>
-
                                 <?php for ($i = $start; $i <= $end; $i++): ?>
                                     <?php if ($i == $paged): ?>
                                         <button class="gti-ue-page-btn active"><?php echo $i; ?></button>
                                     <?php else: ?>
-                                        <a href="<?php echo $base_url; ?>paged=<?php echo $i; ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
+                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
                                     <?php endif; ?>
                                 <?php endfor; ?>
-
                                 <?php if ($end < $total_pages): ?>
-                                    <?php if ($end < $total_pages - 1): ?>
-                                        <span class="gti-ue-page-dots">...</span>
-                                    <?php endif; ?>
-                                    <a href="<?php echo $base_url; ?>paged=<?php echo $total_pages; ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
+                                    <?php if ($end < $total_pages - 1): ?><span class="gti-ue-page-dots">...</span><?php endif; ?>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
                                 <?php endif; ?>
-
                                 <?php if ($paged < $total_pages): ?>
-                                    <a href="<?php echo $base_url; ?>paged=<?php echo $paged + 1; ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
                                 <?php endif; ?>
@@ -813,50 +832,48 @@ $_gti_sp_fmt = function($amount) {
             <button type="button" class="gti-drawer-close" onclick="closeDetailDrawer()"><i class="fas fa-times"></i></button>
         </div>
         <div class="gti-drawer-body">
-            <!-- Stepper Navigation -->
-            <div class="gti-drawer-stepper">
-                <div class="gti-drawer-step active" data-section="info" onclick="switchDrawerStep(this)">
-                    <div class="gti-drawer-step-circle">1</div>
-                    <div class="gti-drawer-step-label">Info</div>
-                </div>
-                <div class="gti-drawer-step-line"></div>
-                <div class="gti-drawer-step" data-section="inventory" onclick="switchDrawerStep(this)">
-                    <div class="gti-drawer-step-circle">2</div>
-                    <div class="gti-drawer-step-label">Inventory</div>
-                </div>
-                <div class="gti-drawer-step-line"></div>
-                <div class="gti-drawer-step" data-section="additional" onclick="switchDrawerStep(this)">
-                    <div class="gti-drawer-step-circle">3</div>
-                    <div class="gti-drawer-step-label">More</div>
-                </div>
-            </div>
-
-            <div class="gti-drawer-section active" data-section="info">
+            <div class="gti-drawer-section">
                 <div class="gti-drawer-section-title"><i class="fas fa-cog"></i> Part Information</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Part Number</span><span class="gti-drawer-value" id="drawer-partnum">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Part Name</span><span class="gti-drawer-value" id="drawer-name">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Category</span><span class="gti-drawer-value" id="drawer-category">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Brand</span><span class="gti-drawer-value" id="drawer-brand">-</span></div>
+                <div class="gti-drawer-row"><span class="gti-drawer-label">Status</span><span class="gti-drawer-value" id="drawer-status-text">-</span></div>
             </div>
-            <div class="gti-drawer-section" data-section="inventory">
+
+            <div class="gti-drawer-section">
                 <div class="gti-drawer-section-title"><i class="fas fa-boxes"></i> Inventory</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Current Stock</span><span class="gti-drawer-value" id="drawer-stock">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Minimum Stock</span><span class="gti-drawer-value" id="drawer-min-stock">-</span></div>
-                <div class="gti-drawer-row"><span class="gti-drawer-label">Status</span><span class="gti-drawer-value" id="drawer-status-text">-</span></div>
+                <div class="gti-drawer-row"><span class="gti-drawer-label">Stock Level</span><span class="gti-drawer-value" id="drawer-stock-level">-</span></div>
             </div>
+
             <div class="gti-drawer-section">
                 <div class="gti-drawer-section-title"><i class="fas fa-coins"></i> Pricing</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Unit Price</span><span class="gti-drawer-value" id="drawer-unit-price">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Total Value</span><span class="gti-drawer-value" id="drawer-total-value">-</span></div>
             </div>
-            <div class="gti-drawer-section" data-section="additional">
-                <div class="gti-drawer-section-title"><i class="fas fa-info-circle"></i> Additional</div>
+
+            <div class="gti-drawer-section">
+                <div class="gti-drawer-section-title"><i class="fas fa-warehouse"></i> Sourcing &amp; Storage</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Supplier</span><span class="gti-drawer-value" id="drawer-supplier">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Location</span><span class="gti-drawer-value" id="drawer-location">-</span></div>
+            </div>
+
+            <div class="gti-drawer-section">
+                <div class="gti-drawer-section-title"><i class="fas fa-align-left"></i> Description</div>
                 <div class="gti-drawer-row" style="flex-direction: column;">
-                    <span class="gti-drawer-label">Description</span>
                     <span class="gti-drawer-value is-message" id="drawer-description">-</span>
                 </div>
+            </div>
+
+            <div class="gti-drawer-section">
+                <div class="gti-drawer-section-title"><i class="fas fa-image"></i> Image</div>
+                <div id="drawer-main-image" style="width:100%;"><span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No image</span></div>
+            </div>
+
+            <div class="gti-drawer-section">
+                <div class="gti-drawer-section-title"><i class="fas fa-database"></i> System</div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Created</span><span class="gti-drawer-value" id="drawer-created">-</span></div>
                 <div class="gti-drawer-row"><span class="gti-drawer-label">Updated</span><span class="gti-drawer-value" id="drawer-updated">-</span></div>
             </div>
@@ -881,6 +898,24 @@ $_gti_sp_fmt = function($amount) {
                 <div class="gti-ue-edit-header-left">
                     <h2><i class="fas fa-edit"></i> Edit Spare Part</h2>
                 </div>
+                <div class="gti-ae-stepper-card">
+                    <div class="gti-ae-stepper">
+                        <div class="gti-ae-step active" data-step="1" onclick="editGoStep(1)">
+                            <div class="gti-ae-step-circle">1</div>
+                            <div class="gti-ae-step-label">Part Info</div>
+                        </div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="2" onclick="editGoStep(2)">
+                            <div class="gti-ae-step-circle">2</div>
+                            <div class="gti-ae-step-label">Inventory &amp; Pricing</div>
+                        </div>
+                        <div class="gti-ae-step-line"></div>
+                        <div class="gti-ae-step" data-step="3" onclick="editGoStep(3)">
+                            <div class="gti-ae-step-circle">3</div>
+                            <div class="gti-ae-step-label">Image</div>
+                        </div>
+                    </div>
+                </div>
                 <button class="gti-ue-edit-close" onclick="closeEditModal()" title="Close"><i class="fas fa-times"></i></button>
             </div>
             <div class="gti-ue-edit-body">
@@ -889,48 +924,85 @@ $_gti_sp_fmt = function($amount) {
                     <input type="hidden" name="action" value="gti_save_spare_part">
                     <input type="hidden" name="nonce" value="<?php echo esc_attr(wp_create_nonce('gti_nonce')); ?>">
 
-                    <div class="gti-ae-form-card">
-                        <div class="gti-ae-card-header"><h3><i class="fas fa-cog"></i> Part Information</h3></div>
-                        <div class="gti-ae-card-body">
-                            <div class="gti-ae-form-grid">
-                                <div class="gti-ae-field"><label>Part Number <span class="required">*</span></label><input type="text" name="part_number" required></div>
-                                <div class="gti-ae-field"><label>Part Name <span class="required">*</span></label><input type="text" name="name" required></div>
+                    <!-- Step 1: Part Information -->
+                    <div class="gti-ae-step-content active" data-step="1">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-cog"></i> Part Information</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Part Number <span class="required">*</span></label><input type="text" name="part_number" required></div>
+                                    <div class="gti-ae-field"><label>Part Name <span class="required">*</span></label><input type="text" name="name" required></div>
+                                </div>
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field">
+                                        <label>Category <span class="required">*</span></label>
+                                        <select name="category" required>
+                                            <option value="">Select Category</option>
+                                            <?php foreach (gti_spare_part_category_names() as $cat_opt): ?>
+                                                <option value="<?php echo esc_attr($cat_opt); ?>"><?php echo esc_html($cat_opt); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="gti-ae-field">
+                                        <label>Brand <span class="required">*</span></label>
+                                        <select name="brand" required>
+                                            <option value="">Select Brand</option>
+                                            <?php foreach (gti_spare_part_brands() as $brand_opt): ?>
+                                                <option value="<?php echo esc_attr($brand_opt); ?>"><?php echo esc_html($brand_opt); ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="gti-ae-field gti-ae-field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
                             </div>
-                            <div class="gti-ae-form-grid">
-                                <div class="gti-ae-field"><label>Category <span class="required">*</span></label><select name="category" required><option value="">Select Category</option><option value="Filters">Filters</option><option value="Undercarriage">Undercarriage</option><option value="Hydraulics">Hydraulics</option><option value="Brakes">Brakes</option><option value="Engine Parts">Engine Parts</option><option value="Electrical">Electrical</option><option value="Transmission">Transmission</option><option value="Body &amp; Frame">Body &amp; Frame</option><option value="Other">Other</option></select></div>
-                                <div class="gti-ae-field"><label>Brand <span class="required">*</span></label><select name="brand" required><option value="">Select Brand</option><option value="KOMATSU">KOMATSU</option><option value="CATERPILLAR">CATERPILLAR</option><option value="HITACHI">HITACHI</option><option value="VOLVO">VOLVO</option><option value="KOBELCO">KOBELCO</option><option value="DOOSAN">DOOSAN</option><option value="HYUNDAI">HYUNDAI</option></select></div>
-                            </div>
-                            <div class="gti-ae-field gti-ae-field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
+                        </div>
+                        <div class="gti-ae-step-nav">
+                            <span></span>
+                            <button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button>
                         </div>
                     </div>
 
-                    <div class="gti-ae-form-card">
-                        <div class="gti-ae-card-header"><h3><i class="fas fa-boxes"></i> Inventory &amp; Pricing</h3></div>
-                        <div class="gti-ae-card-body">
-                            <div class="gti-ae-form-grid">
-                                <div class="gti-ae-field"><label>Current Stock</label><input type="number" name="stock" min="0"></div>
-                                <div class="gti-ae-field"><label>Minimum Stock</label><input type="number" name="minimum_stock" min="0" value="10"></div>
-                                <div class="gti-ae-field"><label>Unit Price (IDR)</label><input type="text" name="unit_price" inputmode="numeric"></div>
-                            </div>
-                            <div class="gti-ae-form-grid">
-                                <div class="gti-ae-field"><label>Supplier</label><input type="text" name="supplier"></div>
-                                <div class="gti-ae-field"><label>Location</label><input type="text" name="location"></div>
-                                <div class="gti-ae-field"><label>Status</label><select name="status"><option value="in_stock">In Stock</option><option value="low_stock">Low Stock</option><option value="out_of_stock">Out of Stock</option></select></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="gti-ae-form-card">
-                        <div class="gti-ae-card-header"><h3><i class="fas fa-images"></i> Image</h3></div>
-                        <div class="gti-ae-card-body">
-                            <div class="gti-ae-field gti-ae-field-full">
-                                <label>Main Image</label>
-                                <div class="gti-ae-upload-area" id="gti-edit-main-upload">
-                                    <input type="file" name="image" id="gti-edit-main-image" accept="image/*" style="display:none;">
-                                    <div class="gti-ae-upload-placeholder" id="gti-edit-upload-placeholder"><i class="fas fa-cloud-upload-alt"></i><p>Click or drag image here to upload</p></div>
-                                    <div class="gti-ae-upload-preview" id="gti-edit-upload-preview" style="display:none;"><img id="gti-edit-preview-img" src="" alt="Preview"><button type="button" class="gti-ae-remove-img" id="gti-edit-remove-img"><i class="fas fa-times"></i></button></div>
+                    <!-- Step 2: Inventory & Pricing -->
+                    <div class="gti-ae-step-content" data-step="2">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-boxes"></i> Inventory &amp; Pricing</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Current Stock</label><input type="number" name="stock" min="0"></div>
+                                    <div class="gti-ae-field"><label>Minimum Stock</label><input type="number" name="minimum_stock" min="0" value="10"></div>
+                                    <div class="gti-ae-field"><label>Unit Price (IDR)</label><input type="text" name="unit_price" inputmode="numeric" placeholder="e.g., 350.000"></div>
+                                </div>
+                                <div class="gti-ae-form-grid">
+                                    <div class="gti-ae-field"><label>Supplier</label><input type="text" name="supplier"></div>
+                                    <div class="gti-ae-field"><label>Location</label><input type="text" name="location"></div>
+                                    <div class="gti-ae-field"><label>Visibility</label><select name="status"><option value="published">Published</option><option value="draft">Draft</option></select><small style="color:#6b7280;font-size:11px;margin-top:4px;display:block;">Stock status is derived from the quantities above</small></div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="gti-ae-step-nav">
+                            <button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button>
+                            <button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Image -->
+                    <div class="gti-ae-step-content" data-step="3">
+                        <div class="gti-ae-form-card">
+                            <div class="gti-ae-card-header"><h3><i class="fas fa-images"></i> Image</h3></div>
+                            <div class="gti-ae-card-body">
+                                <div class="gti-ae-field gti-ae-field-full">
+                                    <label>Main Image</label>
+                                    <div class="gti-ae-upload-area" id="gti-edit-main-upload">
+                                        <input type="file" name="image" id="gti-edit-main-image" accept="image/*" style="display:none;">
+                                        <div class="gti-ae-upload-placeholder" id="gti-edit-upload-placeholder"><i class="fas fa-cloud-upload-alt"></i><p>Click or drag image here to upload</p></div>
+                                        <div class="gti-ae-upload-preview" id="gti-edit-upload-preview" style="display:none;"><img id="gti-edit-preview-img" src="" alt="Preview"><button type="button" class="gti-ae-remove-img" id="gti-edit-remove-img"><i class="fas fa-times"></i></button></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="gti-ae-step-nav">
+                            <button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button>
+                            <span></span>
                         </div>
                     </div>
                 </form>
@@ -1089,6 +1161,14 @@ $_gti_sp_fmt = function($amount) {
         if (firstRow) { try { updateDrawerContent(JSON.parse(firstRow.getAttribute('data-sp'))); } catch(e) {} }
         // Edit modal image upload
         initEditImageUploads();
+        // Unit price — keep a thousand separator while typing
+        var priceInput = document.querySelector('#gti-edit-form input[name="unit_price"]');
+        if (priceInput) {
+            priceInput.addEventListener('input', function() {
+                var digits = this.value.replace(/\D/g, '');
+                this.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+            });
+        }
         // Edit modal submit
         var editSubmitBtn = document.getElementById('gti-edit-submit');
         if (editSubmitBtn) editSubmitBtn.addEventListener('click', handleEditSubmit);
@@ -1097,33 +1177,92 @@ $_gti_sp_fmt = function($amount) {
     });
 
     var _currentDrawerSp = null;
-    function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val || '-'; }
+
+    function setText(id, val) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = (val === 0 || val === '0') ? '0' : (val || '-');
+    }
+    function escHtml(val) {
+        return String(val === null || val === undefined ? '' : val)
+            .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function number_format(val) { return Number(val || 0).toLocaleString('id-ID'); }
+    function formatRupiah(val) {
+        if (val === null || val === undefined || val === '') return '-';
+        return 'Rp ' + Number(val).toLocaleString('id-ID');
+    }
+    function formatDateShort(dateStr) {
+        if (!dateStr) return '-';
+        var d = new Date(dateStr); if (isNaN(d.getTime())) return dateStr;
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+    function formatDate(dateStr) {
+        if (!dateStr) return '-';
+        var d = new Date(dateStr); if (isNaN(d.getTime())) return dateStr;
+        var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        var day = d.getDate(); var hours = d.getHours(); var minutes = String(d.getMinutes()).padStart(2, '0');
+        var ampm = hours >= 12 ? 'PM' : 'AM'; hours = hours % 12 || 12;
+        return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ', ' + hours + ':' + minutes + ' ' + ampm;
+    }
+    var SP_STATUS_LABELS = { 'in_stock':'In Stock', 'low_stock':'Low Stock', 'out_of_stock':'Out of Stock', 'draft':'Draft' };
+    function spStatusLabel(status) { return SP_STATUS_LABELS[status] || status || 'In Stock'; }
+    // Stock level derived from the quantities, independent of the saved status
+    function spStockLevel(sp) {
+        var stock = parseInt(sp.stock, 10) || 0;
+        var min = parseInt(sp.minimum_stock, 10); if (isNaN(min)) min = 10;
+        if (stock <= 0) return 'out_of_stock';
+        if (stock <= min) return 'low_stock';
+        return 'in_stock';
+    }
+
     function updateDrawerContent(sp) {
         _currentDrawerSp = sp;
+        var status = sp.status || 'in_stock';
+        var statusLabel = spStatusLabel(status);
+        // Header
         setText('drawer-part-number', sp.part_number);
-        setText('drawer-partnum', sp.part_number);
         var badge = document.getElementById('drawer-status-badge');
-        var statusMap = { 'in_stock':'In Stock', 'low_stock':'Low Stock', 'out_of_stock':'Out of Stock', 'draft':'Draft' };
-        var sl = statusMap[sp.status] || sp.status || 'In Stock';
-        badge.textContent = sl; badge.className = 'gti-drawer-status status-' + (sp.status || 'in_stock');
+        badge.textContent = statusLabel;
+        badge.className = 'gti-drawer-status status-' + status;
+        // Section 1 — Part information
+        setText('drawer-partnum', sp.part_number);
         setText('drawer-name', sp.name);
         setText('drawer-category', sp.category);
         setText('drawer-brand', sp.brand);
-        setText('drawer-stock', sp.stock || '0');
-        setText('drawer-min-stock', sp.minimum_stock || '10');
-        setText('drawer-status-text', sl);
-        setText('drawer-unit-price', formatRupiah(sp.unit_price));
-        setText('drawer-total-value', formatRupiah((sp.stock || 0) * (sp.unit_price || 0)));
+        setText('drawer-status-text', statusLabel);
+        setText('drawer-description', sp.description);
+        // Section 2 — Inventory
+        var stock = parseInt(sp.stock, 10) || 0;
+        var minStock = parseInt(sp.minimum_stock, 10); if (isNaN(minStock)) minStock = 10;
+        setText('drawer-stock', number_format(stock) + ' pcs');
+        setText('drawer-min-stock', number_format(minStock) + ' pcs');
+        var level = spStockLevel(sp);
+        var levelEl = document.getElementById('drawer-stock-level');
+        if (levelEl) {
+            var levelClass = level === 'in_stock' ? 'level-ok' : (level === 'low_stock' ? 'level-low' : 'level-out');
+            levelEl.innerHTML = '<span class="gti-drawer-stock-tag ' + levelClass + '">' + escHtml(spStatusLabel(level)) + '</span>';
+        }
         setText('drawer-supplier', sp.supplier);
         setText('drawer-location', sp.location);
-        setText('drawer-description', sp.description);
+        // Section 3 — Pricing
+        setText('drawer-unit-price', formatRupiah(sp.unit_price));
+        setText('drawer-total-value', formatRupiah(stock * (parseFloat(sp.unit_price) || 0)));
+        // Section 4 — Media
+        var imgEl = document.getElementById('drawer-main-image');
+        if (imgEl) {
+            imgEl.innerHTML = sp.image
+                ? '<img src="' + escHtml(sp.image) + '" alt="' + escHtml(sp.name) + '" style="width:100%;border-radius:8px;border:1px solid #e5e7eb;">'
+                : '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;">No image</span>';
+        }
+        // Section 5 — System
         setText('drawer-created', formatDate(sp.created_at));
         setText('drawer-updated', formatDate(sp.updated_at));
-        // Show/hide Publish button based on status
+        // Publish only applies to drafts
         var publishBtn = document.getElementById('drawer-btn-publish');
-        if (publishBtn) {
-            publishBtn.style.display = (sp.status === 'draft') ? '' : 'none';
-        }
+        if (publishBtn) publishBtn.style.display = (status === 'draft') ? '' : 'none';
         // Highlight active row
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
         var activeRow = document.querySelector('.gti-ue-table tbody tr[data-sp-id="' + sp.id + '"]');
@@ -1142,39 +1281,26 @@ $_gti_sp_fmt = function($amount) {
         document.getElementById('spDetailDrawer').classList.remove('open');
         document.getElementById('drawerBackdrop').classList.remove('show');
         document.body.style.overflow = '';
-        // Reset stepper
-        var steps = document.querySelectorAll('#spDetailDrawer .gti-drawer-step');
-        var lines = document.querySelectorAll('#spDetailDrawer .gti-drawer-step-line');
-        steps.forEach(function(s,i){ s.classList.remove('active','completed'); if(i===0) s.classList.add('active'); });
-        lines.forEach(function(l){ l.classList.remove('active'); });
-        document.querySelectorAll('#spDetailDrawer .gti-drawer-section[data-section]').forEach(function(s){ s.classList.remove('active'); });
-        var first = document.querySelector('#spDetailDrawer .gti-drawer-section[data-section="info"]');
-        if(first) first.classList.add('active');
+        var body = document.querySelector('#spDetailDrawer .gti-drawer-body');
+        if (body) body.scrollTop = 0;
         _currentDrawerSp = null;
-    }
-    function switchDrawerStep(step) {
-        var section = step.getAttribute('data-section');
-        var steps = document.querySelectorAll('#spDetailDrawer .gti-drawer-step');
-        var lines = document.querySelectorAll('#spDetailDrawer .gti-drawer-step-line');
-        var clickedIdx = Array.prototype.indexOf.call(steps, step);
-        steps.forEach(function(s, i) { s.classList.remove('active','completed'); if (i < clickedIdx) s.classList.add('completed'); else if (i === clickedIdx) s.classList.add('active'); });
-        lines.forEach(function(l, i) { l.classList.toggle('active', i < clickedIdx); });
-        document.querySelectorAll('#spDetailDrawer .gti-drawer-section[data-section]').forEach(function(s) { s.classList.remove('active'); });
-        var target = document.querySelector('#spDetailDrawer .gti-drawer-section[data-section="' + section + '"]');
-        if (target) target.classList.add('active');
-    }
-    function formatRupiah(val) { if (!val) return '-'; return 'Rp ' + Number(val).toLocaleString('id-ID'); }
-    function formatDate(dateStr) {
-        if (!dateStr) return '-';
-        var d = new Date(dateStr); if (isNaN(d.getTime())) return dateStr;
-        var months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-        var day = d.getDate(); var hours = d.getHours(); var minutes = String(d.getMinutes()).padStart(2, '0');
-        var ampm = hours >= 12 ? 'PM' : 'AM'; hours = hours % 12 || 12;
-        return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ', ' + hours + ':' + minutes + ' ' + ampm;
     }
     function populateField(form, name, value) {
         var field = form.querySelector('[name="' + name + '"]');
-        if (!field) return; if (value === null || value === undefined) value = ''; field.value = value;
+        if (!field) return;
+        if (value === null || value === undefined) value = '';
+        // A stored value that predates the current option list would otherwise be
+        // silently replaced by the first option and saved back over the real one.
+        if (field.tagName === 'SELECT' && value !== '') {
+            var known = Array.prototype.some.call(field.options, function(o) { return o.value === value; });
+            if (!known) {
+                var opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = value;
+                field.appendChild(opt);
+            }
+        }
+        field.value = value;
     }
     function parseJson(val) {
         if (!val) return null; if (typeof val === 'object') return val;
@@ -1183,11 +1309,12 @@ $_gti_sp_fmt = function($amount) {
     function showUeToast(message, type) {
         var toast = document.getElementById('gtiUeToast');
         toast.className = 'gti-ue-toast ' + (type || 'success');
-        toast.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i> ' + message;
+        var icon = type === 'error' ? 'fa-exclamation-circle' : (type === 'warning' ? 'fa-triangle-exclamation' : 'fa-check-circle');
+        toast.innerHTML = '<i class="fas ' + icon + '"></i> ' + escHtml(message);
         toast.classList.add('show'); setTimeout(function() { toast.classList.remove('show'); }, 3500);
     }
     // ================================================================
-    //  PUBLISH SPARE PART — Change draft to in_stock
+    //  PUBLISH SPARE PART — Change draft to a live stock status
     // ================================================================
     function handlePublishSparePart(sp) {
         var btn = document.getElementById('drawer-btn-publish');
@@ -1198,11 +1325,7 @@ $_gti_sp_fmt = function($amount) {
         formData.append('action', 'gti_publish_spare_part');
         formData.append('nonce', gtiAjax.nonce);
         formData.append('id', sp.id);
-        // Determine appropriate status based on stock
-        var newStatus = 'in_stock';
-        if ((sp.stock || 0) <= 0) newStatus = 'out_of_stock';
-        else if ((sp.stock || 0) <= (sp.minimum_stock || 10)) newStatus = 'low_stock';
-        formData.append('status', newStatus);
+        formData.append('status', spStockLevel(sp));
 
         fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
@@ -1210,10 +1333,10 @@ $_gti_sp_fmt = function($amount) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-check-circle"></i> Publish';
                 if (data.success) {
-                    showUeToast(data.data.message || 'Spare part published', 'success');
+                    showUeToast((data.data && data.data.message) || 'Spare part published', 'success');
                     setTimeout(function() { window.location.reload(); }, 1200);
                 } else {
-                    showUeToast(data.data.message || 'Failed to publish', 'error');
+                    showUeToast((data.data && data.data.message) || 'Failed to publish', 'error');
                 }
             })
             .catch(function() {
@@ -1223,51 +1346,116 @@ $_gti_sp_fmt = function($amount) {
             });
     }
 
-    // ====== EDIT MODAL ======
-    var _editCurrentEq = null;
+    // ================================================================
+    //  EDIT MODAL — Fullscreen popup with multi-step form
+    // ================================================================
+    var _editCurrentStep = 1;
+    var _editTotalSteps = 3;
+    var _editCurrentSp = null;
+
     function openEditModal(sp) {
-        _editCurrentEq = sp;
+        _editCurrentSp = sp;
         var overlay = document.getElementById('gtiEditOverlay');
-        overlay.classList.add('show'); document.body.style.overflow = 'hidden';
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
         document.getElementById('edit-field-id').value = sp.id;
+
         var form = document.getElementById('gti-edit-form');
+        // Step 1 — Part information
         populateField(form, 'part_number', sp.part_number);
         populateField(form, 'name', sp.name);
         populateField(form, 'category', sp.category);
         populateField(form, 'brand', sp.brand);
         populateField(form, 'description', sp.description);
+        // Step 2 — Inventory & pricing
         populateField(form, 'stock', sp.stock);
         populateField(form, 'minimum_stock', sp.minimum_stock);
-        populateField(form, 'unit_price', sp.unit_price ? Number(sp.unit_price).toLocaleString('id-ID') : '');
+        populateField(form, 'unit_price', sp.unit_price ? number_format(Math.round(parseFloat(sp.unit_price))) : '');
         populateField(form, 'supplier', sp.supplier);
         populateField(form, 'location', sp.location);
-        populateField(form, 'status', sp.status);
-        // Image preview
+        // The column stores the derived stock level too; only draft vs published
+        // is editable here.
+        populateField(form, 'status', sp.status === 'draft' ? 'draft' : 'published');
+        // Step 3 — Image preview
         var previewEl = document.getElementById('gti-edit-upload-preview');
         var placeholderEl = document.getElementById('gti-edit-upload-placeholder');
         var previewImg = document.getElementById('gti-edit-preview-img');
+        var fileInput = document.getElementById('gti-edit-main-image');
+        if (fileInput) fileInput.value = '';
         if (sp.image) { previewImg.src = sp.image; placeholderEl.style.display = 'none'; previewEl.style.display = ''; }
         else { previewImg.src = ''; placeholderEl.style.display = ''; previewEl.style.display = 'none'; }
+
+        editShowStep(1);
     }
     function closeEditModal() {
         document.getElementById('gtiEditOverlay').classList.remove('show');
-        document.body.style.overflow = ''; _editCurrentEq = null;
+        document.body.style.overflow = '';
+        _editCurrentSp = null;
+    }
+    function editGoStep(step) {
+        if (step > _editCurrentStep + 1) return; // can only go 1 ahead
+        editShowStep(step);
+    }
+    function editNextStep() {
+        if (_editCurrentStep < _editTotalSteps) editShowStep(_editCurrentStep + 1);
+    }
+    function editPrevStep() {
+        if (_editCurrentStep > 1) editShowStep(_editCurrentStep - 1);
+    }
+    function editShowStep(step) {
+        var overlay = document.getElementById('gtiEditOverlay');
+        var steps = overlay.querySelectorAll('.gti-ae-step');
+        var lines = overlay.querySelectorAll('.gti-ae-step-line');
+        var contents = overlay.querySelectorAll('.gti-ae-step-content');
+        steps.forEach(function(s, i) {
+            s.classList.remove('active', 'completed');
+            if (i + 1 < step) s.classList.add('completed');
+            else if (i + 1 === step) s.classList.add('active');
+        });
+        lines.forEach(function(l, i) { l.classList.toggle('active', i + 1 < step); });
+        contents.forEach(function(c) { c.classList.remove('active'); });
+        var target = overlay.querySelector('.gti-ae-step-content[data-step="' + step + '"]');
+        if (target) target.classList.add('active');
+        overlay.scrollTop = 0;
+        _editCurrentStep = step;
+    }
+    // A required field on a hidden step cannot be reported by the browser,
+    // so jump to the step that holds it first.
+    function editValidate() {
+        var form = document.getElementById('gti-edit-form');
+        var invalid = form.querySelector(':invalid');
+        if (!invalid) return true;
+        var content = invalid.closest('.gti-ae-step-content');
+        if (content) editShowStep(parseInt(content.getAttribute('data-step'), 10));
+        showUeToast('Please complete the required fields', 'warning');
+        setTimeout(function() {
+            if (invalid.reportValidity) invalid.reportValidity(); else invalid.focus();
+        }, 60);
+        return false;
     }
     function handleEditSubmit(e) {
         if (e) e.preventDefault();
         var form = document.getElementById('gti-edit-form');
         var submitBtn = document.getElementById('gti-edit-submit');
         if (!form || !submitBtn) return;
+        if (!editValidate()) return;
+
         var formData = new FormData(form);
         if (!formData.has('action')) formData.append('action', 'gti_save_spare_part');
         if (!formData.has('nonce')) formData.append('nonce', gtiAjax.nonce);
+        // The price field carries thousand separators — send digits only
+        formData.set('unit_price', String(formData.get('unit_price') || '').replace(/\D/g, ''));
+        // Don't send an empty file input as an upload attempt
+        var fileInput = document.getElementById('gti-edit-main-image');
+        if (fileInput && (!fileInput.files || !fileInput.files.length)) formData.delete('image');
+
         submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         fetch(gtiAjax.ajaxurl, { method: 'POST', body: formData })
             .then(function(r) { return r.text().then(function(text) { try { return JSON.parse(text); } catch(e) { throw new Error('Server returned non-JSON response'); } }); })
             .then(function(data) {
                 submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
-                if (data.success) { showUeToast(data.data.message || 'Spare part updated!', 'success'); closeEditModal(); setTimeout(function() { window.location.reload(); }, 1200); }
-                else { showUeToast(data.data.message || 'Failed to save', 'error'); }
+                if (data.success) { showUeToast((data.data && data.data.message) || 'Spare part updated!', 'success'); closeEditModal(); setTimeout(function() { window.location.reload(); }, 1200); }
+                else { showUeToast((data.data && data.data.message) || 'Failed to save', 'error'); }
             })
             .catch(function(err) {
                 submitBtn.disabled = false; submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';

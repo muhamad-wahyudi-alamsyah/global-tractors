@@ -33,7 +33,6 @@ function gti_render_used_equipment_filter( $atts = [] ) {
     $equipment_data = gti_get_used_equipment_data();
     $categories     = gti_get_used_equipment_categories( $equipment_data );
     $brands         = gti_get_used_equipment_brands( $equipment_data );
-    $types          = gti_get_used_equipment_types( $equipment_data );
     $locations      = gti_get_used_equipment_locations( $equipment_data );
     $conditions     = gti_get_used_equipment_conditions( $equipment_data );
 
@@ -69,8 +68,8 @@ function gti_render_used_equipment_filter( $atts = [] ) {
                             <div class="gti-ef-checkbox-list">
                                 <?php foreach ( $categories as $cat ) : ?>
                                     <label class="gti-ef-checkbox-item">
-                                        <input type="checkbox" name="ef-category" value="<?php echo esc_attr( $cat['slug'] ); ?>">
-                                        <span><?php echo esc_html( $cat['name'] ); ?></span>
+                                        <input type="checkbox" name="ef-category" value="<?php echo esc_attr( $cat['value'] ); ?>">
+                                        <span><i class="<?php echo esc_attr( $cat['icon'] ); ?>"></i> <?php echo esc_html( $cat['name'] ); ?> (<?php echo esc_html( $cat['count'] ); ?>)</span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -89,24 +88,6 @@ function gti_render_used_equipment_filter( $atts = [] ) {
                                     <label class="gti-ef-checkbox-item">
                                         <input type="checkbox" name="ef-brand" value="<?php echo esc_attr( $brand ); ?>">
                                         <span><?php echo esc_html( $brand ); ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- TYPE -->
-                    <div class="gti-ef-filter-group">
-                        <div class="gti-ef-filter-header" data-filter="type">
-                            <h4>TYPE</h4>
-                            <span class="toggle-icon"><i class="fas fa-plus"></i></span>
-                        </div>
-                        <div class="gti-ef-filter-body" data-filter-body="type">
-                            <div class="gti-ef-checkbox-list">
-                                <?php foreach ( $types as $type ) : ?>
-                                    <label class="gti-ef-checkbox-item">
-                                        <input type="checkbox" name="ef-type" value="<?php echo esc_attr( $type ); ?>">
-                                        <span><?php echo esc_html( $type ); ?></span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -238,7 +219,7 @@ function gti_render_used_equipment_filter( $atts = [] ) {
 
                 <!-- Card Grid -->
                 <div class="gti-ef-grid" id="gti-ef-grid">
-                    <?php foreach ( array_slice( $equipment_data, 0, $per_page ) as $item ) : ?>
+                    <?php foreach ( $equipment_data as $item ) : ?>
                         <?php gti_used_render_equipment_card( $item ); ?>
                     <?php endforeach; ?>
                 </div>
@@ -464,39 +445,7 @@ function gti_get_dummy_used_equipment_data() {
 }
 
 function gti_get_used_equipment_categories( $data = [] ) {
-    $known = [
-        [ 'slug' => 'excavator',    'name' => 'Excavator',    'icon' => 'fas fa-dumpster',       'count' => 0 ],
-        [ 'slug' => 'bulldozer',    'name' => 'Bulldozer',    'icon' => 'fas fa-tractor',        'count' => 0 ],
-        [ 'slug' => 'wheel-loader', 'name' => 'Wheel Loader', 'icon' => 'fas fa-truck-monster',  'count' => 0 ],
-        [ 'slug' => 'dump-truck',   'name' => 'Dump Truck',   'icon' => 'fas fa-truck',          'count' => 0 ],
-        [ 'slug' => 'motor-grader', 'name' => 'Motor Grader', 'icon' => 'fas fa-road',           'count' => 0 ],
-        [ 'slug' => 'crane',        'name' => 'Crane',        'icon' => 'fas fa-people-carry',   'count' => 0 ],
-        [ 'slug' => 'forklift',     'name' => 'Forklift',     'icon' => 'fas fa-boxes',          'count' => 0 ],
-    ];
-
-    $slug_map = [];
-    foreach ( $known as &$k ) {
-        $slug_map[ $k['slug'] ] = &$k;
-    }
-    unset( $k );
-
-    $uncategorized = 0;
-    foreach ( $data as $item ) {
-        $cat = strtolower( trim( $item['category'] ?? '' ) );
-        $cat = str_replace( ' ', '-', $cat );
-        if ( isset( $slug_map[ $cat ] ) ) {
-            $slug_map[ $cat ]['count']++;
-        } else {
-            $uncategorized++;
-        }
-    }
-
-    $result = $known;
-    if ( $uncategorized > 0 ) {
-        $result[] = [ 'slug' => 'others', 'name' => 'Others', 'icon' => 'fas fa-ellipsis-h', 'count' => $uncategorized ];
-    }
-
-    return $result;
+    return gti_catalog_category_options( $data, gti_equipment_categories() );
 }
 
 function gti_get_used_equipment_brands( $data = [] ) {
@@ -506,15 +455,6 @@ function gti_get_used_equipment_brands( $data = [] ) {
     }
     sort( $brands );
     return $brands;
-}
-
-function gti_get_used_equipment_types( $data = [] ) {
-    $types = array_unique( array_filter( array_column( $data, 'type' ) ) );
-    if ( empty( $types ) ) {
-        $types = [ 'Excavator', 'Bulldozer', 'Wheel Loader', 'Dump Truck', 'Motor Grader', 'Crane', 'Forklift' ];
-    }
-    sort( $types );
-    return $types;
 }
 
 function gti_get_used_equipment_locations( $data = [] ) {
