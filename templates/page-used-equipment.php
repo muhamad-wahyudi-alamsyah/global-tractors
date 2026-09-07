@@ -1023,10 +1023,6 @@ $_gti_eq_status_badge = function($status) {
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-database"></i> System</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Created</span><span class="gti-drawer-value" id="drawer-created">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Updated</span><span class="gti-drawer-value" id="drawer-updated">-</span></div>
-                    <div class="gti-drawer-row" style="flex-direction:column;">
-                        <span class="gti-drawer-label">Notes</span>
-                        <span class="gti-drawer-value is-message" id="drawer-notes">-</span>
-                    </div>
             </div>
         </div>
         <div class="gti-drawer-footer">

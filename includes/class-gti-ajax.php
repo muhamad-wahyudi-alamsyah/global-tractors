@@ -292,7 +292,9 @@ class GTI_Ajax {
             wp_send_json_success( [
                 'message'  => $is_draft ? 'Draft saved successfully' : 'Equipment saved successfully',
                 'id'       => $id,
-                'redirect' => gti_dashboard_url( 'used-equipment' ),
+                'redirect' => gti_dashboard_url(
+                $type === 'rental' ? 'rental-equipment' : 'used-equipment'
+            ),
             ] );
         } else {
             $err = $wpdb->last_error;
@@ -461,7 +463,11 @@ class GTI_Ajax {
         $like = $wpdb->esc_like($prefix) . '%';
         $max_code = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT equipment_code FROM {$table} WHERE equipment_code LIKE %s AND deleted_at IS NULL ORDER BY id DESC LIMIT 1",
+                "SELECT equipment_code
+                FROM {$table}
+                WHERE equipment_code LIKE %s
+                ORDER BY id DESC
+                LIMIT 1",
                 $like
             )
         );
@@ -627,7 +633,11 @@ class GTI_Ajax {
         $like = $wpdb->esc_like($prefix) . '%';
         $max_code = $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT part_number FROM {$table} WHERE part_number LIKE %s ORDER BY id DESC LIMIT 1",
+                "SELECT part_number
+                FROM {$table}
+                WHERE part_number LIKE %s
+                ORDER BY id DESC
+                LIMIT 1",
                 $like
             )
         );
