@@ -10,92 +10,44 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
-// Database
-global $wpdb;
-$table_name = $wpdb->prefix . 'gti_news_articles';
-
+// Articles are native WordPress posts — see inc/modules/news-articles.php
 // Filters
-$search         = isset($_GET['search'])   ? sanitize_text_field($_GET['search'])   : '';
-$status_filter = isset($_GET['status'])   ? sanitize_text_field($_GET['status'])   : '';
+$search          = isset($_GET['search'])   ? sanitize_text_field($_GET['search'])   : '';
+$status_filter   = isset($_GET['status'])   ? sanitize_text_field($_GET['status'])   : '';
 $category_filter = isset($_GET['category']) ? sanitize_text_field($_GET['category']) : '';
 
-// Pagination
-$paged    = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+// Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
+$paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset   = ($paged - 1) * $per_page;
 
-// Build query
-$where  = "WHERE 1=1";
-$params = [];
+$results = gti_query_articles(array(
+    'search'   => $search,
+    'status'   => $status_filter,
+    'category' => $category_filter,
+    'per_page' => $per_page,
+    'page'     => $paged,
+));
 
-if ($search) {
-    $where      .= " AND (title LIKE %s OR author LIKE %s OR category LIKE %s OR article_id LIKE %s)";
-    $search_like = '%' . $wpdb->esc_like($search) . '%';
-    $params      = array_merge($params, [$search_like, $search_like, $search_like, $search_like]);
-}
-if ($status_filter) {
-    $where   .= " AND status = %s";
-    $params[] = $status_filter;
-}
-if ($category_filter) {
-    $where   .= " AND category = %s";
-    $params[] = $category_filter;
-}
-
-// Count
-$count_query = "SELECT COUNT(*) FROM {$table_name} {$where}";
-$total       = !empty($params) ? $wpdb->get_var($wpdb->prepare($count_query, $params)) : $wpdb->get_var($count_query);
-$total_pages = ceil($total / $per_page);
-
-// Fetch
-if (!empty($params)) {
-    $articles = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table_name} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d",
-        array_merge($params, [$per_page, $offset])
-    ));
-} else {
-    $articles = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table_name} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d",
-        $per_page, $offset
-    ));
-}
+$articles    = $results['items'];
+$total       = $results['total'];
+$total_pages = $results['pages'];
 
 // Status counts
-$total_count   = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}");
-$published_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'published'");
-$draft_count   = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'draft'");
-$total_views   = (int) $wpdb->get_var("SELECT COALESCE(SUM(views), 0) FROM {$table_name}");
+$counts          = gti_article_counts();
+$total_count     = $counts['total'];
+$published_count = $counts['published'];
+$draft_count     = $counts['draft'];
+$total_views     = $counts['views'];
 
 // Categories for filter
-$categories = $wpdb->get_col("SELECT DISTINCT category FROM {$table_name} WHERE category != '' ORDER BY category");
+$categories = gti_article_used_categories();
 
-// Category label map
-$category_labels = [
-    'company-news' => 'Company News',
-    'tips'         => 'Tips & Tricks',
-    'event'        => 'Event',
-    'industry'     => 'Industry',
-    'product'      => 'Product',
-];
 function gti_na_category_label($cat) {
-    $labels = [
-        'company-news' => 'Company News',
-        'tips'         => 'Tips & Tricks',
-        'event'        => 'Event',
-        'industry'     => 'Industry',
-        'product'      => 'Product',
-    ];
-    return $labels[$cat] ?? ucfirst(str_replace('-', ' ', $cat));
+    return gti_article_category_label($cat);
 }
 function gti_na_category_color($cat) {
-    $colors = [
-        'company-news' => ['#dbeafe', '#1d4ed8'],
-        'tips'         => ['#d1fae5', '#047857'],
-        'event'        => ['#fef3c7', '#b45309'],
-        'industry'     => ['#e0e7ff', '#4338ca'],
-        'product'      => ['#fce7f3', '#be185d'],
-    ];
-    return $colors[$cat] ?? ['#f3f4f6', '#374151'];
+    return gti_article_category_color($cat);
 }
 function gti_na_status_class($status) {
     return $status === 'published' ? 'available' : ($status === 'draft' ? 'reserved' : 'sold');
@@ -597,15 +549,18 @@ function gti_na_format_views($views) {
                                                     <button type="button" class="gti-ue-action-item" onclick='showArticleDetail(<?php echo esc_attr(json_encode($a)); ?>)'>
                                                         <i class="fas fa-eye"></i> View Details
                                                     </button>
-                                                    <a href="<?php echo esc_url(gti_dashboard_url('news-articles/add')); ?>" class="gti-ue-action-item">
+                                                    <a href="<?php echo esc_url($a->edit_url); ?>" class="gti-ue-action-item">
                                                         <i class="fas fa-edit"></i> Edit Article
                                                     </a>
-                                                    <a href="#" class="gti-ue-action-item">
+                                                    <a href="<?php echo esc_url($a->permalink); ?>" target="_blank" rel="noopener" class="gti-ue-action-item">
                                                         <i class="fas fa-external-link-alt"></i> View on Site
                                                     </a>
                                                     <button type="button" class="gti-ue-action-item" onclick="toggleArticleStatus(<?php echo esc_attr($a->id); ?>, '<?php echo esc_attr($a->status === 'published' ? 'draft' : 'published'); ?>')">
                                                         <i class="fas fa-<?php echo $a->status === 'published' ? 'eye-slash' : 'check'; ?>"></i>
                                                         <?php echo $a->status === 'published' ? 'Unpublish' : 'Publish'; ?>
+                                                    </button>
+                                                    <button type="button" class="gti-ue-action-item" style="color:#dc2626" onclick="deleteArticle(<?php echo esc_attr($a->id); ?>)">
+                                                        <i class="fas fa-trash" style="color:#dc2626"></i> Delete
                                                     </button>
                                                 </div>
                                             </div>
@@ -632,7 +587,7 @@ function gti_na_format_views($views) {
                                 $base_url = gti_dashboard_url('news-articles');
                                 ?>
                                 <?php if ($paged > 1): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
                                 <?php endif; ?>
@@ -641,7 +596,7 @@ function gti_na_format_views($views) {
                                 $start = max(1, $paged - 2);
                                 $end   = min($total_pages, $paged + 2);
                                 if ($start > 1): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => 1]))); ?>" class="gti-ue-page-btn">1</a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => 1]))); ?>" class="gti-ue-page-btn">1</a>
                                     <?php if ($start > 2): ?>
                                         <span class="gti-ue-page-dots">...</span>
                                     <?php endif; ?>
@@ -651,7 +606,7 @@ function gti_na_format_views($views) {
                                     <?php if ($i == $paged): ?>
                                         <button class="gti-ue-page-btn active"><?php echo $i; ?></button>
                                     <?php else: ?>
-                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
+                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
                                     <?php endif; ?>
                                 <?php endfor; ?>
 
@@ -659,11 +614,11 @@ function gti_na_format_views($views) {
                                     <?php if ($end < $total_pages - 1): ?>
                                         <span class="gti-ue-page-dots">...</span>
                                     <?php endif; ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
                                 <?php endif; ?>
 
                                 <?php if ($paged < $total_pages): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
                                 <?php endif; ?>
@@ -919,6 +874,14 @@ function gti_na_format_views($views) {
         var toggleText = document.getElementById('drawer-btn-toggle-text');
         toggleText.textContent = article.status === 'published' ? 'Unpublish' : 'Publish';
 
+        // Footer links point at the real editor and the live post
+        var editBtn = document.getElementById('drawer-btn-edit');
+        var viewBtn = document.getElementById('drawer-btn-preview');
+        editBtn.href = article.edit_url || '#';
+        viewBtn.href = article.permalink || '#';
+        viewBtn.target = '_blank';
+        viewBtn.rel = 'noopener';
+
         // Highlight active row
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
         var activeRow = document.querySelector('.gti-ue-table tbody tr[data-article-id="' + article.id + '"]');
@@ -959,6 +922,31 @@ function gti_na_format_views($views) {
         if (!_currentArticle) return;
         var newStatus = _currentArticle.status === 'published' ? 'draft' : 'published';
         toggleArticleStatus(_currentArticle.id, newStatus);
+    }
+
+    function deleteArticle(articleId) {
+        if (!confirm('Move this article to the trash?')) return;
+
+        var formData = new FormData();
+        formData.append('action', 'gti_delete_article');
+        formData.append('id', articleId);
+        formData.append('nonce', typeof gtiAjax !== 'undefined' ? gtiAjax.nonce : '');
+
+        fetch(typeof gtiAjax !== 'undefined' ? gtiAjax.ajaxurl : '/wp-admin/admin-ajax.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                location.reload();
+            } else {
+                alert(res.data && res.data.message ? res.data.message : 'Failed to delete article');
+            }
+        })
+        .catch(function() {
+            alert('An error occurred. Please try again.');
+        });
     }
 
     function toggleArticleStatus(articleId, newStatus) {

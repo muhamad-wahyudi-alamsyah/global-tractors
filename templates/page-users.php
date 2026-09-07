@@ -25,18 +25,62 @@ $role_label = $role_labels[$primary_role] ?? ucfirst($primary_role);
 
 // Get user activity count
 global $wpdb;
-$activity_table = $wpdb->prefix . 'gti_activity_log';
-$activity_count = 0;
-if ($wpdb->get_var("SHOW TABLES LIKE '{$activity_table}'") === $activity_table) {
-    $activity_count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$activity_table} WHERE user_id = %d",
-        $current_user->ID
-    ));
-}
+gti_ensure_activity_log_table();
+$activity_table = gti_activity_log_table();
+$activity_count = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$activity_table} WHERE user_id = %d",
+    $current_user->ID
+));
 
-// Member since
-$member_since = !empty($profile['registered']) ? date('M j, Y', strtotime($profile['registered'])) : '-';
-$last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($current_user->last_login)) : date('M j, Y H:i', strtotime($profile['registered']));
+// Member since / last login — 'gti_last_login' is written by the wp_login hook
+// in inc/db/activity-log.php. WP_User has no last_login property of its own.
+$member_since   = !empty($profile['registered']) ? date('M j, Y', strtotime($profile['registered'])) : '-';
+$last_login_raw = get_user_meta($current_user->ID, 'gti_last_login', true);
+$last_login     = $last_login_raw
+    ? date('M j, Y H:i', strtotime($last_login_raw))
+    : 'This session';
+
+// ── Team directory ──────────────────────────────────────────────────────────
+$can_list_users   = current_user_can('list_users');
+$can_create_users = current_user_can('create_users');
+$can_edit_users   = current_user_can('edit_users');
+$can_delete_users = current_user_can('delete_users');
+
+$team          = array();
+$editable_roles = array();
+
+if ($can_list_users) {
+    $editable_roles = get_editable_roles();
+
+    $team_users = get_users(array('orderby' => 'display_name', 'number' => 200));
+
+    // One grouped query beats a COUNT(*) per user.
+    $activity_by_user = array();
+    foreach ($wpdb->get_results("SELECT user_id, COUNT(*) AS total FROM {$activity_table} GROUP BY user_id") as $row) {
+        $activity_by_user[(int) $row->user_id] = (int) $row->total;
+    }
+
+    foreach ($team_users as $team_user) {
+        $role_key = $team_user->roles[0] ?? '';
+        $team[] = array(
+            'id'         => $team_user->ID,
+            'name'       => $team_user->display_name ?: $team_user->user_login,
+            'login'      => $team_user->user_login,
+            'email'      => $team_user->user_email,
+            'first_name' => get_user_meta($team_user->ID, 'first_name', true),
+            'last_name'  => get_user_meta($team_user->ID, 'last_name', true),
+            'phone'      => get_user_meta($team_user->ID, 'gti_phone', true),
+            'department' => get_user_meta($team_user->ID, 'department', true),
+            'role'       => $role_key,
+            'role_label' => $role_labels[$role_key] ?? ($editable_roles[$role_key]['name'] ?? ucfirst((string) $role_key)),
+            'avatar'     => get_avatar_url($team_user->ID, array('size' => 64)),
+            'activities' => $activity_by_user[$team_user->ID] ?? 0,
+            'last_login' => get_user_meta($team_user->ID, 'gti_last_login', true),
+            'registered' => $team_user->user_registered,
+            'is_self'    => ((int) $team_user->ID === (int) $current_user->ID),
+        );
+    }
+}
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -305,6 +349,41 @@ $last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($
             max-width: 480px;
         }
 
+        /* Team directory */
+        .gti-users-table { width: 100%; border-collapse: collapse; }
+        .gti-users-table thead th {
+            padding: 12px 28px; font-size: 12px; font-weight: 600; color: #6b7280;
+            text-align: left; background: #f9fafb; border-bottom: 1px solid #e5e7eb;
+            text-transform: uppercase; letter-spacing: .03em; white-space: nowrap;
+        }
+        .gti-users-table tbody td { padding: 14px 28px; font-size: 14px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+        .gti-users-table tbody tr:last-child td { border-bottom: none; }
+        .gti-users-table tbody tr:hover { background: #fafafa; }
+        .gti-users-cell { display: flex; align-items: center; gap: 12px; }
+        .gti-users-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #f3f4f6; flex-shrink: 0; }
+        .gti-users-cell strong { display: block; font-size: 14px; color: #1a1f36; }
+        .gti-users-cell small { font-size: 12px; color: #9ca3af; }
+        .gti-users-role {
+            display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px;
+            font-size: 12px; font-weight: 600; background: #FFF8EC; color: #B8860B;
+        }
+        .gti-users-icon-btn {
+            width: 30px; height: 30px; border-radius: 6px; border: 1px solid #e5e7eb;
+            background: #fff; color: #6b7280; cursor: pointer; font-size: 12px; margin-left: 4px;
+        }
+        .gti-users-icon-btn:hover { background: #f3f4f6; color: #374151; }
+        .gti-users-icon-btn.danger { color: #dc2626; border-color: #fecaca; }
+        .gti-users-icon-btn.danger:hover { background: #fef2f2; }
+
+        /* Add / edit user modal */
+        .gti-users-modal { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.5); align-items: center; justify-content: center; padding: 20px; }
+        .gti-users-modal.open { display: flex; }
+        .gti-users-modal-box { background: #fff; border-radius: 12px; padding: 28px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+        .gti-users-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .gti-users-modal-head h3 { margin: 0; font-size: 18px; font-weight: 600; color: #1a1f36; }
+        .gti-users-modal-close { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #e5e7eb; background: #fff; color: #6b7280; cursor: pointer; }
+        .gti-users-modal-close:hover { background: #f3f4f6; }
+
         /* Responsive */
         @media (max-width: 768px) {
             .gti-ue-stats-row { flex-wrap: wrap; }
@@ -315,6 +394,8 @@ $last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($
             .gti-profile-avatar { width: 80px; height: 80px; }
             .gti-profile-meta-row { padding: 16px 20px 0; }
             .gti-profile-card-body { padding: 20px; }
+            .gti-users-table thead th, .gti-users-table tbody td { padding-left: 16px; padding-right: 16px; }
+            .gti-users-modal-box { padding: 20px; }
         }
     </style>
 </head>
@@ -437,7 +518,7 @@ $last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($
                             </div>
                             <div class="gti-profile-meta-item">
                                 <i class="fas fa-map-marker-alt"></i>
-                                <span><?php echo esc_html(($profile['city'] ?: '') . ($profile['province'] ? ', ' . $profile['province'] : '') ?: '-'); ?></span>
+                                <span><?php echo esc_html(trim(implode(', ', array_filter(array($profile['city'], $profile['province'])))) ?: '-'); ?></span>
                             </div>
                             <div class="gti-profile-meta-item">
                                 <i class="fas fa-calendar-alt"></i>
@@ -505,6 +586,10 @@ $last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($
                                         <label for="gti-city">City</label>
                                         <input type="text" id="gti-city" name="city" value="<?php echo esc_attr($profile['city']); ?>">
                                     </div>
+                                    <div class="gti-profile-field">
+                                        <label for="gti-province">Province</label>
+                                        <input type="text" id="gti-province" name="province" value="<?php echo esc_attr($profile['province']); ?>">
+                                    </div>
                                     <div class="gti-profile-field full">
                                         <label for="gti-address">Address</label>
                                         <textarea id="gti-address" name="address" rows="3"><?php echo esc_textarea($profile['address']); ?></textarea>
@@ -554,10 +639,148 @@ $last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($
                         </div>
                     </div>
 
+                    <!-- Team Directory -->
+                    <?php if ($can_list_users): ?>
+                    <div class="gti-profile-card" style="margin-top: 24px;">
+                        <div class="gti-profile-card-header">
+                            <h3><i class="fas fa-user-shield"></i> System Users <span style="font-weight:500;color:#9ca3af;font-size:13px;">(<?php echo count($team); ?>)</span></h3>
+                            <?php if ($can_create_users): ?>
+                                <button type="button" class="gti-btn-primary" id="gti-add-user-btn">
+                                    <i class="fas fa-plus"></i> <span>Add User</span>
+                                </button>
+                            <?php endif; ?>
+                        </div>
+                        <div class="gti-profile-card-body" style="padding: 0;">
+                            <div id="gti-users-alert" class="gti-alert" role="alert" style="margin: 20px 28px 0;"></div>
+                            <div style="overflow-x:auto;">
+                                <table class="gti-users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th style="width:170px;">Role</th>
+                                            <th style="width:150px;">Phone</th>
+                                            <th style="width:110px;text-align:center;">Activities</th>
+                                            <th style="width:160px;">Last Login</th>
+                                            <?php if ($can_edit_users || $can_delete_users): ?>
+                                                <th style="width:110px;text-align:right;">Actions</th>
+                                            <?php endif; ?>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($team as $member): ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="gti-users-cell">
+                                                        <img src="<?php echo esc_url($member['avatar']); ?>" alt="" class="gti-users-avatar">
+                                                        <div>
+                                                            <strong><?php echo esc_html($member['name']); ?><?php echo $member['is_self'] ? ' <span style="color:#9ca3af;font-weight:500;">(you)</span>' : ''; ?></strong>
+                                                            <small><?php echo esc_html($member['email']); ?></small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><span class="gti-users-role"><?php echo esc_html($member['role_label']); ?></span></td>
+                                                <td><?php echo esc_html($member['phone'] ?: '—'); ?></td>
+                                                <td style="text-align:center;"><?php echo esc_html($member['activities']); ?></td>
+                                                <td style="color:#6b7280;font-size:13px;">
+                                                    <?php echo esc_html($member['last_login'] ? date('M j, Y H:i', strtotime($member['last_login'])) : 'Never'); ?>
+                                                </td>
+                                                <?php if ($can_edit_users || $can_delete_users): ?>
+                                                <td style="text-align:right;white-space:nowrap;">
+                                                    <?php if ($can_edit_users): ?>
+                                                        <button type="button" class="gti-users-icon-btn" title="Edit user"
+                                                                data-user='<?php echo esc_attr(wp_json_encode($member)); ?>'
+                                                                onclick="gtiEditUser(this)">
+                                                            <i class="fas fa-pen"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                    <?php if ($can_delete_users && !$member['is_self']): ?>
+                                                        <button type="button" class="gti-users-icon-btn danger" title="Delete user"
+                                                                onclick="gtiDeleteUser(<?php echo (int) $member['id']; ?>, '<?php echo esc_js($member['name']); ?>')">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <?php endif; ?>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        <?php if (empty($team)): ?>
+                                            <tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af;">No users found.</td></tr>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                 </div>
             </div>
         </main>
     </div>
+
+    <?php if ($can_create_users || $can_edit_users): ?>
+    <!-- Add / Edit User Modal -->
+    <div class="gti-users-modal" id="gti-user-modal">
+        <div class="gti-users-modal-box">
+            <div class="gti-users-modal-head">
+                <h3 id="gti-user-modal-title">Add User</h3>
+                <button type="button" class="gti-users-modal-close" onclick="gtiCloseUserModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="gti-user-form">
+                <input type="hidden" name="user_id" id="gti-user-id" value="0">
+                <div id="gti-user-modal-alert" class="gti-alert" role="alert"></div>
+                <div class="gti-profile-grid">
+                    <div class="gti-profile-field">
+                        <label for="gti-user-login">Username <span style="color:#ef4444">*</span></label>
+                        <input type="text" id="gti-user-login" name="user_login" required>
+                        <span class="field-hint" id="gti-user-login-hint">Cannot be changed later</span>
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-email">Email <span style="color:#ef4444">*</span></label>
+                        <input type="email" id="gti-user-email" name="user_email" required>
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-first">First Name</label>
+                        <input type="text" id="gti-user-first" name="first_name">
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-last">Last Name</label>
+                        <input type="text" id="gti-user-last" name="last_name">
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-phone">Phone</label>
+                        <input type="tel" id="gti-user-phone" name="phone">
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-department">Department</label>
+                        <input type="text" id="gti-user-department" name="department">
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-role">Role <span style="color:#ef4444">*</span></label>
+                        <select id="gti-user-role" name="role" required>
+                            <?php foreach ($editable_roles as $role_key => $role_data): ?>
+                                <option value="<?php echo esc_attr($role_key); ?>">
+                                    <?php echo esc_html($role_labels[$role_key] ?? $role_data['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="gti-profile-field">
+                        <label for="gti-user-pass">Password</label>
+                        <input type="password" id="gti-user-pass" name="user_pass" minlength="8" autocomplete="new-password">
+                        <span class="field-hint" id="gti-user-pass-hint">Required for new users, min. 8 characters</span>
+                    </div>
+                </div>
+                <div class="gti-profile-actions">
+                    <button type="button" class="gti-btn-secondary" onclick="gtiCloseUserModal()">Cancel</button>
+                    <button type="submit" class="gti-btn-primary" id="gti-user-save-btn">
+                        <i class="fas fa-save"></i> <span>Save User</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -692,7 +915,143 @@ $last_login = !empty($current_user->last_login) ? date('M j, Y H:i', strtotime($
                     });
             });
         }
+
+        // ── Team directory ──────────────────────────────────────────────
+        var addUserBtn = document.getElementById('gti-add-user-btn');
+        if (addUserBtn) {
+            addUserBtn.addEventListener('click', function() { gtiOpenUserModal(null); });
+        }
+
+        var userForm = document.getElementById('gti-user-form');
+        if (userForm) {
+            userForm.addEventListener('submit', gtiSubmitUserForm);
+        }
+
+        var userModal = document.getElementById('gti-user-modal');
+        if (userModal) {
+            // Click the backdrop, not the box, to dismiss.
+            userModal.addEventListener('click', function(e) {
+                if (e.target === userModal) gtiCloseUserModal();
+            });
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') gtiCloseUserModal();
+        });
     });
+
+    function gtiUsersAlert(id, type, message) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.style.display = 'block';
+        el.className = 'gti-alert ' + type;
+        el.textContent = message;
+        if (type === 'success') {
+            setTimeout(function() { el.style.display = 'none'; }, 5000);
+        }
+    }
+
+    function gtiOpenUserModal(user) {
+        var modal = document.getElementById('gti-user-modal');
+        if (!modal) return;
+
+        document.getElementById('gti-user-modal-alert').style.display = 'none';
+        document.getElementById('gti-user-modal-title').textContent = user ? 'Edit User' : 'Add User';
+        document.getElementById('gti-user-id').value = user ? user.id : 0;
+        document.getElementById('gti-user-login').value = user ? user.login : '';
+        document.getElementById('gti-user-email').value = user ? user.email : '';
+        document.getElementById('gti-user-first').value = user ? (user.first_name || '') : '';
+        document.getElementById('gti-user-last').value = user ? (user.last_name || '') : '';
+        document.getElementById('gti-user-phone').value = user ? (user.phone || '') : '';
+        document.getElementById('gti-user-department').value = user ? (user.department || '') : '';
+        document.getElementById('gti-user-pass').value = '';
+
+        var roleSelect = document.getElementById('gti-user-role');
+        if (user && user.role) roleSelect.value = user.role;
+
+        // WordPress does not allow renaming an account after creation.
+        var loginField = document.getElementById('gti-user-login');
+        loginField.readOnly = !!user;
+        document.getElementById('gti-user-login-hint').textContent = user
+            ? 'Usernames cannot be changed'
+            : 'Cannot be changed later';
+        document.getElementById('gti-user-pass-hint').textContent = user
+            ? 'Leave blank to keep the current password'
+            : 'Required for new users, min. 8 characters';
+        document.getElementById('gti-user-pass').required = !user;
+
+        modal.classList.add('open');
+    }
+
+    function gtiEditUser(btn) {
+        var user;
+        try { user = JSON.parse(btn.getAttribute('data-user')); } catch (e) { return; }
+        gtiOpenUserModal(user);
+    }
+
+    function gtiCloseUserModal() {
+        var modal = document.getElementById('gti-user-modal');
+        if (modal) modal.classList.remove('open');
+    }
+
+    function gtiSubmitUserForm(e) {
+        e.preventDefault();
+
+        var form = e.target;
+        var btn = document.getElementById('gti-user-save-btn');
+        var pass = document.getElementById('gti-user-pass').value;
+        var isNew = document.getElementById('gti-user-id').value === '0';
+
+        if ((isNew || pass) && pass.length < 8) {
+            gtiUsersAlert('gti-user-modal-alert', 'error', 'Password must be at least 8 characters.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Saving...</span>';
+
+        var data = new FormData(form);
+        data.append('action', 'gti_save_user');
+        data.append('nonce', gtiAjax.nonce);
+
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: data })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> <span>Save User</span>';
+                if (res.success) {
+                    location.reload();
+                } else {
+                    gtiUsersAlert('gti-user-modal-alert', 'error', (res.data && res.data.message) || 'Failed to save user.');
+                }
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> <span>Save User</span>';
+                gtiUsersAlert('gti-user-modal-alert', 'error', 'Network error. Please try again.');
+            });
+    }
+
+    function gtiDeleteUser(userId, name) {
+        if (!confirm('Delete the account for ' + name + '? This cannot be undone.')) return;
+
+        var data = new FormData();
+        data.append('action', 'gti_delete_user');
+        data.append('id', userId);
+        data.append('nonce', gtiAjax.nonce);
+
+        fetch(gtiAjax.ajaxurl, { method: 'POST', body: data })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (res.success) {
+                    location.reload();
+                } else {
+                    gtiUsersAlert('gti-users-alert', 'error', (res.data && res.data.message) || 'Failed to delete user.');
+                }
+            })
+            .catch(function() {
+                gtiUsersAlert('gti-users-alert', 'error', 'Network error. Please try again.');
+            });
+    }
     </script>
 </body>
 </html>

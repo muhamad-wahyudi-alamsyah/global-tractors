@@ -12,14 +12,21 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
 // Database
 global $wpdb;
-$table_name = $wpdb->prefix . 'gti_customers';
+gti_ensure_customers_table();
+$table_name = gti_customers_table();
+
+// Everyone who submitted a Request Equipment or a Request Quotation becomes a
+// customer here. New submissions sync on arrival; this backfills anything that
+// predates the sync hooks (throttled to once every 5 minutes).
+gti_sync_customers_from_sources();
 
 // Filters
-$search         = isset($_GET['search'])   ? sanitize_text_field($_GET['search'])   : '';
-$status_filter = isset($_GET['status'])   ? sanitize_text_field($_GET['status'])   : '';
+$search        = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+$status_filter = isset($_GET['status']) ? sanitize_text_field($_GET['status']) : '';
+$source_filter = isset($_GET['source']) ? sanitize_text_field($_GET['source']) : '';
 
-// Pagination
-$paged    = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+// Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
+$paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset   = ($paged - 1) * $per_page;
 
@@ -35,6 +42,10 @@ if ($search) {
 if ($status_filter) {
     $where   .= " AND status = %s";
     $params[] = $status_filter;
+}
+if ($source_filter) {
+    $where   .= " AND source = %s";
+    $params[] = $source_filter;
 }
 
 // Count
@@ -55,9 +66,19 @@ if (!empty($params)) {
     ));
 }
 
-// Status counts
-$active_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'active'");
-$inactive_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'inactive'");
+// Status counts — unfiltered, so the stat cards do not move with the search box
+$total_customers = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}");
+$active_count    = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'active'");
+$inactive_count  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status <> 'active'");
+$total_requests  = (int) $wpdb->get_var("SELECT COALESCE(SUM(total_transactions), 0) FROM {$table_name}");
+
+// Where customers came from, for the filter dropdown
+$sources = $wpdb->get_col("SELECT DISTINCT source FROM {$table_name} WHERE source <> '' ORDER BY source");
+$source_labels = array(
+    'request-equipment' => 'Request Equipment',
+    'request-quotation' => 'Request Quotation',
+    'sell-equipment'    => 'Sell Equipment',
+);
 
 // Format currency
 function gti_fmt_currency($amount) {
@@ -297,7 +318,7 @@ function gti_customer_initials($name) {
                         <div class="gti-ue-stat-icon"><i class="fas fa-users"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Total Customers</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($total); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html($total_customers); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
@@ -312,6 +333,13 @@ function gti_customer_initials($name) {
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Inactive</p>
                             <p class="gti-ue-stat-value"><?php echo esc_html($inactive_count); ?></p>
+                        </div>
+                    </div>
+                    <div class="gti-ue-stat-card">
+                        <div class="gti-ue-stat-icon reserved"><i class="fas fa-file-signature"></i></div>
+                        <div class="gti-ue-stat-info">
+                            <p class="gti-ue-stat-label">Requests &amp; Quotations</p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html($total_requests); ?></p>
                         </div>
                     </div>
                 </div>
@@ -331,6 +359,18 @@ function gti_customer_initials($name) {
                                 <option value="inactive" <?php selected($status_filter, 'inactive'); ?>>Inactive</option>
                             </select>
                         </div>
+                        <?php if (!empty($sources)): ?>
+                        <div class="gti-ue-filter">
+                            <select name="source">
+                                <option value="">All Sources</option>
+                                <?php foreach ($sources as $src): ?>
+                                    <option value="<?php echo esc_attr($src); ?>" <?php selected($source_filter, $src); ?>>
+                                        <?php echo esc_html($source_labels[$src] ?? ucwords(str_replace('-', ' ', $src))); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <?php endif; ?>
                         <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-ue-btn-reset">
                             <i class="fas fa-rotate-right"></i> Reset
                         </a>
@@ -359,7 +399,9 @@ function gti_customer_initials($name) {
                                             <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                                             <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No customers found</p>
                                             <p style="font-size: 14px;">
-                                                <?php echo $search ? 'Try adjusting your search' : 'No customers registered yet'; ?>
+                                                <?php echo ($search || $status_filter || $source_filter)
+                                                    ? 'Try adjusting your filters'
+                                                    : 'Customers appear here automatically once someone submits a Request Equipment or Request Quotation'; ?>
                                             </p>
                                         </div>
                                     </td>
@@ -381,12 +423,12 @@ function gti_customer_initials($name) {
                                             </div>
                                         </td>
                                         <td class="col-company">
-                                            <strong style="color:#1a1f36"><?php echo esc_html($c->company); ?></strong>
+                                            <strong style="color:#1a1f36"><?php echo esc_html($c->company ?: '—'); ?></strong>
                                         </td>
                                         <td class="col-email">
                                             <a href="mailto:<?php echo esc_attr($c->email); ?>" style="color:#2563eb;text-decoration:none;font-size:13px"><?php echo esc_html($c->email); ?></a>
                                         </td>
-                                        <td class="col-phone"><?php echo esc_html($c->phone); ?></td>
+                                        <td class="col-phone"><?php echo esc_html($c->phone ?: '—'); ?></td>
                                         <td class="col-status">
                                             <span class="gti-badge-status <?php echo $c->status === 'active' ? 'available' : 'sold'; ?>"><?php echo esc_html(ucfirst($c->status)); ?></span>
                                         </td>
@@ -424,11 +466,12 @@ function gti_customer_initials($name) {
                                 $query_params = [];
                                 if ($search) $query_params['search'] = $search;
                                 if ($status_filter) $query_params['status'] = $status_filter;
+                                if ($source_filter) $query_params['source'] = $source_filter;
                                 $query_params['gti_page'] = 'customers';
                                 $base_url = gti_dashboard_url('customers');
                                 ?>
                                 <?php if ($paged > 1): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
                                 <?php endif; ?>
@@ -437,7 +480,7 @@ function gti_customer_initials($name) {
                                 $start = max(1, $paged - 2);
                                 $end   = min($total_pages, $paged + 2);
                                 if ($start > 1): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => 1]))); ?>" class="gti-ue-page-btn">1</a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => 1]))); ?>" class="gti-ue-page-btn">1</a>
                                     <?php if ($start > 2): ?>
                                         <span class="gti-ue-page-dots">...</span>
                                     <?php endif; ?>
@@ -447,7 +490,7 @@ function gti_customer_initials($name) {
                                     <?php if ($i == $paged): ?>
                                         <button class="gti-ue-page-btn active"><?php echo $i; ?></button>
                                     <?php else: ?>
-                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
+                                        <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
                                     <?php endif; ?>
                                 <?php endfor; ?>
 
@@ -455,11 +498,11 @@ function gti_customer_initials($name) {
                                     <?php if ($end < $total_pages - 1): ?>
                                         <span class="gti-ue-page-dots">...</span>
                                     <?php endif; ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
                                 <?php endif; ?>
 
                                 <?php if ($paged < $total_pages): ?>
-                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
+                                    <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
                                 <?php endif; ?>

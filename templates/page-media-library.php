@@ -10,116 +10,40 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
-// Fetch media from WordPress uploads directory
-$upload_dir = wp_upload_dir();
-$base_dir = $upload_dir['basedir'];
+// Media comes from the WordPress media library — see inc/modules/media-library.php
+// Filters
+$search       = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+$type_filter  = isset($_GET['type'])   ? sanitize_text_field($_GET['type'])   : '';
+$month_filter = isset($_GET['month'])  ? sanitize_text_field($_GET['month'])  : '';
 
-// Scan wp-uploads for images
-$all_media = array();
-$months = array();
+// Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
+$paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
+$per_page = 24;
 
-if (is_dir($base_dir)) {
-    $year_dirs = glob($base_dir . '/*', GLOB_ONLYDIR);
-    foreach ($year_dirs as $year_dir) {
-        $year = basename($year_dir);
-        if (!is_numeric($year)) continue;
-        $month_dirs = glob($year_dir . '/*', GLOB_ONLYDIR);
-        foreach ($month_dirs as $month_dir) {
-            $month = basename($month_dir);
-            if (!is_numeric($month)) continue;
-            $month_key = $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT);
-            $month_label = date('F Y', mktime(0, 0, 0, intval($month), 1, intval($year)));
-            $files = glob($month_dir . '/{*.jpg,*.jpeg,*.png,*.gif,*.webp,*.svg,*.pdf,*.doc,*.docx,*.xls,*.xlsx}', GLOB_BRACE);
-            foreach ($files as $file) {
-                $filename = basename($file);
-                // Skip thumbnails
-                if (preg_match('/-\d+x\d+\./', $filename)) continue;
-                $file_url = str_replace($base_dir, $upload_dir['baseurl'], $file);
-                $file_size = filesize($file);
-                $file_mtime = filemtime($file);
-                $file_ext = strtoupper(pathinfo($file, PATHINFO_EXTENSION));
-
-                $type = 'document';
-                if (in_array($file_ext, ['JPG', 'JPEG', 'PNG', 'GIF', 'WEBP', 'SVG'])) {
-                    $type = 'image';
-                }
-
-                $all_media[] = array(
-                    'id' => count($all_media) + 1,
-                    'filename' => $filename,
-                    'url' => $file_url,
-                    'path' => $file,
-                    'type' => $type,
-                    'ext' => $file_ext,
-                    'size' => $file_size,
-                    'size_human' => size_format($file_size),
-                    'date' => $file_mtime,
-                    'date_human' => date('M j, Y', $file_mtime),
-                    'date_full' => date('Y-m-d H:i:s', $file_mtime),
-                    'month' => $month_key,
-                    'month_label' => $month_label,
-                    'dims' => ($type === 'image' && function_exists('getimagesize')) ? @getimagesize($file) : null,
-                );
-            }
-        }
-    }
-}
-
-// Sort by date descending
-usort($all_media, function($a, $b) { return $b['date'] - $a['date']; });
-
-// Re-index
-$all_media = array_values($all_media);
+$results     = gti_query_media(array(
+    'search'   => $search,
+    'type'     => $type_filter,
+    'month'    => $month_filter,
+    'per_page' => $per_page,
+    'page'     => $paged,
+));
+$page_items  = $results['items'];
+$total_items = $results['total'];
+$total_pages = $results['pages'];
 
 // Statistics
-$total_media = count($all_media);
-$total_images = count(array_filter($all_media, fn($m) => $m['type'] === 'image'));
-$total_documents = count(array_filter($all_media, fn($m) => $m['type'] === 'document'));
-$total_size = array_sum(array_column($all_media, 'size'));
+$counts          = gti_media_counts();
+$total_media     = $counts['total'];
+$total_images    = $counts['images'];
+$total_documents = $counts['documents'];
+$total_size      = $counts['size'];
 
-// Group by month
-$grouped = array();
-foreach ($all_media as $m) {
-    $grouped[$m['month']][] = $m;
-}
+// Month grouping / filter options
+$unique_months = gti_media_months();
+$month_counts  = gti_media_month_counts();
+$is_filtered   = ($search || $type_filter || $month_filter);
 
-// Filters
-$search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
-$type_filter = isset($_GET['type']) ? sanitize_text_field($_GET['type']) : '';
-$month_filter = isset($_GET['month']) ? sanitize_text_field($_GET['month']) : '';
-
-// Apply filters
-$filtered = $all_media;
-if ($search) {
-    $filtered = array_filter($filtered, function($m) use ($search) {
-        return stripos($m['filename'], $search) !== false;
-    });
-}
-if ($type_filter) {
-    $filtered = array_filter($filtered, function($m) use ($type_filter) {
-        return $m['type'] === $type_filter;
-    });
-}
-if ($month_filter) {
-    $filtered = array_filter($filtered, function($m) use ($month_filter) {
-        return $m['month'] === $month_filter;
-    });
-}
-$filtered = array_values($filtered);
-
-// Pagination
-$paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
-$per_page = 24;
-$total_items = count($filtered);
-$total_pages = ceil($total_items / $per_page);
-$page_items = array_slice($filtered, ($paged - 1) * $per_page, $per_page);
-
-// Get unique months for filter
-$unique_months = array();
-foreach ($all_media as $m) {
-    $unique_months[$m['month']] = $m['month_label'];
-}
-ksort($unique_months);
+$can_upload = current_user_can('upload_files');
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
@@ -185,6 +109,16 @@ ksort($unique_months);
         .gti-ml-card-check { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 10px; opacity: 0; transition: opacity 0.15s; }
         .gti-ml-card:hover .gti-ml-card-check { opacity: 1; }
         .gti-ml-card.selected .gti-ml-card-check { opacity: 1; background: #F5A623; border-color: #F5A623; }
+
+        /* ====== List View ====== */
+        .gti-ml-grid.is-list { display: block; }
+        .gti-ml-grid.is-list .gti-ml-card { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; padding: 8px 12px; }
+        .gti-ml-grid.is-list .gti-ml-card-thumb { width: 44px; height: 44px; aspect-ratio: auto; flex-shrink: 0; border-radius: 8px; }
+        .gti-ml-grid.is-list .gti-ml-card-thumb .gti-ml-doc-icon { font-size: 18px; }
+        .gti-ml-grid.is-list .gti-ml-card-info { flex: 1; min-width: 0; padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .gti-ml-grid.is-list .gti-ml-card-name { flex: 1; min-width: 0; }
+        .gti-ml-grid.is-list .gti-ml-card-meta { margin-top: 0; gap: 14px; flex-shrink: 0; }
+        .gti-ml-grid.is-list .gti-ml-month-header { display: flex; }
 
         /* ====== Month Group Header ====== */
         .gti-ml-month-header { display: flex; align-items: center; gap: 10px; padding: 8px 0; margin-top: 8px; }
@@ -441,9 +375,11 @@ ksort($unique_months);
                                 <button type="button" class="gti-ml-view-btn active" data-view="grid" title="Grid View"><i class="fas fa-th"></i></button>
                                 <button type="button" class="gti-ml-view-btn" data-view="list" title="List View"><i class="fas fa-list"></i></button>
                             </div>
+                            <?php if ($can_upload): ?>
                             <button type="button" class="gti-ml-upload-btn" id="uploadMediaBtn">
                                 <i class="fas fa-cloud-upload-alt"></i> Upload File
                             </button>
+                            <?php endif; ?>
                         </div>
                     </form>
 
@@ -453,18 +389,18 @@ ksort($unique_months);
                             <div class="gti-ml-empty" style="grid-column: 1/-1;">
                                 <i class="fas fa-photo-video"></i>
                                 <h3>No media found</h3>
-                                <p><?php echo ($search || $type_filter || $month_filter) ? 'Try adjusting your filters' : 'No files uploaded yet'; ?></p>
+                                <p><?php echo $is_filtered ? 'Try adjusting your filters' : 'No files uploaded yet'; ?></p>
                             </div>
                         <?php else: ?>
                             <?php
                             $current_month = '';
                             foreach ($page_items as $item):
-                                if ($item['month'] !== $current_month && !($search || $type_filter || $month_filter)):
+                                if ($item['month'] !== $current_month && !$is_filtered):
                                     $current_month = $item['month'];
                                     ?>
                                     <div class="gti-ml-month-header" style="grid-column: 1/-1;">
                                         <h3><?php echo esc_html($item['month_label']); ?></h3>
-                                        <span class="gti-ml-month-count"><?php echo count(array_filter($all_media, fn($m) => $m['month'] === $current_month)); ?> files</span>
+                                        <span class="gti-ml-month-count"><?php echo (int) ($month_counts[$current_month] ?? 0); ?> files</span>
                                         <div class="gti-ml-month-line"></div>
                                     </div>
                                 <?php endif; ?>
@@ -473,7 +409,7 @@ ksort($unique_months);
                                      onclick="openMediaDetail(this)">
                                     <div class="gti-ml-card-thumb">
                                         <?php if ($item['type'] === 'image'): ?>
-                                            <img src="<?php echo esc_url($item['url']); ?>" alt="<?php echo esc_attr($item['filename']); ?>" loading="lazy">
+                                            <img src="<?php echo esc_url($item['thumb'] ?: $item['url']); ?>" alt="<?php echo esc_attr($item['alt'] ?: $item['filename']); ?>" loading="lazy">
                                         <?php else: ?>
                                             <i class="fas fa-file-alt gti-ml-doc-icon"></i>
                                         <?php endif; ?>
@@ -507,7 +443,7 @@ ksort($unique_months);
                                 $base = gti_dashboard_url('media-library');
                                 ?>
                                 <?php if ($paged > 1): ?>
-                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['paged' => $paged - 1]))); ?>" class="gti-ml-page-btn"><i class="fas fa-chevron-left"></i></a>
+                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['page_num' => $paged - 1]))); ?>" class="gti-ml-page-btn"><i class="fas fa-chevron-left"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ml-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
                                 <?php endif; ?>
@@ -516,23 +452,23 @@ ksort($unique_months);
                                 $start_p = max(1, $paged - 2);
                                 $end_p = min($total_pages, $paged + 2);
                                 if ($start_p > 1): ?>
-                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['paged' => 1]))); ?>" class="gti-ml-page-btn">1</a>
+                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['page_num' => 1]))); ?>" class="gti-ml-page-btn">1</a>
                                     <?php if ($start_p > 2): ?><span style="padding:0 4px;color:#9ca3af;">...</span><?php endif; ?>
                                 <?php endif; ?>
                                 <?php for ($i = $start_p; $i <= $end_p; $i++): ?>
                                     <?php if ($i === $paged): ?>
                                         <button class="gti-ml-page-btn active"><?php echo $i; ?></button>
                                     <?php else: ?>
-                                        <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['paged' => $i]))); ?>" class="gti-ml-page-btn"><?php echo $i; ?></a>
+                                        <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['page_num' => $i]))); ?>" class="gti-ml-page-btn"><?php echo $i; ?></a>
                                     <?php endif; ?>
                                 <?php endfor; ?>
                                 <?php if ($end_p < $total_pages): ?>
                                     <?php if ($end_p < $total_pages - 1): ?><span style="padding:0 4px;color:#9ca3af;">...</span><?php endif; ?>
-                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['paged' => $total_pages]))); ?>" class="gti-ml-page-btn"><?php echo $total_pages; ?></a>
+                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['page_num' => $total_pages]))); ?>" class="gti-ml-page-btn"><?php echo $total_pages; ?></a>
                                 <?php endif; ?>
 
                                 <?php if ($paged < $total_pages): ?>
-                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['paged' => $paged + 1]))); ?>" class="gti-ml-page-btn"><i class="fas fa-chevron-right"></i></a>
+                                    <a href="<?php echo esc_url($base . '?' . http_build_query(array_merge($qp, ['page_num' => $paged + 1]))); ?>" class="gti-ml-page-btn"><i class="fas fa-chevron-right"></i></a>
                                 <?php else: ?>
                                     <button class="gti-ml-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
                                 <?php endif; ?>
@@ -584,6 +520,22 @@ ksort($unique_months);
                             <div class="gti-drawer-row">
                                 <span class="gti-drawer-label">Dimensions</span>
                                 <span class="gti-drawer-value" id="drawer-dims">-</span>
+                            </div>
+                            <div class="gti-drawer-row">
+                                <span class="gti-drawer-label">Title</span>
+                                <span class="gti-drawer-value" id="drawer-title-val">-</span>
+                            </div>
+                            <div class="gti-drawer-row">
+                                <span class="gti-drawer-label">Alt Text</span>
+                                <span class="gti-drawer-value" id="drawer-alt">-</span>
+                            </div>
+                            <div class="gti-drawer-row">
+                                <span class="gti-drawer-label">Uploaded By</span>
+                                <span class="gti-drawer-value" id="drawer-uploader">-</span>
+                            </div>
+                            <div class="gti-drawer-row">
+                                <span class="gti-drawer-label">Attached To</span>
+                                <span class="gti-drawer-value" id="drawer-attached">-</span>
                             </div>
                         </div>
 
@@ -673,19 +625,32 @@ ksort($unique_months);
         document.getElementById('drawerBackdrop').addEventListener('click', closeMediaDrawer);
         document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeMediaDrawer(); closeUploadModal(); } });
 
-        // View toggle
+        // View toggle — actually switches layout, and the choice sticks.
+        var mediaGrid = document.getElementById('mediaGrid');
+        function applyMediaView(view) {
+            if (!mediaGrid) return;
+            mediaGrid.classList.toggle('is-list', view === 'list');
+            document.querySelectorAll('.gti-ml-view-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('data-view') === view);
+            });
+        }
+        applyMediaView(localStorage.getItem('gti-media-view') || 'grid');
+
         document.querySelectorAll('.gti-ml-view-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.gti-ml-view-btn').forEach(function(b) { b.classList.remove('active'); });
-                this.classList.add('active');
+                var view = this.getAttribute('data-view');
+                localStorage.setItem('gti-media-view', view);
+                applyMediaView(view);
             });
         });
 
-        // Upload button
-        document.getElementById('uploadMediaBtn').addEventListener('click', function() {
-            var modal = document.getElementById('uploadModal');
-            modal.style.display = 'flex';
-        });
+        // Upload button (hidden for users without the upload_files capability)
+        var uploadBtn = document.getElementById('uploadMediaBtn');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', function() {
+                document.getElementById('uploadModal').style.display = 'flex';
+            });
+        }
 
         // Drop zone
         var dz = document.getElementById('uploadDropZone');
@@ -720,18 +685,22 @@ ksort($unique_months);
                 body: formData
             }).then(function(r) { return r.json(); }).then(function(res) {
                 document.getElementById('uploadProgressBar').style.width = '100%';
-                document.getElementById('uploadStatus').textContent = res.success ? 'Upload complete! Reloading...' : 'Upload failed. Please try again.';
-                if (res.success) { setTimeout(function() { location.reload(); }, 1500); }
+                var msg = res.data && res.data.message ? res.data.message : (res.success ? 'Upload complete!' : 'Upload failed. Please try again.');
+                document.getElementById('uploadStatus').textContent = res.success ? msg + ' Reloading...' : msg;
+                if (res.success) { setTimeout(function() { location.reload(); }, 1200); }
             }).catch(function() {
                 document.getElementById('uploadStatus').textContent = 'Upload failed. Please try again.';
             });
         });
     })();
 
+    var _currentMedia = null;
+
     // Open media detail drawer
     function openMediaDetail(el) {
         var data;
         try { data = JSON.parse(el.getAttribute('data-media')); } catch(e) { return; }
+        _currentMedia = data;
 
         // Mark active card
         document.querySelectorAll('.gti-ml-card').forEach(function(c) { c.classList.remove('active'); });
@@ -756,6 +725,10 @@ ksort($unique_months);
         document.getElementById('drawer-filesize').textContent = data.size_human;
         document.getElementById('drawer-uploaded').textContent = data.date_human;
         document.getElementById('drawer-dims').textContent = data.dims ? data.dims[0] + ' × ' + data.dims[1] + ' px' : '-';
+        document.getElementById('drawer-title-val').textContent = data.title || '-';
+        document.getElementById('drawer-alt').textContent = data.alt || '-';
+        document.getElementById('drawer-uploader').textContent = data.uploader || '-';
+        document.getElementById('drawer-attached').textContent = data.attached_to || 'Unattached';
         document.getElementById('drawer-url').textContent = data.url;
         document.getElementById('drawer-url').setAttribute('data-url', data.url);
         document.getElementById('drawer-download').href = data.url;
@@ -778,6 +751,38 @@ ksort($unique_months);
     function closeUploadModal() {
         document.getElementById('uploadModal').style.display = 'none';
     }
+
+    // Permanently remove the attachment, its resized files included.
+    document.getElementById('drawer-delete').addEventListener('click', function() {
+        if (!_currentMedia) return;
+        if (!confirm('Permanently delete "' + _currentMedia.filename + '"? This cannot be undone.')) return;
+
+        var btn = this;
+        btn.disabled = true;
+
+        var formData = new FormData();
+        formData.append('action', 'gti_delete_media');
+        formData.append('id', _currentMedia.id);
+        formData.append('nonce', (typeof gtiAjax !== 'undefined' ? gtiAjax.nonce : ''));
+
+        fetch((typeof gtiAjax !== 'undefined' ? gtiAjax.ajaxurl : '/wp-admin/admin-ajax.php'), {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            btn.disabled = false;
+            if (res.success) {
+                location.reload();
+            } else {
+                alert(res.data && res.data.message ? res.data.message : 'Failed to delete the file.');
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            alert('An error occurred. Please try again.');
+        });
+    });
 
     function copyUrl(el) {
         var url = el.getAttribute('data-url') || el.textContent;

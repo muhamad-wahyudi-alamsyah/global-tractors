@@ -66,19 +66,21 @@ function gti_get_dashboard_stats() {
  * @param string $action     Action name.
  * @param string $description Description.
  */
-function gti_log_activity( $user_id, $action, $description = '' ) {
-    global $wpdb;
+if ( ! function_exists( 'gti_log_activity' ) ) {
+    function gti_log_activity( $user_id, $action, $description = '' ) {
+        global $wpdb;
     
-    $table_name = gti_table( 'activity_log' );
+        $table_name = gti_table( 'activity_log' );
     
-    $wpdb->insert(
-        $table_name,
-        [
-            'user_id'     => $user_id,
-            'action'      => $action,
-            'description' => $description,
-            'ip_address'  => gti_get_client_ip(),
-        ],
-        [ '%d', '%s', '%s', '%s' ]
-    );
+        $wpdb->insert(
+            $table_name,
+            [
+                'user_id'     => $user_id,
+                'action'      => $action,
+                'description' => $description,
+                'ip_address'  => gti_get_client_ip(),
+            ],
+            [ '%d', '%s', '%s', '%s' ]
+        );
+    }
 }
