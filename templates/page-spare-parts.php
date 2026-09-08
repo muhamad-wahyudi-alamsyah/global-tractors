@@ -10,6 +10,25 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
+// Auto-generate spare part code
+global $wpdb;
+
+$sp_table = $wpdb->prefix . 'gti_spare_parts';
+
+$sp_year = date('Y');
+
+$sp_cat_abbrev_map = [];
+
+foreach (gti_spare_part_categories() as $sp_cat_name => $sp_cat_meta) {
+
+    $sp_cat_abbrev_map[$sp_cat_name] = $sp_cat_meta['abbr'];
+
+}
+
+$gti_next_sp_code = 'SP-GEN-' . $sp_year . '-001';
+
+$gti_sp_cat_map_json = wp_json_encode($sp_cat_abbrev_map);
+
 // Database queries
 global $wpdb;
 $table = $wpdb->prefix . 'gti_spare_parts';
@@ -963,7 +982,8 @@ $_gti_sp_status_badge = function($status) use ($_gti_sp_status_label) {
                                         type="text"
                                         name="part_number"
                                         id="edit-field-part-number"
-                                        required
+                                        value="<?php echo esc_attr($gti_next_sp_code); ?>"
+                                        readonly required style="background:#f9fafb;cursor:not-allowed;"
                                     >
                                 </div>
 
@@ -994,10 +1014,12 @@ $_gti_sp_status_badge = function($status) use ($_gti_sp_status_label) {
                                     >
                                         <option value="">Select Category</option>
 
-                                        <?php foreach (gti_spare_part_category_names() as $cat_opt): ?>
-                                            <option value="<?php echo esc_attr($cat_opt); ?>">
-                                                <?php echo esc_html($cat_opt); ?>
-                                            </option>
+                                        <?php
+                                        $categories = gti_spare_part_category_names();
+                                        $sel_cat = $_POST['category'] ?? '';
+                                        foreach ($categories as $cat):
+                                        ?>
+                                            <option value="<?php echo esc_attr($cat); ?>" <?php selected($sel_cat, $cat); ?>><?php echo esc_html($cat); ?></option>
                                         <?php endforeach; ?>
 
                                     </select>
@@ -1329,6 +1351,79 @@ $_gti_sp_status_badge = function($status) use ($_gti_sp_status_label) {
         document.querySelectorAll('[data-toggle="dropdown"]').forEach(function(toggle) {
             toggle.addEventListener('click', function(e) { e.preventDefault(); var group = this.closest('.gti-has-children'); if (group) group.classList.toggle('open'); });
         });
+        
+        // Auto-generate spare part code on category change
+        var spCatMap = <?php echo $gti_sp_cat_map_json; ?>;
+
+        // Auto-generate spare part code for Edit Spare Part
+        var editSpCatSelect = document.getElementById('edit-field-category');
+        var editSpCodeInput = document.getElementById('edit-field-part-number');
+
+        // Simpan category saat pertama kali modal/data dibuka
+        var originalCategory = editSpCatSelect ? editSpCatSelect.value : '';
+
+        if (editSpCatSelect && editSpCodeInput) {
+
+            function generateEditSpCode(catVal) {
+
+                if (!catVal) return;
+
+                var abbr = spCatMap[catVal] || 'GEN';
+                var year = new Date().getFullYear();
+
+                var fd = new FormData();
+
+                fd.append('action', 'gti_get_next_spare_part_code');
+                fd.append('nonce', gtiAjax.nonce);
+                fd.append('category', catVal);
+
+                fetch(gtiAjax.ajaxurl, {
+                    method: 'POST',
+                    body: fd
+                })
+                .then(function(r) {
+                    return r.json();
+                })
+                .then(function(d) {
+
+                    if (d.success && d.data && d.data.code) {
+
+                        editSpCodeInput.value = d.data.code;
+
+                    } else {
+
+                        var ts = Date.now().toString().slice(-4);
+
+                        editSpCodeInput.value =
+                            'SP-' + abbr + '-' + year + '-' + ts;
+                    }
+
+                })
+                .catch(function() {
+
+                    var ts = Date.now().toString().slice(-4);
+
+                    editSpCodeInput.value =
+                        'SP-' + abbr + '-' + year + '-' + ts;
+                });
+            }
+
+            // Generate hanya jika category benar-benar berubah
+            editSpCatSelect.addEventListener('change', function() {
+
+                var newCategory = this.value;
+
+                // Category sama dengan data existing
+                if (newCategory === originalCategory) {
+                    return;
+                }
+
+                // Category berbeda → generate Part Number baru
+                generateEditSpCode(newCategory);
+
+            });
+        }
+
         // Action Dropdown Toggle — fixed positioning
         document.addEventListener('click', function(e) {
             var toggle = e.target.closest('.gti-ue-action-toggle');

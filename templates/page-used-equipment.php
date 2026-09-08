@@ -10,6 +10,25 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
+// Auto-generate equipment code
+global $wpdb;
+$table = $wpdb->prefix . 'gti_equipment';
+$year = date('Y');
+$cat_abbrev_map = [
+    'Excavator'     => 'EXC', 'Bulldozer'     => 'BLD', 'Wheel Loader'  => 'WLD',
+    'Dump Truck'    => 'DMP', 'Motor Grader'  => 'MGR', 'Crane'         => 'CRN',
+    'Compactor'     => 'CMP',
+];
+$gti_next_code = '';
+// Default first code
+$gti_next_code = 'GTI-GEN-' . $year . '-001';
+
+// Category abbrev map for JS
+$gti_cat_map_json = wp_json_encode($cat_abbrev_map);
+
+// AJAX endpoint to get next code
+$gti_ajax_url = admin_url('admin-ajax.php');
+
 // Database queries
 global $wpdb;
 $table = $wpdb->prefix . 'gti_equipment';
@@ -1103,7 +1122,7 @@ $_gti_eq_status_badge = function($status, $price_valid_until = null) {
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Equipment Name <span class="required">*</span></label><input type="text" name="name" required></div>
-                                    <div class="gti-ae-field"><label>Equipment Code <span class="required">*</span></label><input type="text" name="equipment_code" readonly required style="background:#f9fafb;cursor:not-allowed;"></div>
+                                    <div class="gti-ae-field"><label>Equipment Code <span class="required">*</span></label><input type="text" name="equipment_code" value="<?php echo esc_attr($gti_next_code); ?>" readonly required style="background:#f9fafb;cursor:not-allowed;"></div>
                                     <div class="gti-ae-field"><label>Category <span class="required">*</span></label><select name="category" required><option value="">Select Category</option><option value="Excavator">Excavator</option><option value="Bulldozer">Bulldozer</option><option value="Wheel Loader">Wheel Loader</option><option value="Dump Truck">Dump Truck</option><option value="Motor Grader">Motor Grader</option><option value="Crane">Crane</option><option value="Compactor">Compactor</option></select></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
@@ -1372,6 +1391,92 @@ $_gti_eq_status_badge = function($status, $price_valid_until = null) {
         ajaxurl: '<?php echo esc_js(admin_url("admin-ajax.php")); ?>',
         nonce: '<?php echo esc_js(wp_create_nonce("gti_nonce")); ?>'
     };
+    // Auto-generate equipment code on category change
+        document.addEventListener('DOMContentLoaded', function() {
+            var catMap = <?php echo $gti_cat_map_json; ?>;
+            var catSelect = document.querySelector('select[name="category"]');
+            var codeInput = document.querySelector('input[name="equipment_code"]');
+            if (!catSelect || !codeInput) return;
+
+            function generateCode(catVal) {
+                if (!catVal) return;
+                var abbr = catMap[catVal] || 'GEN';
+                var year = new Date().getFullYear();
+                var fd = new FormData();
+                fd.append('action', 'gti_get_next_code');
+                fd.append('nonce', gtiAjax.nonce);
+                fd.append('category', catVal);
+                fetch(gtiAjax.ajaxurl, { method: 'POST', body: fd })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.success && d.data && d.data.code) {
+                            codeInput.value = d.data.code;
+                        } else {
+                            var ts = Date.now().toString().slice(-4);
+                            codeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
+                        }
+                    })
+                    .catch(function(err) {
+                        var ts = Date.now().toString().slice(-4);
+                        codeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
+                    });
+            }
+
+            catSelect.addEventListener('change', function() {
+                generateCode(this.value);
+            });
+        });
+
+        // Auto-generate equipment code for Edit Modal (with change detection)
+        var catMap = <?php echo $gti_cat_map_json; ?>;
+        var editEqCatSelect = document.getElementById('gti-edit-form') ? document.querySelector('#gti-edit-form select[name="category"]') : null;
+        var editEqCodeInput = document.getElementById('gti-edit-form') ? document.querySelector('#gti-edit-form input[name="equipment_code"]') : null;
+        var lastSelectedCategory = '';
+
+        if (editEqCatSelect && editEqCodeInput) {
+            function generateEditEqCode(catVal) {
+                if (!catVal) return;
+                var abbr = catMap[catVal] || 'GEN';
+                var year = new Date().getFullYear();
+                var fd = new FormData();
+                fd.append('action', 'gti_get_next_code');
+                fd.append('nonce', gtiAjax.nonce);
+                fd.append('category', catVal);
+                fetch(gtiAjax.ajaxurl, {
+                    method: 'POST',
+                    body: fd
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    if (d.success && d.data && d.data.code) {
+                        editEqCodeInput.value = d.data.code;
+                    } else {
+                        var ts = Date.now().toString().slice(-4);
+                        editEqCodeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
+                    }
+                })
+                .catch(function() {
+                    var ts = Date.now().toString().slice(-4);
+                    editEqCodeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
+                });
+            }
+
+            // Regenerate code when category changes from last selected value
+            editEqCatSelect.addEventListener('change', function() {
+                var newCategory = this.value;
+                if (newCategory !== lastSelectedCategory) {
+                    lastSelectedCategory = newCategory;
+                    generateEditEqCode(newCategory);
+                }
+            });
+
+            // Initialize tracking when modal opens
+            var origOpenEditModal = window.openEditModal;
+            window.openEditModal = function(eq) {
+                lastSelectedCategory = eq.category || '';
+                return origOpenEditModal.call(this, eq);
+            };
+        }
     document.addEventListener('DOMContentLoaded', function() {
         // Sidebar collapse
         var collapseBtn = document.getElementById('gti-collapse-btn');
@@ -1778,6 +1883,7 @@ $_gti_eq_status_badge = function($status, $price_valid_until = null) {
 
     function openEditModal(eq) {
         _editCurrentEq = eq;
+        originalEditCategory = eq.category || '';
         _editCurrentStep = 1;
         var overlay = document.getElementById('gtiEditOverlay');
         overlay.classList.add('show');
