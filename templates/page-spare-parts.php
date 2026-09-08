@@ -893,124 +893,388 @@ $_gti_sp_status_badge = function($status) use ($_gti_sp_status_label) {
     <!-- ====== Edit Spare Part Modal (Fullscreen Popup) ====== -->
     <div class="gti-ue-edit-overlay" id="gtiEditOverlay">
         <div class="gti-edit-backdrop" onclick="closeEditModal()"></div>
+
         <div class="gti-ue-edit-container">
+
+            <!-- Header -->
             <div class="gti-ue-edit-header">
                 <div class="gti-ue-edit-header-left">
-                    <h2><i class="fas fa-edit"></i> Edit Spare Part</h2>
+                    <h2>
+                        <i class="fas fa-edit"></i> Edit Spare Part
+                    </h2>
                 </div>
-                <div class="gti-ae-stepper-card">
-                    <div class="gti-ae-stepper">
-                        <div class="gti-ae-step active" data-step="1" onclick="editGoStep(1)">
-                            <div class="gti-ae-step-circle">1</div>
-                            <div class="gti-ae-step-label">Part Info</div>
-                        </div>
-                        <div class="gti-ae-step-line"></div>
-                        <div class="gti-ae-step" data-step="2" onclick="editGoStep(2)">
-                            <div class="gti-ae-step-circle">2</div>
-                            <div class="gti-ae-step-label">Inventory &amp; Pricing</div>
-                        </div>
-                        <div class="gti-ae-step-line"></div>
-                        <div class="gti-ae-step" data-step="3" onclick="editGoStep(3)">
-                            <div class="gti-ae-step-circle">3</div>
-                            <div class="gti-ae-step-label">Image</div>
-                        </div>
-                    </div>
-                </div>
-                <button class="gti-ue-edit-close" onclick="closeEditModal()" title="Close"><i class="fas fa-times"></i></button>
+
+                <button
+                    class="gti-ue-edit-close"
+                    onclick="closeEditModal()"
+                    title="Close"
+                    type="button">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+
+            <!-- Body -->
             <div class="gti-ue-edit-body">
-                <form id="gti-edit-form" method="post" enctype="multipart/form-data">
+
+                <form
+                    id="gti-edit-form"
+                    method="post"
+                    enctype="multipart/form-data"
+                >
+
                     <input type="hidden" name="id" id="edit-field-id" value="">
-                    <input type="hidden" name="action" value="gti_save_spare_part">
-                    <input type="hidden" name="nonce" value="<?php echo esc_attr(wp_create_nonce('gti_nonce')); ?>">
 
-                    <!-- Step 1: Part Information -->
-                    <div class="gti-ae-step-content active" data-step="1">
-                        <div class="gti-ae-form-card">
-                            <div class="gti-ae-card-header"><h3><i class="fas fa-cog"></i> Part Information</h3></div>
-                            <div class="gti-ae-card-body">
-                                <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Part Number <span class="required">*</span></label><input type="text" name="part_number" required></div>
-                                    <div class="gti-ae-field"><label>Part Name <span class="required">*</span></label><input type="text" name="name" required></div>
-                                </div>
-                                <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field">
-                                        <label>Category <span class="required">*</span></label>
-                                        <select name="category" required>
-                                            <option value="">Select Category</option>
-                                            <?php foreach (gti_spare_part_category_names() as $cat_opt): ?>
-                                                <option value="<?php echo esc_attr($cat_opt); ?>"><?php echo esc_html($cat_opt); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="gti-ae-field">
-                                        <label>Brand <span class="required">*</span></label>
-                                        <select name="brand" required>
-                                            <option value="">Select Brand</option>
-                                            <?php foreach (gti_spare_part_brands() as $brand_opt): ?>
-                                                <option value="<?php echo esc_attr($brand_opt); ?>"><?php echo esc_html($brand_opt); ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="gti-ae-field gti-ae-field-full"><label>Description</label><textarea name="description" rows="3"></textarea></div>
-                            </div>
+                    <input
+                        type="hidden"
+                        name="action"
+                        value="gti_save_spare_part"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="nonce"
+                        value="<?php echo esc_attr(wp_create_nonce('gti_nonce')); ?>"
+                    >
+
+                    <!-- ========================================= -->
+                    <!-- PART INFORMATION -->
+                    <!-- ========================================= -->
+                    <div class="gti-ae-form-card">
+
+                        <div class="gti-ae-card-header">
+                            <h3>
+                                <i class="fas fa-info-circle"></i>
+                                Part Information
+                            </h3>
                         </div>
-                        <div class="gti-ae-step-nav">
-                            <span></span>
-                            <button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button>
+
+                        <div class="gti-ae-card-body">
+
+                            <!-- Row 1 -->
+                            <div class="gti-ae-form-grid">
+
+                                <div class="gti-ae-field">
+                                    <label>
+                                        Part Number
+                                        <span class="required">*</span>
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="part_number"
+                                        id="edit-field-part-number"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="gti-ae-field">
+                                    <label>
+                                        Part Name
+                                        <span class="required">*</span>
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        id="edit-field-name"
+                                        required
+                                    >
+                                </div>
+
+                                <div class="gti-ae-field">
+                                    <label>
+                                        Category
+                                        <span class="required">*</span>
+                                    </label>
+
+                                    <select
+                                        name="category"
+                                        id="edit-field-category"
+                                        required
+                                    >
+                                        <option value="">Select Category</option>
+
+                                        <?php foreach (gti_spare_part_category_names() as $cat_opt): ?>
+                                            <option value="<?php echo esc_attr($cat_opt); ?>">
+                                                <?php echo esc_html($cat_opt); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <!-- Row 2 -->
+                            <div class="gti-ae-form-grid">
+
+                                <div class="gti-ae-field">
+                                    <label>
+                                        Brand
+                                        <span class="required">*</span>
+                                    </label>
+
+                                    <select
+                                        name="brand"
+                                        id="edit-field-brand"
+                                        required
+                                    >
+                                        <option value="">Select Brand</option>
+
+                                        <?php foreach (gti_spare_part_brands() as $brand_opt): ?>
+                                            <option value="<?php echo esc_attr($brand_opt); ?>">
+                                                <?php echo esc_html($brand_opt); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+
+                                    </select>
+                                </div>
+
+                                <div class="gti-ae-field">
+                                    <label>Supplier</label>
+
+                                    <input
+                                        type="text"
+                                        name="supplier"
+                                        id="edit-field-supplier"
+                                    >
+                                </div>
+
+                                <div class="gti-ae-field">
+                                    <label>Location</label>
+
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        id="edit-field-location"
+                                    >
+                                </div>
+
+                            </div>
+
+                            <!-- Description -->
+                            <div class="gti-ae-field gti-ae-field-full">
+
+                                <label>Description</label>
+
+                                <textarea
+                                    name="description"
+                                    id="edit-field-description"
+                                    rows="4"
+                                ></textarea>
+
+                            </div>
+
                         </div>
                     </div>
 
-                    <!-- Step 2: Inventory & Pricing -->
-                    <div class="gti-ae-step-content" data-step="2">
-                        <div class="gti-ae-form-card">
-                            <div class="gti-ae-card-header"><h3><i class="fas fa-boxes"></i> Inventory &amp; Pricing</h3></div>
-                            <div class="gti-ae-card-body">
-                                <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Current Stock</label><input type="number" name="stock" min="0"></div>
-                                    <div class="gti-ae-field"><label>Minimum Stock</label><input type="number" name="minimum_stock" min="0" value="10"></div>
-                                    <div class="gti-ae-field"><label>Unit Price (IDR)</label><input type="text" name="unit_price" inputmode="numeric" placeholder="e.g., 350.000"></div>
-                                </div>
-                                <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Supplier</label><input type="text" name="supplier"></div>
-                                    <div class="gti-ae-field"><label>Location</label><input type="text" name="location"></div>
-                                    <div class="gti-ae-field"><label>Visibility</label><select name="status"><option value="published">Published</option><option value="draft">Draft</option></select><small style="color:#6b7280;font-size:11px;margin-top:4px;display:block;">Stock status is derived from the quantities above</small></div>
-                                </div>
-                            </div>
+
+                    <!-- ========================================= -->
+                    <!-- STOCK & PRICING -->
+                    <!-- ========================================= -->
+                    <div class="gti-ae-form-card">
+
+                        <div class="gti-ae-card-header">
+                            <h3>
+                                <i class="fas fa-boxes"></i>
+                                Stock &amp; Pricing
+                            </h3>
                         </div>
-                        <div class="gti-ae-step-nav">
-                            <button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button>
-                            <button type="button" class="gti-ae-next" onclick="editNextStep()">Next <i class="fas fa-arrow-right"></i></button>
+
+                        <div class="gti-ae-card-body">
+
+                            <!-- Stock / Minimum / Price -->
+                            <div class="gti-ae-form-grid">
+
+                                <div class="gti-ae-field">
+
+                                    <label>
+                                        Stock Quantity
+                                        <span class="required">*</span>
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        name="stock"
+                                        id="edit-field-stock"
+                                        min="0"
+                                        required
+                                    >
+
+                                </div>
+
+                                <div class="gti-ae-field">
+
+                                    <label>Minimum Stock</label>
+
+                                    <input
+                                        type="number"
+                                        name="minimum_stock"
+                                        id="edit-field-minimum-stock"
+                                        min="0"
+                                        value="10"
+                                    >
+
+                                </div>
+
+                                <div class="gti-ae-field">
+
+                                    <label>
+                                        Unit Price (Rp)
+                                        <span class="required">*</span>
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        name="unit_price"
+                                        id="edit-field-unit-price"
+                                        min="0"
+                                        step="1000"
+                                        required
+                                    >
+
+                                </div>
+
+                            </div>
+
+                            <!-- Stock Status -->
+                            <div class="gti-ae-form-grid">
+
+                                <div class="gti-ae-field">
+
+                                    <label>Stock Status</label>
+
+                                    <input
+                                        type="text"
+                                        id="gti-edit-status-display"
+                                        value="In Stock"
+                                        readonly
+                                        style="background:#f9fafb;cursor:not-allowed;"
+                                    >
+
+                                    <small
+                                        style="
+                                            color:#6b7280;
+                                            font-size:11px;
+                                            margin-top:4px;
+                                            display:block;
+                                        ">
+                                        Derived from stock vs minimum stock
+                                    </small>
+
+                                </div>
+
+                            </div>
+
                         </div>
                     </div>
 
-                    <!-- Step 3: Image -->
-                    <div class="gti-ae-step-content" data-step="3">
-                        <div class="gti-ae-form-card">
-                            <div class="gti-ae-card-header"><h3><i class="fas fa-images"></i> Image</h3></div>
-                            <div class="gti-ae-card-body">
-                                <div class="gti-ae-field gti-ae-field-full">
-                                    <label>Main Image</label>
-                                    <div class="gti-ae-upload-area" id="gti-edit-main-upload">
-                                        <input type="file" name="image" id="gti-edit-main-image" accept="image/*" style="display:none;">
-                                        <div class="gti-ae-upload-placeholder" id="gti-edit-upload-placeholder"><i class="fas fa-cloud-upload-alt"></i><p>Click or drag image here to upload</p></div>
-                                        <div class="gti-ae-upload-preview" id="gti-edit-upload-preview" style="display:none;"><img id="gti-edit-preview-img" src="" alt="Preview"><button type="button" class="gti-ae-remove-img" id="gti-edit-remove-img"><i class="fas fa-times"></i></button></div>
+
+                    <!-- ========================================= -->
+                    <!-- PART IMAGE -->
+                    <!-- ========================================= -->
+                    <div class="gti-ae-form-card">
+
+                        <div class="gti-ae-card-header">
+
+                            <h3>
+                                <i class="fas fa-image"></i>
+                                Part Image
+                            </h3>
+
+                        </div>
+
+                        <div class="gti-ae-card-body">
+
+                            <div class="gti-ae-field gti-ae-field-full">
+
+                                <label>Upload Image</label>
+
+                                <div
+                                    class="gti-ae-upload-area"
+                                    id="gti-edit-main-upload"
+                                >
+
+                                    <input
+                                        type="file"
+                                        name="image"
+                                        id="gti-edit-main-image"
+                                        accept="image/*"
+                                        style="display:none;"
+                                    >
+
+                                    <!-- Upload Placeholder -->
+                                    <div
+                                        class="gti-ae-upload-placeholder"
+                                        id="gti-edit-upload-placeholder"
+                                    >
+
+                                        <i class="fas fa-cloud-upload-alt"></i>
+
+                                        <p>
+                                            Drag &amp; drop image here or click to browse
+                                        </p>
+
                                     </div>
+
+                                    <!-- Preview -->
+                                    <div
+                                        class="gti-ae-upload-preview"
+                                        id="gti-edit-upload-preview"
+                                        style="display:none;"
+                                    >
+
+                                        <img
+                                            id="gti-edit-preview-img"
+                                            src=""
+                                            alt="Preview"
+                                        >
+
+                                        <button
+                                            type="button"
+                                            class="gti-ae-remove-img"
+                                            id="gti-edit-remove-img"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </button>
+
+                                    </div>
+
                                 </div>
+
                             </div>
+
                         </div>
-                        <div class="gti-ae-step-nav">
-                            <button type="button" class="gti-ae-prev" onclick="editPrevStep()"><i class="fas fa-arrow-left"></i> Previous</button>
-                            <span></span>
-                        </div>
+
                     </div>
+
                 </form>
+
             </div>
+
+
+            <!-- Footer -->
             <div class="gti-ue-edit-footer">
-                <button type="button" class="gti-ae-btn-cancel" onclick="closeEditModal()">Cancel</button>
-                <button type="button" class="gti-ae-btn-submit" id="gti-edit-submit"><i class="fas fa-save"></i> Save Changes</button>
+
+                <button
+                    type="button"
+                    class="gti-ae-btn-cancel"
+                    onclick="closeEditModal()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="gti-ae-btn-submit"
+                    id="gti-edit-submit"
+                >
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+
             </div>
+
         </div>
     </div>
 
