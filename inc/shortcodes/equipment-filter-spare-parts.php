@@ -256,10 +256,8 @@ function gti_render_spare_parts_filter( $atts = [] ) {
 
 function gti_spare_render_part_card( $item ) {
     $title       = isset( $item['name'] ) ? $item['name'] : 'Spare Part';
-    $part_number = isset( $item['part_number'] ) ? $item['part_number'] : '';
     $brand       = isset( $item['brand'] ) ? $item['brand'] : '';
     $category    = isset( $item['category'] ) ? $item['category'] : '';
-    $price       = isset( $item['unit_price'] ) ? $item['unit_price'] : '';
     $stock       = isset( $item['stock'] ) ? (int) $item['stock'] : 0;
     $min_stock   = isset( $item['minimum_stock'] ) ? (int) $item['minimum_stock'] : 10;
     $supplier    = isset( $item['supplier'] ) ? $item['supplier'] : '';
@@ -286,7 +284,6 @@ function gti_spare_render_part_card( $item ) {
          data-category="<?php echo esc_attr( $category ); ?>"
          data-brand="<?php echo esc_attr( $brand ); ?>"
          data-supplier="<?php echo esc_attr( $supplier ); ?>"
-         data-price="<?php echo esc_attr( $price ); ?>"
          data-stock="<?php echo esc_attr( $stock ); ?>"
          data-stock-status="<?php echo esc_attr( $stock_status ); ?>"
          data-location="<?php echo esc_attr( $location ); ?>">
@@ -300,9 +297,6 @@ function gti_spare_render_part_card( $item ) {
         </div>
         <div class="gti-ef-card-body">
             <h3 class="gti-ef-card-title"><?php echo esc_html( $title ); ?></h3>
-            <?php if ( $part_number ) : ?>
-                <div class="gti-ef-card-part-number"><strong>Part #:</strong> <?php echo esc_html( $part_number ); ?></div>
-            <?php endif; ?>
             <div class="gti-ef-card-meta">
                 <?php if ( $brand ) : ?>
                     <div class="gti-ef-card-meta-row"><i class="fas fa-industry"></i><span><?php echo esc_html( $brand ); ?></span></div>
@@ -310,9 +304,6 @@ function gti_spare_render_part_card( $item ) {
                 <div class="gti-ef-card-meta-row"><i class="fas fa-tag"></i><span><?php echo esc_html( $category ); ?></span></div>
                 <div class="gti-ef-card-meta-row"><i class="fas fa-map-marker-alt"></i><span><?php echo esc_html( $location ); ?></span></div>
             </div>
-            <?php if ( $price ) : ?>
-                <div class="gti-ef-card-price">Rp <?php echo esc_html( number_format( (float) $price, 0, ',', '.' ) ); ?></div>
-            <?php endif; ?>
             <span class="gti-ef-card-cta">REQUEST QUOTATION <i class="fas fa-arrow-right"></i></span>
         </div>
     </a>
@@ -528,7 +519,6 @@ function gti_spare_render_part_detail( $part_id ) {
     ?>
     <div class="gti-ed-wrapper gti-sp-detail" id="gti-equipment-detail"
          data-id="<?php echo esc_attr( $part_id ); ?>"
-         data-part-number="<?php echo esc_attr( $part_number ); ?>"
          data-brand="<?php echo esc_attr( $brand ); ?>"
          data-name="<?php echo esc_attr( $title ); ?>"
          data-nonce="<?php echo esc_attr( wp_create_nonce( 'gti_customer_quotation' ) ); ?>">
@@ -560,9 +550,6 @@ function gti_spare_render_part_detail( $part_id ) {
                         <span class="gti-ed-brand-badge"><?php echo esc_html( $brand ); ?></span>
                     <?php endif; ?>
                     <h1 class="gti-ed-title"><?php echo esc_html( $title ); ?></h1>
-                    <?php if ( $part_number ) : ?>
-                        <p class="gti-ed-part-number"><strong>Part Number:</strong> <?php echo esc_html( $part_number ); ?></p>
-                    <?php endif; ?>
                     <p class="gti-ed-tagline">REQUEST QUOTATION</p>
 
                     <div class="gti-ed-specs-list">
@@ -573,13 +560,6 @@ function gti_spare_render_part_detail( $part_id ) {
                         <div class="gti-ed-spec-item"><i class="fas fa-building"></i><span class="spec-label">Supplier</span><span class="spec-value"><?php echo esc_html( $supplier ); ?></span></div>
                         <?php endif; ?>
                     </div>
-
-                    <?php if ( $price ) : ?>
-                    <div class="gti-ed-price-display">
-                        <span class="gti-ed-price-label">Unit Price</span>
-                        <span class="gti-ed-price-value">Rp <?php echo esc_html( number_format( (float) $price, 0, ',', '.' ) ); ?></span>
-                    </div>
-                    <?php endif; ?>
 
                     <div class="gti-ed-cta-group">
                         <a href="https://wa.me/<?php echo esc_attr( $wa_number ); ?>?text=<?php echo urlencode( 'Halo GTI, saya ingin menanyakan spare part ' . $title . ' (' . $part_number . ')' ); ?>" target="_blank" rel="noopener noreferrer" class="gti-ed-btn gti-ed-btn-whatsapp"><i class="fab fa-whatsapp"></i> CHAT ON WHATSAPP</a>
@@ -626,15 +606,12 @@ function gti_spare_render_part_detail( $part_id ) {
                         <?php endif; ?>
                         <div class="gti-ed-spec-row"><span class="label">Location</span><span class="value"><?php echo esc_html( $location ); ?></span></div>
                     </div>
+                    <div class="gti-ed-spec-row">
+                        <span class="label">Description</span>
+                        <div class="value"><?php echo wp_kses_post( nl2br( esc_html( $description ) ) ); ?></div>
+                    </div>
                 </div>
-
-                <?php if ( $description ) : ?>
-                <div class="gti-ed-features-block">
-                    <h2 class="gti-ed-section-title">DESCRIPTION</h2>
-                    <div class="gti-ed-description"><?php echo wp_kses_post( nl2br( esc_html( $description ) ) ); ?></div>
-                </div>
-                <?php endif; ?>
-
+                
                 <div class="gti-ed-why-block">
                     <h2 class="gti-ed-section-title">WHY BUY FROM GTI?</h2>
                     <div class="gti-ed-why-grid">

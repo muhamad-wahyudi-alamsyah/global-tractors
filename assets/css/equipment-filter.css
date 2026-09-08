@@ -522,6 +522,37 @@
   background: var(--ef-red);
 }
 
+/* ── Spare Parts Stock Status ───────────────────────────────────────────── */
+
+.gti-ef-status-badge.in-stock {
+    background: var(--ef-green);
+}
+
+.gti-ef-status-badge.low-stock {
+    background: var(--ef-orange);
+}
+
+.gti-ef-status-badge.out-of-stock {
+    background: var(--ef-red);
+}
+
+/* ── Equipment Stock Status ───────────────────────────────────────────── */
+
+.gti-ed-status-badge.in-stock {
+    background: var(--ef-green);
+    color: var(--ef-white);
+}
+
+.gti-ed-status-badge.low-stock {
+    background: var(--ef-orange);
+    color: var(--ef-white);
+}
+
+.gti-ed-status-badge.out-of-stock {
+    background: var(--ef-red);
+    color: var(--ef-white);
+}
+
 
 /* ── Card Body ────────────────────────────────────────────────────────────── */
 .gti-ef-card-body {
