@@ -10,72 +10,92 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
-// Handle form submission
-global $wpdb;
-$table = $wpdb->prefix . 'gti_news_articles';
-$success = false;
-$error = '';
+// Articles are native WordPress posts — see inc/modules/news-articles.php
+$editing_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+$article    = $editing_id ? gti_article_from_post($editing_id) : null;
+if ($editing_id && !$article) {
+    $editing_id = 0;
+}
+
+$success = isset($_GET['saved']);
+$error   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp_verify_nonce($_POST['gti_na_nonce'], 'gti_save_article')) {
-    $title         = sanitize_text_field($_POST['title'] ?? '');
-    $category      = sanitize_text_field($_POST['category'] ?? '');
-    $author        = sanitize_text_field($_POST['author'] ?? '');
-    $author_email  = sanitize_email($_POST['author_email'] ?? '');
-    $excerpt       = sanitize_textarea_field($_POST['excerpt'] ?? '');
-    $content       = wp_kses_post($_POST['content'] ?? '');
-    $tags          = sanitize_text_field($_POST['tags'] ?? '');
-    $status        = sanitize_text_field($_POST['status'] ?? 'draft');
-    $is_featured   = isset($_POST['is_featured']) ? 1 : 0;
 
-    if (empty($title) || empty($category) || empty($author)) {
-        $error = 'Please fill in all required fields.';
+    if (!current_user_can('edit_posts')) {
+        $error = 'You do not have permission to publish articles.';
     } else {
-        // Generate slug
-        $slug = sanitize_title($title);
-        // Check slug uniqueness
-        $existing = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE slug = %s", $slug));
-        if ($existing > 0) {
-            $slug .= '-' . time();
-        }
+        $title    = sanitize_text_field($_POST['title'] ?? '');
+        $category = sanitize_text_field($_POST['category'] ?? '');
+        $status   = sanitize_text_field($_POST['status'] ?? 'draft');
 
-        // Generate article_id
-        $prefix = 'ART-' . date('ymd');
-        $last_id = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE article_id LIKE %s", $prefix . '%'));
-        $article_id = $prefix . str_pad($last_id + 1, 2, '0', STR_PAD_LEFT);
-
-        $insert_data = [
-            'article_id'     => $article_id,
-            'title'          => $title,
-            'slug'           => $slug,
-            'excerpt'        => $excerpt,
-            'content'        => $content,
-            'category'       => $category,
-            'tags'           => $tags,
-            'author'         => $author,
-            'author_email'   => $author_email,
-            'featured_image' => '',
-            'status'         => $status,
-            'views'          => 0,
-            'is_featured'    => $is_featured,
-            'published_at'   => $status === 'published' ? current_time('mysql') : null,
-        ];
-
-        $result = $wpdb->insert($table, $insert_data);
-
-        if ($result !== false) {
-            $success = true;
+        if (empty($title) || empty($category)) {
+            $error = 'Please fill in all required fields.';
         } else {
-            $error = 'Failed to save article. Please try again.';
+            $featured_image_id = 0;
+
+            // The featured image goes into the WordPress media library, so it is
+            // reusable and shows up on /dashboard/media-library.
+            if (!empty($_FILES['featured_image']['name']) && $_FILES['featured_image']['error'] === UPLOAD_ERR_OK) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+                require_once ABSPATH . 'wp-admin/includes/media.php';
+                require_once ABSPATH . 'wp-admin/includes/image.php';
+
+                $uploaded = media_handle_upload('featured_image', 0);
+                if (is_wp_error($uploaded)) {
+                    $error = 'Featured image upload failed: ' . $uploaded->get_error_message();
+                } else {
+                    $featured_image_id = $uploaded;
+                }
+            }
+
+            if (!$error) {
+                $post_id = gti_save_article(array(
+                    'id'                => $editing_id,
+                    'title'             => $title,
+                    'category'          => $category,
+                    'excerpt'           => sanitize_textarea_field($_POST['excerpt'] ?? ''),
+                    'content'           => wp_kses_post($_POST['content'] ?? ''),
+                    'tags'              => sanitize_text_field($_POST['tags'] ?? ''),
+                    'status'            => $status,
+                    'is_featured'       => isset($_POST['is_featured']) ? 1 : 0,
+                    // Reassigning an article to someone else needs edit_others_posts.
+                    'author_id'         => current_user_can('edit_others_posts')
+                        ? (intval($_POST['author_id'] ?? 0) ?: ($editing_id ? 0 : $current_user->ID))
+                        : ($editing_id ? 0 : $current_user->ID),
+                    'featured_image_id' => $featured_image_id,
+                    'remove_featured_image' => !empty($_POST['remove_featured_image']),
+                ));
+
+                if (is_wp_error($post_id)) {
+                    $error = $post_id->get_error_message();
+                } else {
+                    // Redirect so a page refresh cannot re-submit the article.
+                    wp_safe_redirect(gti_dashboard_url('news-articles/add') . '?id=' . $post_id . '&saved=1');
+                    exit;
+                }
+            }
         }
     }
 }
+
+// Field values: what was just submitted wins, then the stored article, then a default.
+function gti_na_value($field, $article, $default = '') {
+    if (isset($_POST[$field])) return $_POST[$field];
+    if ($article && isset($article->$field)) return $article->$field;
+    return $default;
+}
+
+$page_title  = $editing_id ? 'Edit Article' : 'Add New Article';
+$page_intro  = $editing_id ? 'Update an existing news or article post' : 'Create a new news or article post';
+$existing_thumb = $article ? $article->featured_image : '';
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Article - <?php bloginfo('name'); ?></title>
+    <title><?php echo esc_html($page_title); ?> - <?php bloginfo('name'); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -267,8 +287,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                 <div class="gti-header-left">
                     <button class="gti-menu-toggle" id="gti-menu-toggle"><i class="fas fa-bars"></i></button>
                     <div>
-                        <h1 class="gti-page-title">Add New Article</h1>
-                        <p class="gti-welcome">Create a new news or article post</p>
+                        <h1 class="gti-page-title"><?php echo esc_html($page_title); ?></h1>
+                        <p class="gti-welcome"><?php echo esc_html($page_intro); ?></p>
                     </div>
                 </div>
                 <div class="gti-header-right">
@@ -306,7 +326,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                         <div class="gti-ae-card-body" style="display: flex; align-items: center; gap: 12px; padding: 16px 20px;">
                             <i class="fas fa-check-circle" style="color: #10b981; font-size: 20px;"></i>
                             <span style="color: #10b981; font-weight: 500;">Article saved successfully!</span>
-                            <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" style="margin-left: auto; color: var(--gti-primary); font-weight: 500; text-decoration: none;">View List &rarr;</a>
+                            <?php if ($article && $article->status === 'published'): ?>
+                                <a href="<?php echo esc_url($article->permalink); ?>" target="_blank" rel="noopener" style="margin-left: auto; color: var(--gti-primary); font-weight: 500; text-decoration: none;">View on Site &rarr;</a>
+                                <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" style="color: var(--gti-primary); font-weight: 500; text-decoration: none;">View List &rarr;</a>
+                            <?php else: ?>
+                                <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" style="margin-left: auto; color: var(--gti-primary); font-weight: 500; text-decoration: none;">View List &rarr;</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -333,7 +358,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>Title <span class="required">*</span></label>
-                                    <input type="text" name="title" placeholder="Enter article title..." required value="<?php echo esc_attr($_POST['title'] ?? ''); ?>">
+                                    <input type="text" name="title" placeholder="Enter article title..." required value="<?php echo esc_attr(gti_na_value('title', $article)); ?>">
                                 </div>
                             </div>
                             <div class="gti-ae-form-grid">
@@ -342,14 +367,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                                     <select name="category" required>
                                         <option value="">Select Category</option>
                                         <?php
-                                        $cats = [
-                                            'company-news' => 'Company News',
-                                            'tips'         => 'Tips & Tricks',
-                                            'event'        => 'Event',
-                                            'industry'     => 'Industry',
-                                            'product'      => 'Product',
-                                        ];
-                                        $sel_cat = $_POST['category'] ?? '';
+                                        $cats    = gti_article_categories();
+                                        $sel_cat = gti_na_value('category', $article);
                                         foreach ($cats as $val => $label):
                                         ?>
                                             <option value="<?php echo esc_attr($val); ?>" <?php selected($sel_cat, $val); ?>><?php echo esc_html($label); ?></option>
@@ -358,27 +377,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                                 </div>
                                 <div class="gti-ae-field">
                                     <label>Status</label>
+                                    <?php $sel_status = gti_na_value('status', $article, 'draft'); ?>
                                     <select name="status">
-                                        <option value="draft" <?php selected($_POST['status'] ?? 'draft', 'draft'); ?>>Draft</option>
-                                        <option value="published" <?php selected($_POST['status'] ?? '', 'published'); ?>>Published</option>
-                                        <option value="archived" <?php selected($_POST['status'] ?? '', 'archived'); ?>>Archived</option>
+                                        <option value="draft" <?php selected($sel_status, 'draft'); ?>>Draft</option>
+                                        <option value="published" <?php selected($sel_status, 'published'); ?>>Published</option>
+                                        <option value="archived" <?php selected($sel_status, 'archived'); ?>>Archived</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="gti-ae-form-grid">
+                                <?php
+                                // The author is a real WordPress user so the byline matches the public post.
+                                $authors     = get_users(array('capability' => 'edit_posts', 'orderby' => 'display_name'));
+                                if (empty($authors)) $authors = array($current_user);
+                                $sel_author  = intval($_POST['author_id'] ?? 0);
+                                if (!$sel_author && $article) {
+                                    $sel_author = (int) get_post_field('post_author', $article->id);
+                                }
+                                if (!$sel_author) $sel_author = $current_user->ID;
+                                $author_user = get_userdata($sel_author);
+                                ?>
                                 <div class="gti-ae-field">
                                     <label>Author <span class="required">*</span></label>
-                                    <input type="text" name="author" placeholder="e.g., Admin GTI" required value="<?php echo esc_attr($_POST['author'] ?? $user_name); ?>">
+                                    <?php if (current_user_can('edit_others_posts')): ?>
+                                        <select name="author_id" required>
+                                            <?php foreach ($authors as $author_option): ?>
+                                                <option value="<?php echo esc_attr($author_option->ID); ?>" <?php selected($sel_author, $author_option->ID); ?>>
+                                                    <?php echo esc_html($author_option->display_name ?: $author_option->user_login); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php else: ?>
+                                        <input type="text" value="<?php echo esc_attr($author_user ? ($author_user->display_name ?: $author_user->user_login) : ''); ?>" disabled>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="gti-ae-field">
                                     <label>Author Email</label>
-                                    <input type="email" name="author_email" placeholder="e.g., admin@global-tractors.co.id" value="<?php echo esc_attr($_POST['author_email'] ?? $current_user->user_email); ?>">
+                                    <input type="email" value="<?php echo esc_attr($author_user ? $author_user->user_email : ''); ?>" disabled>
+                                    <p style="font-size: 12px; color: #9ca3af; margin-top: 4px;">Taken from the selected author's WordPress account</p>
                                 </div>
                             </div>
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>
-                                        <input type="checkbox" name="is_featured" value="1" <?php checked($_POST['is_featured'] ?? '', '1'); ?>>
+                                        <input type="checkbox" name="is_featured" value="1" <?php checked((string) gti_na_value('is_featured', $article), '1'); ?>>
                                         Set as Featured Article
                                     </label>
                                     <p style="font-size: 12px; color: #9ca3af; margin-top: 4px;">Featured articles will be highlighted on the homepage</p>
@@ -396,7 +438,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>Short Description</label>
-                                    <textarea name="excerpt" rows="3" placeholder="Brief summary of the article (displayed in article list and social media previews)..."><?php echo esc_textarea($_POST['excerpt'] ?? ''); ?></textarea>
+                                    <textarea name="excerpt" rows="3" placeholder="Brief summary of the article (displayed in article list and social media previews)..."><?php echo esc_textarea(gti_na_value('excerpt', $article)); ?></textarea>
                                     <div class="gti-na-char-count"><span id="excerpt-count">0</span> / 300 characters</div>
                                 </div>
                             </div>
@@ -412,7 +454,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>Article Content <span class="required">*</span></label>
-                                    <textarea name="content" class="gti-na-content-editor" placeholder="Write your article content here... Use double line breaks for paragraph separation."><?php echo esc_textarea($_POST['content'] ?? ''); ?></textarea>
+                                    <textarea name="content" class="gti-na-content-editor" placeholder="Write your article content here... Use double line breaks for paragraph separation."><?php echo esc_textarea(gti_na_value('content', $article)); ?></textarea>
                                 </div>
                             </div>
                         </div>
@@ -433,7 +475,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                                             <i class="fas fa-plus"></i> Add
                                         </button>
                                     </div>
-                                    <input type="hidden" name="tags" id="tags-hidden" value="<?php echo esc_attr($_POST['tags'] ?? ''); ?>">
+                                    <input type="hidden" name="tags" id="tags-hidden" value="<?php echo esc_attr(gti_na_value('tags', $article)); ?>">
                                     <div class="gti-na-tags-wrap" id="tags-container">
                                         <!-- Tags populated by JS -->
                                     </div>
@@ -452,14 +494,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>Upload Featured Image</label>
-                                    <div class="gti-na-featured-upload" id="na-upload-area">
+                                    <input type="hidden" name="remove_featured_image" id="na-remove-flag" value="">
+                                    <div class="gti-na-featured-upload" id="na-upload-area"<?php echo $existing_thumb ? ' style="display:none;"' : ''; ?>>
                                         <i class="fas fa-cloud-upload-alt" style="font-size: 32px; color: #9ca3af; margin-bottom: 8px;"></i>
                                         <p style="color: #6b7280; font-size: 13px; margin: 0;">Drag & drop image here or click to browse</p>
                                         <p style="color: #d1d5db; font-size: 11px; margin: 6px 0 0;">JPG, PNG, WebP — Max 5MB</p>
                                         <input type="file" name="featured_image" id="na-file-input" accept="image/*" style="display: none;">
                                     </div>
-                                    <div class="gti-na-featured-preview" id="na-preview">
-                                        <img id="na-preview-img" src="" alt="Preview">
+                                    <div class="gti-na-featured-preview" id="na-preview"<?php echo $existing_thumb ? ' style="display:block;"' : ''; ?>>
+                                        <img id="na-preview-img" src="<?php echo esc_url($existing_thumb); ?>" alt="Preview">
                                         <button type="button" class="gti-na-featured-remove" id="na-remove-img">
                                             <i class="fas fa-times"></i>
                                         </button>
@@ -478,7 +521,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                                 <i class="fas fa-save"></i> Save as Draft
                             </button>
                             <button type="submit" name="status" value="published" class="gti-ae-btn gti-ae-btn-submit">
-                                <i class="fas fa-check"></i> Publish Article
+                                <i class="fas fa-check"></i> <?php echo $editing_id ? 'Update &amp; Publish' : 'Publish Article'; ?>
                             </button>
                         </div>
                     </div>
@@ -632,8 +675,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
         if (removeBtn) {
             removeBtn.addEventListener('click', function() {
                 fileInput.value = '';
+                previewImg.src = '';
                 preview.style.display = 'none';
                 uploadArea.style.display = '';
+                // Tells the server to detach the stored featured image.
+                var removeFlag = document.getElementById('na-remove-flag');
+                if (removeFlag) removeFlag.value = '1';
+            });
+        }
+
+        // Choosing a new file cancels a pending removal.
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                var removeFlag = document.getElementById('na-remove-flag');
+                if (removeFlag) removeFlag.value = '';
             });
         }
     });

@@ -12,6 +12,25 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 add_action( 'wp_ajax_gti_filter_equipment', 'gti_ajax_filter_equipment' );
 add_action( 'wp_ajax_nopriv_gti_filter_equipment', 'gti_ajax_filter_equipment' );
 
+/**
+ * Normalize a category value the way the catalog JS does: lower case, '&'
+ * dropped, and every run of space/underscore/dash collapsed to a single dash.
+ * A stored "Wheel Loader" and a "wheel-loader" filter value both become
+ * "wheel-loader", so either spelling reaches the same rows.
+ */
+function gti_ef_normalize_key( $value ) {
+    $value = strtolower( trim( (string) $value ) );
+    $value = str_replace( '&', ' ', $value );
+    return preg_replace( '/[\s_-]+/', '-', $value );
+}
+
+/**
+ * SQL counterpart of gti_ef_normalize_key() for the category column.
+ */
+function gti_ef_category_expr() {
+    return "LOWER(REPLACE(REPLACE(REPLACE(category, '&', ' '), '_', '-'), ' ', '-'))";
+}
+
 function gti_ajax_filter_equipment() {
     $data_type = sanitize_text_field( wp_unslash( $_POST['data_type'] ?? 'used' ) );
 
@@ -61,8 +80,8 @@ function gti_ajax_filter_equipment() {
         wp_send_json_success( [ 'items' => [], 'total' => 0, 'totalPages' => 0, 'page' => $page, 'perPage' => $per_page ] );
     }
 
-    // Build WHERE
-    $where   = [ 'deleted_at IS NULL' ];
+    // Build WHERE — drafts belong to the dashboard, never to the public catalog
+    $where   = [ 'deleted_at IS NULL', "status != 'draft'" ];
     $params  = [];
 
     // Filter by equipment type (used / rental)
@@ -75,8 +94,8 @@ function gti_ajax_filter_equipment() {
     // Categories (multi)
     if ( ! empty( $categories ) ) {
         $placeholders = implode( ',', array_fill( 0, count( $categories ), '%s' ) );
-        $where[]      = "LOWER(category) IN ({$placeholders})";
-        $params       = array_merge( $params, array_map( 'strtolower', $categories ) );
+        $where[]      = gti_ef_category_expr() . " IN ({$placeholders})";
+        $params       = array_merge( $params, array_map( 'gti_ef_normalize_key', $categories ) );
     }
 
     // Brand (multi)
@@ -239,15 +258,15 @@ function gti_ajax_filter_spare_parts() {
         wp_send_json_success( [ 'items' => [], 'total' => 0, 'totalPages' => 0, 'page' => $page, 'perPage' => $per_page ] );
     }
 
-    // Build WHERE
-    $where  = [];
+    // Build WHERE — drafts belong to the dashboard, never to the public catalog
+    $where  = [ "status != 'draft'" ];
     $params = [];
 
     // Categories
     if ( ! empty( $categories ) ) {
         $placeholders = implode( ',', array_fill( 0, count( $categories ), '%s' ) );
-        $where[]      = "LOWER(category) IN ({$placeholders})";
-        $params       = array_merge( $params, array_map( 'strtolower', $categories ) );
+        $where[]      = gti_ef_category_expr() . " IN ({$placeholders})";
+        $params       = array_merge( $params, array_map( 'gti_ef_normalize_key', $categories ) );
     }
 
     // Brand

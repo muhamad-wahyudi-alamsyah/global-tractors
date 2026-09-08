@@ -10,103 +10,83 @@ $current_user = wp_get_current_user();
 $user_name = $current_user->display_name ?: $current_user->user_login;
 $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
-// Check activity log table exists
+// The activity log table ships in two historic shapes; this creates or patches it.
 global $wpdb;
-$activity_table = $wpdb->prefix . 'gti_activity_log';
-$table_exists = ($wpdb->get_var("SHOW TABLES LIKE '{$activity_table}'") === $activity_table);
+gti_ensure_activity_log_table();
+$activity_table = gti_activity_log_table();
 
 // Filters
-$search = isset($_GET['search']) ? sanitize_text_field($_GET['search']) : '';
+$search        = isset($_GET['search'])      ? sanitize_text_field($_GET['search'])      : '';
 $action_filter = isset($_GET['action_type']) ? sanitize_text_field($_GET['action_type']) : '';
-$date_from = isset($_GET['date_from']) ? sanitize_text_field($_GET['date_from']) : '';
-$date_to = isset($_GET['date_to']) ? sanitize_text_field($_GET['date_to']) : '';
+$date_from     = isset($_GET['date_from'])   ? sanitize_text_field($_GET['date_from'])   : '';
+$date_to       = isset($_GET['date_to'])     ? sanitize_text_field($_GET['date_to'])     : '';
 
-// Pagination
-$paged = isset($_GET['paged']) ? max(1, intval($_GET['paged'])) : 1;
+// Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
+$paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 15;
-$offset = ($paged - 1) * $per_page;
+$offset   = ($paged - 1) * $per_page;
 
 // Build query
-$where = "WHERE 1=1";
+$where  = "WHERE 1=1";
 $params = array();
 
-if ($table_exists) {
-    if ($search) {
-        $where .= " AND (al.description LIKE %s OR al.action LIKE %s OR u.display_name LIKE %s)";
-        $search_like = '%' . $wpdb->esc_like($search) . '%';
-        $params = array_merge($params, array($search_like, $search_like, $search_like));
-    }
-
-    if ($action_filter) {
-        $where .= " AND al.action = %s";
-        $params[] = $action_filter;
-    }
-
-    if ($date_from) {
-        $where .= " AND al.created_at >= %s";
-        $params[] = $date_from . ' 00:00:00';
-    }
-
-    if ($date_to) {
-        $where .= " AND al.created_at <= %s";
-        $params[] = $date_to . ' 23:59:59';
-    }
-
-    // Get total count
-    $count_query = "SELECT COUNT(*) FROM {$activity_table} al LEFT JOIN {$wpdb->users} u ON al.user_id = u.ID {$where}";
-    $total = !empty($params) ? (int) $wpdb->get_var($wpdb->prepare($count_query, $params)) : (int) $wpdb->get_var($count_query);
-    $total_pages = ceil($total / $per_page);
-
-    // Get activities
-    if (!empty($params)) {
-        $activities = $wpdb->get_results($wpdb->prepare(
-            "SELECT al.*, u.display_name, u.user_login, u.user_email
-             FROM {$activity_table} al
-             LEFT JOIN {$wpdb->users} u ON al.user_id = u.ID
-             {$where}
-             ORDER BY al.created_at DESC
-             LIMIT %d OFFSET %d",
-            array_merge($params, array($per_page, $offset))
-        ));
-    } else {
-        $activities = $wpdb->get_results($wpdb->prepare(
-            "SELECT al.*, u.display_name, u.user_login, u.user_email
-             FROM {$activity_table} al
-             LEFT JOIN {$wpdb->users} u ON al.user_id = u.ID
-             {$where}
-             ORDER BY al.created_at DESC
-             LIMIT %d OFFSET %d",
-            $per_page, $offset
-        ));
-    }
-
-    // Get unique actions for filter
-    $action_types = $wpdb->get_col("SELECT DISTINCT action FROM {$activity_table} WHERE action != '' ORDER BY action");
-
-    // Status counts
-    $total_activities = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$activity_table}");
-    $today_count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$activity_table} WHERE DATE(created_at) = %s",
-        current_time('mysql', true)
-    ));
-    $week_count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$activity_table} WHERE created_at >= %s",
-        date('Y-m-d H:i:s', strtotime('-7 days'))
-    ));
-    $my_count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM {$activity_table} WHERE user_id = %d",
-        $current_user->ID
-    ));
-} else {
-    $total = 0;
-    $total_pages = 0;
-    $activities = array();
-    $action_types = array();
-    $total_activities = 0;
-    $today_count = 0;
-    $week_count = 0;
-    $my_count = 0;
+if ($search) {
+    $where .= " AND (al.description LIKE %s OR al.action LIKE %s OR al.entity_type LIKE %s OR u.display_name LIKE %s OR u.user_login LIKE %s)";
+    $search_like = '%' . $wpdb->esc_like($search) . '%';
+    $params = array_merge($params, array($search_like, $search_like, $search_like, $search_like, $search_like));
 }
+
+if ($action_filter) {
+    $where .= " AND al.action = %s";
+    $params[] = $action_filter;
+}
+
+if ($date_from) {
+    $where .= " AND al.created_at >= %s";
+    $params[] = $date_from . ' 00:00:00';
+}
+
+if ($date_to) {
+    $where .= " AND al.created_at <= %s";
+    $params[] = $date_to . ' 23:59:59';
+}
+
+$join = "FROM {$activity_table} al LEFT JOIN {$wpdb->users} u ON al.user_id = u.ID";
+
+// Get total count
+$count_query = "SELECT COUNT(*) {$join} {$where}";
+$total       = !empty($params) ? (int) $wpdb->get_var($wpdb->prepare($count_query, $params)) : (int) $wpdb->get_var($count_query);
+$total_pages = (int) ceil($total / $per_page);
+
+// Get activities
+$list_query = "SELECT al.*, u.display_name, u.user_login, u.user_email
+               {$join}
+               {$where}
+               ORDER BY al.created_at DESC
+               LIMIT %d OFFSET %d";
+$activities = $wpdb->get_results($wpdb->prepare(
+    $list_query,
+    array_merge($params, array($per_page, $offset))
+));
+
+// Get unique actions for filter
+$action_types = $wpdb->get_col("SELECT DISTINCT action FROM {$activity_table} WHERE action <> '' ORDER BY action");
+
+// Status counts
+$total_activities = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$activity_table}");
+$today_count = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$activity_table} WHERE created_at >= %s AND created_at <= %s",
+    current_time('Y-m-d') . ' 00:00:00',
+    current_time('Y-m-d') . ' 23:59:59'
+));
+$week_count = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$activity_table} WHERE created_at >= %s",
+    date('Y-m-d H:i:s', strtotime(current_time('mysql') . ' -7 days'))
+));
+$my_count = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$activity_table} WHERE user_id = %d",
+    $current_user->ID
+));
 
 // Action icon mapping
 function gti_get_action_icon($action) {
@@ -117,6 +97,9 @@ function gti_get_action_icon($action) {
         'update'             => array('icon' => 'fa-edit', 'color' => '#d97706', 'bg' => '#fef3c7'),
         'delete'             => array('icon' => 'fa-trash-alt', 'color' => '#dc2626', 'bg' => '#fee2e2'),
         'view'               => array('icon' => 'fa-eye', 'color' => '#6366f1', 'bg' => '#e0e7ff'),
+        'publish'            => array('icon' => 'fa-bullhorn', 'color' => '#047857', 'bg' => '#d1fae5'),
+        'unpublish'          => array('icon' => 'fa-eye-slash', 'color' => '#b45309', 'bg' => '#fef3c7'),
+        'upload'             => array('icon' => 'fa-cloud-arrow-up', 'color' => '#0891b2', 'bg' => '#cffafe'),
         'status_change'      => array('icon' => 'fa-exchange-alt', 'color' => '#8b5cf6', 'bg' => '#ede9fe'),
         'password_change'    => array('icon' => 'fa-key', 'color' => '#ec4899', 'bg' => '#fce7f3'),
         'profile_update'     => array('icon' => 'fa-user-edit', 'color' => '#0891b2', 'bg' => '#cffafe'),
@@ -575,19 +558,14 @@ function gti_get_action_icon($action) {
 
                     <!-- Table -->
                     <div class="gti-ue-table-card">
-                        <?php if (!$table_exists): ?>
-                            <div class="gti-al-empty">
-                                <i class="fas fa-database"></i>
-                                <p class="title">Activity log table not found</p>
-                                <p class="desc">The activity log table hasn't been created yet. It will be created after the first activity is recorded.</p>
-                            </div>
-                        <?php else: ?>
+                        <?php // The table is created/patched on load, so it always renders. ?>
                             <table class="gti-ue-table">
                                 <thead>
                                     <tr>
                                         <th style="width:180px;">User</th>
                                         <th style="width:170px;">Action</th>
                                         <th>Description</th>
+                                        <th style="width:150px;">Entity</th>
                                         <th style="width:120px;">IP Address</th>
                                         <th style="width:160px;">Date &amp; Time</th>
                                     </tr>
@@ -595,7 +573,7 @@ function gti_get_action_icon($action) {
                                 <tbody>
                                     <?php if (empty($activities)): ?>
                                         <tr>
-                                            <td colspan="5" style="text-align:center; padding:60px 20px;">
+                                            <td colspan="6" style="text-align:center; padding:60px 20px;">
                                                 <div class="gti-al-empty">
                                                     <i class="fas fa-inbox"></i>
                                                     <p class="title">No activities found</p>
@@ -608,18 +586,26 @@ function gti_get_action_icon($action) {
                                     <?php else: ?>
                                         <?php foreach ($activities as $log): ?>
                                             <?php
-                                            $action_style = gti_get_action_icon($log->action);
-                                            $display_name = $log->display_name ?: $log->user_login ?: 'Unknown';
+                                            $action_style  = gti_get_action_icon($log->action);
+                                            $is_guest      = empty($log->user_id) || !$log->user_login;
+                                            $display_name  = $log->display_name ?: $log->user_login ?: ($is_guest ? 'Guest / System' : 'Deleted user');
                                             $activity_date = date('M j, Y', strtotime($log->created_at));
                                             $activity_time = date('H:i:s', strtotime($log->created_at));
+                                            // Rows written before this page had a description column still render text.
+                                            $description   = gti_activity_row_description($log);
+                                            $entity_label  = !empty($log->entity_type) ? gti_activity_entity_label($log->entity_type) : '';
                                             ?>
                                             <tr>
                                                 <td>
                                                     <div class="gti-al-user">
-                                                        <?php echo get_avatar($log->user_id, 32); ?>
+                                                        <?php if ($is_guest): ?>
+                                                            <div class="gti-al-action-icon" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;color:#9ca3af;"><i class="fas fa-user-secret"></i></div>
+                                                        <?php else: ?>
+                                                            <?php echo get_avatar($log->user_id, 32); ?>
+                                                        <?php endif; ?>
                                                         <div class="gti-al-user-info">
                                                             <strong><?php echo esc_html($display_name); ?></strong>
-                                                            <small>@<?php echo esc_html($log->user_login ?: 'unknown'); ?></small>
+                                                            <small><?php echo $log->user_login ? '@' . esc_html($log->user_login) : 'not signed in'; ?></small>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -631,8 +617,17 @@ function gti_get_action_icon($action) {
                                                         <span class="gti-al-action-label"><?php echo esc_html(ucwords(str_replace('_', ' ', $log->action))); ?></span>
                                                     </div>
                                                 </td>
-                                                <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<?php echo esc_attr($log->description); ?>">
-                                                    <?php echo esc_html($log->description ?: '-'); ?>
+                                                <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="<?php echo esc_attr($description); ?>">
+                                                    <?php echo esc_html($description ?: '-'); ?>
+                                                </td>
+                                                <td>
+                                                    <?php if ($entity_label): ?>
+                                                        <span class="gti-al-ip" style="background:#eef2ff;color:#4338ca;">
+                                                            <?php echo esc_html($entity_label); ?><?php echo !empty($log->entity_id) ? ' #' . (int) $log->entity_id : ''; ?>
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span style="color:#9ca3af;">-</span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <?php if (!empty($log->ip_address)): ?>
@@ -668,7 +663,7 @@ function gti_get_action_icon($action) {
                                         ?>
 
                                         <?php if ($paged > 1): ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
+                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
                                         <?php else: ?>
                                             <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
                                         <?php endif; ?>
@@ -677,7 +672,7 @@ function gti_get_action_icon($action) {
                                         $start = max(1, $paged - 2);
                                         $end = min($total_pages, $paged + 2);
                                         if ($start > 1): ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => 1]))); ?>" class="gti-ue-page-btn">1</a>
+                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => 1]))); ?>" class="gti-ue-page-btn">1</a>
                                             <?php if ($start > 2): ?>
                                                 <span class="gti-ue-page-dots">...</span>
                                             <?php endif; ?>
@@ -687,7 +682,7 @@ function gti_get_action_icon($action) {
                                             <?php if ($i == $paged): ?>
                                                 <button class="gti-ue-page-btn active"><?php echo $i; ?></button>
                                             <?php else: ?>
-                                                <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
+                                                <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
                                             <?php endif; ?>
                                         <?php endfor; ?>
 
@@ -695,18 +690,17 @@ function gti_get_action_icon($action) {
                                             <?php if ($end < $total_pages - 1): ?>
                                                 <span class="gti-ue-page-dots">...</span>
                                             <?php endif; ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
+                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
                                         <?php endif; ?>
 
                                         <?php if ($paged < $total_pages): ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['paged' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
+                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
                                         <?php else: ?>
                                             <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
                                         <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endif; ?>
-                        <?php endif; ?>
                     </div>
 
                 </div>

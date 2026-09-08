@@ -499,20 +499,14 @@ class GTI_Ajax {
         $stock = intval($_POST['stock'] ?? 0);
         $minimum_stock = intval($_POST['minimum_stock'] ?? 10);
         
-        // Determine status: draft takes priority, then form status, then stock-based
-        if ($is_draft) {
+        // A form may only choose the publication state. The stock level is always
+        // derived, so the dashboard badge, the catalog card and the catalog
+        // filters can never disagree with the quantity actually on hand.
+        $form_status = sanitize_text_field($_POST['status'] ?? '');
+        if ($is_draft || 'draft' === $form_status) {
             $status = 'draft';
         } else {
-            $form_status = sanitize_text_field($_POST['status'] ?? '');
-            if ($form_status) {
-                $status = $form_status;
-            } elseif ($stock == 0) {
-                $status = 'out_of_stock';
-            } elseif ($stock <= $minimum_stock) {
-                $status = 'low_stock';
-            } else {
-                $status = 'in_stock';
-            }
+            $status = gti_spare_stock_status($stock, $minimum_stock);
         }
 
         // Handle image upload
@@ -594,7 +588,12 @@ class GTI_Ajax {
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
         $id = intval($_POST['id'] ?? 0);
-        $status = sanitize_text_field($_POST['status'] ?? 'in_stock');
+        // Derive from the stored quantities so publishing cannot mislabel stock.
+        $row = $wpdb->get_row($wpdb->prepare("SELECT stock, minimum_stock FROM {$table} WHERE id = %d", $id));
+        if (!$row) {
+            wp_send_json_error(array('message' => 'Spare part not found'));
+        }
+        $status = gti_spare_stock_status($row->stock, $row->minimum_stock);
         $result = $wpdb->update($table, array('status' => $status), array('id' => $id));
         if ($result !== false) {
             wp_send_json_success(array('message' => 'Spare part published successfully'));
@@ -619,13 +618,7 @@ class GTI_Ajax {
         $category = sanitize_text_field($_POST['category'] ?? '');
         $year     = date('Y');
 
-        $cat_abbrev = [
-            'Filter' => 'FLT', 'Belt' => 'BLT', 'Brake' => 'BRK',
-            'Engine' => 'ENG', 'Hydraulic' => 'HYD', 'Seal' => 'SEL',
-            'Undercarriage' => 'UND', 'Cooling' => 'CLG', 'Electrical' => 'ELT',
-            'Other' => 'OTH',
-        ];
-        $abbr = $cat_abbrev[$category] ?? 'GEN';
+        $abbr = gti_spare_part_category_abbr( $category );
 
         $prefix = "SP-{$abbr}-{$year}-";
 
@@ -896,7 +889,10 @@ class GTI_Ajax {
         }
         
         if ($result !== false) {
-            self::log_activity($id > 0 ? 'update' : 'create', 'customer', $id);
+            self::log_activity($id > 0 ? 'update' : 'create', 'customer', $id, array('name' => $data['name']));
+            if (function_exists('gti_refresh_customer_stats')) {
+                gti_refresh_customer_stats($data['customer_id']);
+            }
             wp_send_json_success(array('message' => 'Customer saved', 'id' => $id));
         } else {
             wp_send_json_error(array('message' => 'Failed to save customer'));
@@ -910,15 +906,33 @@ class GTI_Ajax {
      */
     public static function save_user() {
         self::verify_nonce();
-        
+
         $user_id = intval($_POST['user_id'] ?? 0);
+
+        $required_cap = $user_id > 0 ? 'edit_users' : 'create_users';
+        if (!current_user_can($required_cap)) {
+            wp_send_json_error(array('message' => 'You do not have permission to manage users.'));
+            exit;
+        }
+
+        // Only roles this user is allowed to hand out.
+        $role = sanitize_text_field($_POST['role'] ?? '');
+        if ($role && !array_key_exists($role, get_editable_roles())) {
+            wp_send_json_error(array('message' => 'That role is not available.'));
+            exit;
+        }
+
         $userdata = array(
-            'user_login'   => sanitize_user($_POST['user_login']),
-            'user_email'   => sanitize_email($_POST['user_email']),
-            'first_name'   => sanitize_text_field($_POST['first_name']),
-            'last_name'    => sanitize_text_field($_POST['last_name']),
-            'role'         => sanitize_text_field($_POST['role']),
+            'user_login'   => sanitize_user($_POST['user_login'] ?? ''),
+            'user_email'   => sanitize_email($_POST['user_email'] ?? ''),
+            'first_name'   => sanitize_text_field($_POST['first_name'] ?? ''),
+            'last_name'    => sanitize_text_field($_POST['last_name'] ?? ''),
+            'display_name' => sanitize_text_field($_POST['display_name'] ?? ''),
+            'role'         => $role,
         );
+        if ($userdata['display_name'] === '') {
+            unset($userdata['display_name']);
+        }
         
         // Password only on create or if provided
         if (!empty($_POST['user_pass'])) {
@@ -926,6 +940,8 @@ class GTI_Ajax {
         }
         
         if ($user_id > 0) {
+            $userdata['ID'] = $user_id;
+            unset($userdata['user_login']); // user_login is immutable in WordPress
             $result = wp_update_user($userdata);
         } else {
             if (empty($userdata['user_pass'])) {
@@ -937,11 +953,16 @@ class GTI_Ajax {
         
         if (!is_wp_error($result)) {
             // Update meta
-            update_user_meta($result, 'phone', sanitize_text_field($_POST['phone']));
-            update_user_meta($result, 'department', sanitize_text_field($_POST['department']));
-            update_user_meta($result, 'profile_photo', intval($_POST['profile_photo'] ?? 0));
-            
-            self::log_activity($user_id > 0 ? 'update' : 'create', 'user', $result);
+            update_user_meta($result, 'gti_phone', sanitize_text_field($_POST['phone'] ?? ''));
+            update_user_meta($result, 'department', sanitize_text_field($_POST['department'] ?? ''));
+            if (isset($_POST['profile_photo'])) {
+                update_user_meta($result, 'profile_photo', intval($_POST['profile_photo']));
+            }
+
+            $saved_user = get_userdata($result);
+            self::log_activity($user_id > 0 ? 'update' : 'create', 'user', $result, array(
+                'name' => $saved_user ? $saved_user->display_name : '',
+            ));
             wp_send_json_success(array('message' => 'User saved', 'id' => $result));
         } else {
             wp_send_json_error(array('message' => $result->get_error_message()));
@@ -955,7 +976,12 @@ class GTI_Ajax {
      */
     public static function delete_user() {
         self::verify_nonce();
-        
+
+        if (!current_user_can('delete_users')) {
+            wp_send_json_error(array('message' => 'You do not have permission to delete users.'));
+            exit;
+        }
+
         $user_id = intval($_POST['id']);
         
         // Don't allow deleting yourself
@@ -964,10 +990,13 @@ class GTI_Ajax {
             exit;
         }
         
+        $doomed = get_userdata($user_id);
         $result = wp_delete_user($user_id);
-        
+
         if ($result) {
-            self::log_activity('delete', 'user', $user_id);
+            self::log_activity('delete', 'user', $user_id, array(
+                'name' => $doomed ? $doomed->display_name : '',
+            ));
             wp_send_json_success(array('message' => 'User deleted'));
         } else {
             wp_send_json_error(array('message' => 'Failed to delete user'));
@@ -1008,8 +1037,21 @@ class GTI_Ajax {
      * Log activity
      */
     private static function log_activity($action, $entity_type, $entity_id, $details = array()) {
+        // Routed through the shared logger so these rows also carry a readable
+        // description and an IP address, which /dashboard/activity-log renders.
+        if (function_exists('gti_log_activity')) {
+            gti_log_activity(
+                get_current_user_id(),
+                $action,
+                gti_activity_build_description($action, $entity_type, $entity_id, $details),
+                $entity_type,
+                $entity_id,
+                $details
+            );
+            return;
+        }
+
         global $wpdb;
-        
         $wpdb->insert(
             $wpdb->prefix . 'gti_activity_log',
             array(

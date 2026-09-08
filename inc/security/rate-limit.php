@@ -62,14 +62,16 @@ function gti_reset_rate_limit( $key ) {
  *
  * @return string
  */
-function gti_get_client_ip() {
-    $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+if ( ! function_exists( 'gti_get_client_ip' ) ) {
+    function gti_get_client_ip() {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
     
-    // Behind proxy
-    if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-        $ips = explode( ',', $_SERVER['HTTP_X_FORWARDED_FOR'] );
-        $ip = trim( $ips[0] );
+        // Behind proxy
+        if ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+            $ips = explode( ',', $_SERVER['HTTP_X_FORWARDED_FOR'] );
+            $ip = trim( $ips[0] );
+        }
+    
+        return $ip;
     }
-    
-    return $ip;
 }

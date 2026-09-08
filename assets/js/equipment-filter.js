@@ -17,6 +17,7 @@
       nonce:    wrapper.dataset.nonce    || '',
       postType: wrapper.dataset.postType || 'post',
       perPage:  parseInt(wrapper.dataset.perPage, 10) || 12,
+      itemLabel: wrapper.dataset.itemLabel || 'units',
     };
 
     // ── State ──────────────────────────────────────────────────────────────
@@ -32,6 +33,8 @@
       maxHours:    '',
       locations:   [],
       condition:   [],
+      suppliers:   [],
+      stock:       [],
       sortBy:      'newest',
       viewMode:    'grid',
       currentPage: 1,
@@ -50,8 +53,10 @@
     var mobileOverlay  = document.getElementById('gti-ef-mobile-overlay');
     var sidebar        = document.getElementById('gti-ef-sidebar');
 
-    // All cards in DOM (client-side filter)
+    // All cards in DOM (client-side filter). The server already ordered them by
+    // created_at, so remember that order — 'newest' restores it.
     var allCards = Array.from(gridEl.querySelectorAll('.gti-ef-card'));
+    allCards.forEach(function (card, i) { card.dataset.order = i; });
 
     // ═══ ACCORDION FILTERS (includes Categories) ══════════════════════════
     var filterHeaders = document.querySelectorAll('.gti-ef-filter-header');
@@ -145,6 +150,8 @@
         state.types     = [];
         state.locations = [];
         state.condition = [];
+        state.suppliers = [];
+        state.stock     = [];
         state.minYear   = '';
         state.maxYear   = '';
         state.minPrice  = '';
@@ -218,6 +225,18 @@
         state.condition.push(cb.value);
       });
 
+      // Suppliers
+      state.suppliers = [];
+      document.querySelectorAll('input[name="ef-supplier"]:checked').forEach(function (cb) {
+        state.suppliers.push(cb.value);
+      });
+
+      // Stock status
+      state.stock = [];
+      document.querySelectorAll('input[name="ef-stock"]:checked').forEach(function (cb) {
+        state.stock.push(cb.value);
+      });
+
       // Year range
       var yearMin = document.querySelector('input[name="ef-year-min"]');
       var yearMax = document.querySelector('input[name="ef-year-max"]');
@@ -237,14 +256,33 @@
       state.maxHours = hoursMax ? hoursMax.value : '';
     }
 
+    // Compare filter values and card attributes case- and separator-insensitively,
+    // so a stored "Wheel Loader" still matches a "wheel-loader" filter value.
+    function normKey(v) {
+      return String(v == null ? '' : v).toLowerCase().trim().replace(/&/g, ' ').replace(/[\s_-]+/g, '-');
+    }
+    function matchesAny(values, cardValue) {
+      var key = normKey(cardValue);
+      for (var i = 0; i < values.length; i++) {
+        if (normKey(values[i]) === key) return true;
+      }
+      return false;
+    }
+
     // ═══ APPLY FILTERS (Client-Side) ══════════════════════════════════════
     function applyFilters() {
       var filtered = allCards.filter(function (card) {
         // Category (multi-select)
-        if (state.categories.length > 0 && state.categories.indexOf(card.dataset.category) === -1) return false;
+        if (state.categories.length > 0 && !matchesAny(state.categories, card.dataset.category)) return false;
 
         // Brand
-        if (state.brands.length > 0 && state.brands.indexOf(card.dataset.brand) === -1) return false;
+        if (state.brands.length > 0 && !matchesAny(state.brands, card.dataset.brand)) return false;
+
+        // Supplier
+        if (state.suppliers.length > 0 && !matchesAny(state.suppliers, card.dataset.supplier)) return false;
+
+        // Stock status
+        if (state.stock.length > 0 && !matchesAny(state.stock, card.dataset.stockStatus)) return false;
 
         // Type
         if (state.types.length > 0 && state.types.indexOf(card.dataset.type) === -1) return false;
@@ -265,10 +303,10 @@
         if (state.maxHours && cardHours > parseFloat(state.maxHours)) return false;
 
         // Location
-        if (state.locations.length > 0 && state.locations.indexOf(card.dataset.location) === -1) return false;
+        if (state.locations.length > 0 && !matchesAny(state.locations, card.dataset.location)) return false;
 
         // Condition
-        if (state.condition.length > 0 && state.condition.indexOf(card.dataset.condition) === -1) return false;
+        if (state.condition.length > 0 && !matchesAny(state.condition, card.dataset.condition)) return false;
 
         return true;
       });
@@ -306,9 +344,15 @@
         case 'hours-low':
           sorted.sort(function (a, b) { return (parseFloat(a.dataset.hours) || 0) - (parseFloat(b.dataset.hours) || 0); });
           break;
+        case 'name-asc':
+          sorted.sort(function (a, b) { return (a.dataset.name || '').localeCompare(b.dataset.name || ''); });
+          break;
+        case 'name-desc':
+          sorted.sort(function (a, b) { return (b.dataset.name || '').localeCompare(a.dataset.name || ''); });
+          break;
         case 'newest':
         default:
-          sorted.sort(function (a, b) { return parseInt(b.dataset.id, 10) - parseInt(a.dataset.id, 10); });
+          sorted.sort(function (a, b) { return (parseInt(a.dataset.order, 10) || 0) - (parseInt(b.dataset.order, 10) || 0); });
       }
       return sorted;
     }
@@ -339,7 +383,7 @@
       if (total === 0) {
         resultCountEl.innerHTML = 'No results found';
       } else {
-        resultCountEl.innerHTML = 'Showing <strong>' + from + ' - ' + to + '</strong> of <strong>' + total + '</strong> units';
+        resultCountEl.innerHTML = 'Showing <strong>' + from + ' - ' + to + '</strong> of <strong>' + total + '</strong> ' + config.itemLabel;
       }
     }
 
@@ -386,5 +430,8 @@
       paginationEl.innerHTML = html;
       paginationEl.dataset.totalPages = totalPages;
     }
+
+    // ═══ INITIAL RENDER ════════════════════════════════════════════════════
+    applyFilters();
   });
 })();

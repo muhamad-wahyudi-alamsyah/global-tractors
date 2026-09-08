@@ -103,6 +103,9 @@ function gti_customer_submit_quotation() {
     if ( $result ) {
         $insert_id = $wpdb->insert_id;
 
+        // Surfaces the submitter on /dashboard/customers.
+        do_action( 'gti_submission_received', 'request-quotation', $data );
+
         // ── Send notification email to admin ─────────────────────────────
         $admin_email = get_option( 'admin_email' );
         $site_name   = get_bloginfo( 'name' );

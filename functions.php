@@ -15,8 +15,16 @@ require_once get_stylesheet_directory() . '/inc/constants.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/url-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/format-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/template-loader.php';
+require_once GTI_CHILD_DIR . '/inc/helpers/equipment-taxonomy.php';
+require_once GTI_CHILD_DIR . '/inc/helpers/spare-parts-taxonomy.php';
 require_once GTI_CHILD_DIR . '/inc/user/user-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/user/user-meta.php';
+
+// ── Dashboard data modules ───────────────────────────────────────────────────
+require_once GTI_CHILD_DIR . '/inc/db/activity-log.php';
+require_once GTI_CHILD_DIR . '/inc/db/customers-sync.php';
+require_once GTI_CHILD_DIR . '/inc/modules/news-articles.php';
+require_once GTI_CHILD_DIR . '/inc/modules/media-library.php';
 
 // ── Security ─────────────────────────────────────────────────────────────────
 require_once GTI_CHILD_DIR . '/inc/security/sanitize.php';
@@ -50,6 +58,7 @@ require_once GTI_CHILD_DIR . '/inc/shortcodes/equipment-filter-spare-parts.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-equipment-filter.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-customer-quotation.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/ajax-dashboard.php';
 // ── GTI Ajax class (equipment, spare parts, customers, etc.) ────────────
 require_once GTI_CHILD_DIR . '/includes/class-gti-ajax.php';
 add_action('init', function() {
@@ -235,6 +244,9 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
     $result = $wpdb->insert($table, $data);
 
     if ($result) {
+        // Surfaces the submitter on /dashboard/customers.
+        do_action('gti_submission_received', 'request-equipment', $data);
+
         update_post_meta($insertId, '_gti_request_id', $request_id);
         if (class_exists('\FluentForm\App\Services\Submission\SubmissionService')) {
             $service = new \FluentForm\App\Services\Submission\SubmissionService();
@@ -320,6 +332,8 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
     $result = $wpdb->insert($table, $data);
 
     if ($result) {
+        do_action('gti_submission_received', 'sell-equipment', $data);
+
         update_post_meta($insertId, '_gti_sell_request_id', $data['equipment_name']);
         if (class_exists('\FluentForm\App\Services\Submission\SubmissionService')) {
             $service = new \FluentForm\App\Services\Submission\SubmissionService();

@@ -14,12 +14,10 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 global $wpdb;
 $sp_table = $wpdb->prefix . 'gti_spare_parts';
 $sp_year = date('Y');
-$sp_cat_abbrev_map = [
-    'Filter'        => 'FLT', 'Belt'          => 'BLT', 'Brake'         => 'BRK',
-    'Engine'        => 'ENG', 'Hydraulic'     => 'HYD', 'Seal'          => 'SEL',
-    'Undercarriage' => 'UND', 'Cooling'       => 'CLG', 'Electrical'    => 'ELT',
-    'Other'         => 'OTH',
-];
+$sp_cat_abbrev_map = [];
+foreach (gti_spare_part_categories() as $sp_cat_name => $sp_cat_meta) {
+    $sp_cat_abbrev_map[$sp_cat_name] = $sp_cat_meta['abbr'];
+}
 $gti_next_sp_code = 'SP-GEN-' . $sp_year . '-001';
 $gti_sp_cat_map_json = wp_json_encode($sp_cat_abbrev_map);
 
@@ -42,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
     $unit_price = floatval($_POST['unit_price'] ?? 0);
     $supplier = sanitize_text_field($_POST['supplier'] ?? '');
     $location = sanitize_text_field($_POST['location'] ?? '');
-    $status = sanitize_text_field($_POST['status'] ?? 'in_stock');
+    $status = gti_spare_stock_status($stock, $minimum_stock);
 
     if (empty($part_number) || empty($name) || empty($category) || empty($brand)) {
         $error = 'Please fill in all required fields.';
@@ -229,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
                                     <select name="category" required>
                                         <option value="">Select Category</option>
                                         <?php
-                                        $categories = ['Filter', 'Belt', 'Brake', 'Engine', 'Hydraulic', 'Seal', 'Undercarriage', 'Cooling', 'Electrical', 'Other'];
+                                        $categories = gti_spare_part_category_names();
                                         $sel_cat = $_POST['category'] ?? '';
                                         foreach ($categories as $cat):
                                         ?>
@@ -244,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
                                     <select name="brand" required>
                                         <option value="">Select Brand</option>
                                         <?php
-                                        $brands = ['KOMATSU', 'CATERPILLAR', 'HITACHI', 'VOLVO', 'KOBELCO', 'DOOSAN', 'HYUNDAI', 'OTHER'];
+                                        $brands = gti_spare_part_brands();
                                         $sel_brand = $_POST['brand'] ?? '';
                                         foreach ($brands as $b):
                                         ?>
@@ -290,16 +288,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
                             </div>
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field">
-                                    <label>Status</label>
-                                    <select name="status">
-                                        <?php
-                                        $statuses = ['in_stock' => 'In Stock', 'low_stock' => 'Low Stock', 'out_of_stock' => 'Out of Stock'];
-                                        $sel_status = $_POST['status'] ?? 'in_stock';
-                                        foreach ($statuses as $val => $label):
-                                        ?>
-                                            <option value="<?php echo esc_attr($val); ?>" <?php selected($sel_status, $val); ?>><?php echo esc_html($label); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <label>Stock Status</label>
+                                    <input type="text" id="gti-sp-status-display" value="In Stock" readonly style="background:#f9fafb;cursor:not-allowed;">
+                                    <small style="color:#6b7280;font-size:11px;margin-top:4px;display:block;">Derived from stock vs minimum stock</small>
                                 </div>
                             </div>
                         </div>
@@ -413,6 +404,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
                 generateSpCode(this.value);
             });
         }
+
+        // Stock status mirrors what the server will derive on save
+        var spStockInput = document.querySelector('input[name="stock"]');
+        var spMinInput = document.querySelector('input[name="minimum_stock"]');
+        var spStatusDisplay = document.getElementById('gti-sp-status-display');
+        function refreshSpStatus() {
+            if (!spStatusDisplay) return;
+            var stock = parseInt(spStockInput && spStockInput.value, 10) || 0;
+            var min = parseInt(spMinInput && spMinInput.value, 10);
+            if (isNaN(min)) min = 10;
+            spStatusDisplay.value = stock <= 0 ? 'Out of Stock' : (stock <= min ? 'Low Stock' : 'In Stock');
+        }
+        if (spStockInput) spStockInput.addEventListener('input', refreshSpStatus);
+        if (spMinInput) spMinInput.addEventListener('input', refreshSpStatus);
+        refreshSpStatus();
 
         // Image Upload
         var uploadArea = document.getElementById('gti-ae-upload-area');

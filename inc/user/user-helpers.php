@@ -7,6 +7,30 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+if ( ! function_exists( 'gti_normalize_phone' ) ) {
+    /**
+     * Normalise an Indonesian phone number to bare 62XXXXXXXXX digits.
+     *
+     * Callers below and in user-meta.php have always relied on this, but it was
+     * never defined anywhere — reaching gti_get_user_by_phone() was a fatal.
+     *
+     * @param string $phone
+     * @return string
+     */
+    function gti_normalize_phone( $phone ) {
+        $digits = preg_replace( '/[^0-9]/', '', (string) $phone );
+        if ( $digits === '' ) return '';
+
+        if ( strpos( $digits, '0' ) === 0 ) {
+            return '62' . substr( $digits, 1 );      // 0812... → 62812...
+        }
+        if ( strpos( $digits, '62' ) === 0 ) {
+            return $digits;                          // already normalised (+62 loses its plus above)
+        }
+        return '62' . $digits;                       // bare 812... → 62812...
+    }
+}
+
 /**
  * Get user by phone number.
  *

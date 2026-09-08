@@ -38,8 +38,9 @@ function gti_render_spare_parts_filter( $atts = [] ) {
 
     ob_start();
     ?>
-    <div class="gti-ef-wrapper gti-sp-wrapper" id="gti-spare-parts-filter"
+    <div class="gti-ef-wrapper gti-sp-wrapper" id="gti-equipment-filter"
          data-type="spare_parts"
+         data-item-label="items"
          data-per-page="<?php echo esc_attr( $per_page ); ?>"
          data-nonce="<?php echo esc_attr( wp_create_nonce( 'gti_spare_parts_filter' ) ); ?>"
          data-ajax-url="<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>">
@@ -68,8 +69,8 @@ function gti_render_spare_parts_filter( $atts = [] ) {
                             <div class="gti-ef-checkbox-list">
                                 <?php foreach ( $categories as $cat ) : ?>
                                     <label class="gti-ef-checkbox-item">
-                                        <input type="checkbox" name="ef-category" value="<?php echo esc_attr( $cat['slug'] ); ?>">
-                                        <span><?php echo esc_html( $cat['name'] ); ?></span>
+                                        <input type="checkbox" name="ef-category" value="<?php echo esc_attr( $cat['value'] ); ?>">
+                                        <span><i class="<?php echo esc_attr( $cat['icon'] ); ?>"></i> <?php echo esc_html( $cat['name'] ); ?> (<?php echo esc_html( $cat['count'] ); ?>)</span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -210,7 +211,7 @@ function gti_render_spare_parts_filter( $atts = [] ) {
 
                 <!-- Card Grid -->
                 <div class="gti-ef-grid" id="gti-ef-grid">
-                    <?php foreach ( array_slice( $parts_data, 0, $per_page ) as $item ) : ?>
+                    <?php foreach ( $parts_data as $item ) : ?>
                         <?php gti_spare_render_part_card( $item ); ?>
                     <?php endforeach; ?>
                 </div>
@@ -261,16 +262,17 @@ function gti_spare_render_part_card( $item ) {
     $price       = isset( $item['unit_price'] ) ? $item['unit_price'] : '';
     $stock       = isset( $item['stock'] ) ? (int) $item['stock'] : 0;
     $min_stock   = isset( $item['minimum_stock'] ) ? (int) $item['minimum_stock'] : 10;
+    $supplier    = isset( $item['supplier'] ) ? $item['supplier'] : '';
     $location    = isset( $item['location'] ) ? $item['location'] : '—';
     $image_url   = isset( $item['image'] ) ? $item['image'] : '';
     $id          = isset( $item['id'] ) ? $item['id'] : 0;
-    $status      = isset( $item['status'] ) ? $item['status'] : 'in_stock';
 
-    // Stock status badge
-    if ( $stock <= 0 ) {
+    // Stock status badge — same derivation the dashboard drawer uses
+    $stock_status = gti_spare_stock_status( $stock, $min_stock );
+    if ( 'out_of_stock' === $stock_status ) {
         $stock_class = 'out-of-stock';
         $stock_label = 'OUT OF STOCK';
-    } elseif ( $stock <= $min_stock ) {
+    } elseif ( 'low_stock' === $stock_status ) {
         $stock_class = 'low-stock';
         $stock_label = 'LOW STOCK (' . $stock . ')';
     } else {
@@ -280,10 +282,13 @@ function gti_spare_render_part_card( $item ) {
     ?>
     <a href="<?php echo esc_url( add_query_arg( 'id', $id ) ); ?>" class="gti-ef-card gti-sp-card"
          data-id="<?php echo esc_attr( $id ); ?>"
+         data-name="<?php echo esc_attr( $title ); ?>"
          data-category="<?php echo esc_attr( $category ); ?>"
          data-brand="<?php echo esc_attr( $brand ); ?>"
+         data-supplier="<?php echo esc_attr( $supplier ); ?>"
          data-price="<?php echo esc_attr( $price ); ?>"
          data-stock="<?php echo esc_attr( $stock ); ?>"
+         data-stock-status="<?php echo esc_attr( $stock_status ); ?>"
          data-location="<?php echo esc_attr( $location ); ?>">
         <div class="gti-ef-card-image">
             <?php if ( $image_url ) : ?>
@@ -366,7 +371,9 @@ function gti_get_spare_parts_data() {
         return [];
     }
 
-    $rows = $wpdb->get_results( "SELECT * FROM {$table} ORDER BY created_at DESC" );
+    $rows = $wpdb->get_results(
+        "SELECT * FROM {$table} WHERE status != 'draft' ORDER BY created_at DESC"
+    );
 
     if ( empty( $rows ) ) {
         return gti_get_dummy_spare_parts_data();
@@ -374,35 +381,35 @@ function gti_get_spare_parts_data() {
 
     $items = [];
     foreach ( $rows as $row ) {
-        $stock     = (int) $row->stock;
-        $min_stock = (int) $row->minimum_stock;
-
-        if ( $stock <= 0 ) {
-            $display_status = 'out_of_stock';
-        } elseif ( $stock <= $min_stock ) {
-            $display_status = 'low_stock';
-        } else {
-            $display_status = 'in_stock';
-        }
-
-        $items[] = [
-            'id'            => (int) $row->id,
-            'name'          => $row->name ?: 'Spare Part',
-            'part_number'   => $row->part_number ?: '',
-            'category'      => strtolower( $row->category ?: 'others' ),
-            'brand'         => $row->brand ?: '',
-            'description'   => $row->description ?: '',
-            'stock'         => $stock,
-            'minimum_stock' => $min_stock,
-            'unit_price'    => $row->unit_price ?: '',
-            'supplier'      => $row->supplier ?: '',
-            'location'      => $row->location ?: '',
-            'image'         => $row->image ?: '',
-            'status'        => $display_status,
-        ];
+        $items[] = gti_spare_map_row( $row );
     }
 
     return $items;
+}
+
+/**
+ * Map one spare parts row to the array shape the cards and detail page expect.
+ * `category` stays exactly as stored so the filter checkbox can match it.
+ */
+function gti_spare_map_row( $row ) {
+    $stock     = (int) $row->stock;
+    $min_stock = (int) $row->minimum_stock;
+
+    return [
+        'id'            => (int) $row->id,
+        'name'          => $row->name ?: 'Spare Part',
+        'part_number'   => $row->part_number ?: '',
+        'category'      => $row->category ?: '',
+        'brand'         => $row->brand ?: '',
+        'description'   => $row->description ?: '',
+        'stock'         => $stock,
+        'minimum_stock' => $min_stock,
+        'unit_price'    => $row->unit_price ?: '',
+        'supplier'      => $row->supplier ?: '',
+        'location'      => $row->location ?: '',
+        'image'         => $row->image ?: '',
+        'status'        => gti_spare_stock_status( $stock, $min_stock ),
+    ];
 }
 
 function gti_get_dummy_spare_parts_data() {
@@ -410,37 +417,37 @@ function gti_get_dummy_spare_parts_data() {
     return [
         [
             'id' => 1, 'name' => 'Oil Filter Komatsu', 'part_number' => 'KO-OF-PC200',
-            'category' => 'engine-parts', 'brand' => 'KOMATSU', 'stock' => 25,
+            'category' => 'Filter', 'brand' => 'KOMATSU', 'stock' => 25,
             'minimum_stock' => 10, 'unit_price' => 350000, 'supplier' => 'Komatsu Parts Center',
             'location' => 'Balikpapan', 'image' => '', 'status' => 'in_stock',
         ],
         [
             'id' => 2, 'name' => 'Hydraulic Filter CAT', 'part_number' => 'CAT-HF-320',
-            'category' => 'hydraulic-parts', 'brand' => 'CATERPILLAR', 'stock' => 8,
+            'category' => 'Hydraulic', 'brand' => 'CATERPILLAR', 'stock' => 8,
             'minimum_stock' => 10, 'unit_price' => 450000, 'supplier' => 'CAT Parts Indonesia',
             'location' => 'Samarinda', 'image' => '', 'status' => 'low_stock',
         ],
         [
             'id' => 3, 'name' => 'Air Filter Hitachi', 'part_number' => 'HI-AF-ZX200',
-            'category' => 'engine-parts', 'brand' => 'HITACHI', 'stock' => 15,
+            'category' => 'Filter', 'brand' => 'HITACHI', 'stock' => 15,
             'minimum_stock' => 10, 'unit_price' => 280000, 'supplier' => 'Hitachi Parts',
             'location' => 'Banjarmasin', 'image' => '', 'status' => 'in_stock',
         ],
         [
             'id' => 4, 'name' => 'Bucket Teeth CAT', 'part_number' => 'CAT-BT-950',
-            'category' => 'attachment-parts', 'brand' => 'CATERPILLAR', 'stock' => 50,
+            'category' => 'Other', 'brand' => 'CATERPILLAR', 'stock' => 50,
             'minimum_stock' => 20, 'unit_price' => 125000, 'supplier' => 'CAT Parts Indonesia',
             'location' => 'Palangkaraya', 'image' => '', 'status' => 'in_stock',
         ],
         [
             'id' => 5, 'name' => 'Track Chain Komatsu', 'part_number' => 'KO-TC-D65',
-            'category' => 'undercarriage-parts', 'brand' => 'KOMATSU', 'stock' => 3,
+            'category' => 'Undercarriage', 'brand' => 'KOMATSU', 'stock' => 3,
             'minimum_stock' => 5, 'unit_price' => 8500000, 'supplier' => 'Komatsu Parts Center',
             'location' => 'Pontianak', 'image' => '', 'status' => 'low_stock',
         ],
         [
             'id' => 6, 'name' => 'Fuel Injector Volvo', 'part_number' => 'VO-FI-EC210',
-            'category' => 'engine-parts', 'brand' => 'VOLVO', 'stock' => 0,
+            'category' => 'Engine', 'brand' => 'VOLVO', 'stock' => 0,
             'minimum_stock' => 5, 'unit_price' => 2200000, 'supplier' => 'Volvo CE Parts',
             'location' => 'Banjarbaru', 'image' => '', 'status' => 'out_of_stock',
         ],
@@ -448,38 +455,11 @@ function gti_get_dummy_spare_parts_data() {
 }
 
 function gti_get_spare_parts_categories( $data = [] ) {
-    $known = [
-        [ 'slug' => 'engine-parts',        'name' => 'Engine Parts',        'icon' => 'fas fa-engine',      'count' => 0 ],
-        [ 'slug' => 'hydraulic-parts',     'name' => 'Hydraulic Parts',     'icon' => 'fas fa-water',       'count' => 0 ],
-        [ 'slug' => 'undercarriage-parts', 'name' => 'Undercarriage Parts', 'icon' => 'fas fa-cogs',        'count' => 0 ],
-        [ 'slug' => 'attachment-parts',    'name' => 'Attachment Parts',    'icon' => 'fas fa-link',        'count' => 0 ],
-        [ 'slug' => 'electrical-parts',    'name' => 'Electrical Parts',    'icon' => 'fas fa-bolt',        'count' => 0 ],
-        [ 'slug' => 'filter-parts',        'name' => 'Filter Parts',        'icon' => 'fas fa-filter',      'count' => 0 ],
-    ];
-
-    $slug_map = [];
-    foreach ( $known as &$k ) {
-        $slug_map[ $k['slug'] ] = &$k;
+    $canonical = [];
+    foreach ( gti_spare_part_categories() as $name => $meta ) {
+        $canonical[ $name ] = $meta['icon'];
     }
-    unset( $k );
-
-    $uncategorized = 0;
-    foreach ( $data as $item ) {
-        $cat = strtolower( trim( $item['category'] ?? '' ) );
-        $cat = str_replace( ' ', '-', $cat );
-        if ( isset( $slug_map[ $cat ] ) ) {
-            $slug_map[ $cat ]['count']++;
-        } else {
-            $uncategorized++;
-        }
-    }
-
-    $result = $known;
-    if ( $uncategorized > 0 ) {
-        $result[] = [ 'slug' => 'others', 'name' => 'Others', 'icon' => 'fas fa-ellipsis-h', 'count' => $uncategorized ];
-    }
-
-    return $result;
+    return gti_catalog_category_options( $data, $canonical );
 }
 
 function gti_get_spare_parts_brands( $data = [] ) {
@@ -529,10 +509,11 @@ function gti_spare_render_part_detail( $part_id ) {
     $image       = $item['image'] ?: '';
 
     // Stock badge
-    if ( $stock <= 0 ) {
+    $stock_status = gti_spare_stock_status( $stock, $min_stock );
+    if ( 'out_of_stock' === $stock_status ) {
         $stock_class = 'out-of-stock';
         $stock_label = 'OUT OF STOCK';
-    } elseif ( $stock <= $min_stock ) {
+    } elseif ( 'low_stock' === $stock_status ) {
         $stock_class = 'low-stock';
         $stock_label = 'LOW STOCK';
     } else {
@@ -540,11 +521,12 @@ function gti_spare_render_part_detail( $part_id ) {
         $stock_label = 'IN STOCK';
     }
 
+    $related   = gti_spare_get_related_parts( $item, 8 );
     $wa_number = get_option( 'gti_whatsapp_number', '6281234567890' );
 
     ob_start();
     ?>
-    <div class="gti-ed-wrapper gti-sp-detail" id="gti-spare-parts-detail"
+    <div class="gti-ed-wrapper gti-sp-detail" id="gti-equipment-detail"
          data-id="<?php echo esc_attr( $part_id ); ?>"
          data-part-number="<?php echo esc_attr( $part_number ); ?>"
          data-brand="<?php echo esc_attr( $brand ); ?>"
@@ -584,7 +566,7 @@ function gti_spare_render_part_detail( $part_id ) {
                     <p class="gti-ed-tagline">REQUEST QUOTATION</p>
 
                     <div class="gti-ed-specs-list">
-                        <div class="gti-ed-spec-item"><i class="fas fa-tag"></i><span class="spec-label">Category</span><span class="spec-value"><?php echo esc_html( ucfirst( str_replace( '-', ' ', $category ) ) ); ?></span></div>
+                        <div class="gti-ed-spec-item"><i class="fas fa-tag"></i><span class="spec-label">Category</span><span class="spec-value"><?php echo esc_html( $category ); ?></span></div>
                         <div class="gti-ed-spec-item"><i class="fas fa-box"></i><span class="spec-label">Stock</span><span class="spec-value"><?php echo esc_html( $stock ); ?> units (min: <?php echo esc_html( $min_stock ); ?>)</span></div>
                         <div class="gti-ed-spec-item"><i class="fas fa-map-marker-alt"></i><span class="spec-label">Location</span><span class="spec-value"><?php echo esc_html( $location ); ?></span></div>
                         <?php if ( $supplier ) : ?>
@@ -602,6 +584,7 @@ function gti_spare_render_part_detail( $part_id ) {
                     <div class="gti-ed-cta-group">
                         <a href="https://wa.me/<?php echo esc_attr( $wa_number ); ?>?text=<?php echo urlencode( 'Halo GTI, saya ingin menanyakan spare part ' . $title . ' (' . $part_number . ')' ); ?>" target="_blank" rel="noopener noreferrer" class="gti-ed-btn gti-ed-btn-whatsapp"><i class="fab fa-whatsapp"></i> CHAT ON WHATSAPP</a>
                         <button type="button" class="gti-ed-btn gti-ed-btn-offer" onclick="document.getElementById('gti-ed-inquiry-form').scrollIntoView({behavior:'smooth'});var f=document.getElementById('ed-name');if(f)f.focus();"><i class="fas fa-file-invoice-dollar"></i> REQUEST QUOTATION</button>
+                        <button type="button" id="gti-ed-share-btn" class="gti-ed-btn gti-ed-btn-share"><i class="fas fa-share-alt"></i> <span>SHARE PART</span></button>
                     </div>
                 </div>
 
@@ -632,7 +615,7 @@ function gti_spare_render_part_detail( $part_id ) {
                     <div class="gti-ed-spec-table">
                         <div class="gti-ed-spec-row"><span class="label">Part Number</span><span class="value"><?php echo esc_html( $part_number ); ?></span></div>
                         <div class="gti-ed-spec-row"><span class="label">Brand</span><span class="value"><?php echo esc_html( $brand ); ?></span></div>
-                        <div class="gti-ed-spec-row"><span class="label">Category</span><span class="value"><?php echo esc_html( ucfirst( str_replace( '-', ' ', $category ) ) ); ?></span></div>
+                        <div class="gti-ed-spec-row"><span class="label">Category</span><span class="value"><?php echo esc_html( $category ); ?></span></div>
                         <div class="gti-ed-spec-row"><span class="label">Stock</span><span class="value"><?php echo esc_html( $stock ); ?> units</span></div>
                         <div class="gti-ed-spec-row"><span class="label">Minimum Stock</span><span class="value"><?php echo esc_html( $min_stock ); ?> units</span></div>
                         <?php if ( $price ) : ?>
@@ -666,55 +649,164 @@ function gti_spare_render_part_detail( $part_id ) {
             </div>
         </section>
 
+        <!-- ═══ RELATED PARTS ═══ -->
+        <?php if ( ! empty( $related ) ) : ?>
+        <section class="gti-ed-related-section">
+            <div class="gti-ed-related-header">
+                <h2>YOU MAY ALSO NEED</h2>
+                <a href="<?php echo esc_url( remove_query_arg( 'id' ) ); ?>">VIEW ALL &rarr;</a>
+            </div>
+            <div class="gti-ed-related-carousel-wrapper">
+                <button class="gti-ed-carousel-arrow prev" type="button" aria-label="Scroll left"><i class="fas fa-chevron-left"></i></button>
+                <div class="gti-ed-related-carousel" id="gti-ed-related-carousel">
+                    <?php foreach ( $related as $rel ) : ?>
+                        <?php gti_spare_render_related_card( $rel ); ?>
+                    <?php endforeach; ?>
+                </div>
+                <button class="gti-ed-carousel-arrow next" type="button" aria-label="Scroll right"><i class="fas fa-chevron-right"></i></button>
+            </div>
+        </section>
+        <?php endif; ?>
     </div>
     <?php
     return ob_get_clean();
+}
+
+/**
+ * Parts from the same category first, topped up with the newest other parts.
+ */
+function gti_spare_get_related_parts( $current, $limit = 8 ) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'gti_spare_parts';
+    $items = [];
+
+    if ( gti_spare_has_published_rows() ) {
+        $category   = $current['category'] ?: '';
+        $current_id = (int) $current['id'];
+
+        if ( $category ) {
+            $rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM {$table} WHERE status != 'draft' AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
+                    $category, $current_id, $limit
+                )
+            );
+            foreach ( $rows as $row ) {
+                $items[] = gti_spare_map_row( $row );
+            }
+        }
+
+        if ( count( $items ) < $limit ) {
+            $existing_ids   = array_column( $items, 'id' );
+            $existing_ids[] = $current_id;
+            $placeholders   = implode( ',', array_fill( 0, count( $existing_ids ), '%d' ) );
+            $rows = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM {$table} WHERE status != 'draft' AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
+                    array_merge( $existing_ids, [ $limit - count( $items ) ] )
+                )
+            );
+            foreach ( $rows as $row ) {
+                $items[] = gti_spare_map_row( $row );
+            }
+        }
+    }
+
+    if ( empty( $items ) && ! gti_spare_has_published_rows() ) {
+        $current_id = (int) ( $current['id'] ?? 0 );
+        foreach ( gti_get_dummy_spare_parts_data() as $d ) {
+            if ( (int) $d['id'] !== $current_id ) {
+                $items[] = $d;
+                if ( count( $items ) >= $limit ) break;
+            }
+        }
+    }
+
+    return $items;
+}
+
+function gti_spare_render_related_card( $item ) {
+    $title     = $item['name'] ?: 'Spare Part';
+    $part_no   = $item['part_number'] ?: '';
+    $brand     = $item['brand'] ?: '';
+    $location  = $item['location'] ?: '—';
+    $price     = $item['unit_price'] ?: '';
+    $image_url = $item['image'] ?: '';
+    $id        = $item['id'] ?: 0;
+
+    $stock_status = gti_spare_stock_status( $item['stock'] ?? 0, $item['minimum_stock'] ?? 10 );
+    if ( 'out_of_stock' === $stock_status ) {
+        $status_class = 'out-of-stock';
+        $status_label = 'OUT OF STOCK';
+    } elseif ( 'low_stock' === $stock_status ) {
+        $status_class = 'low-stock';
+        $status_label = 'LOW STOCK';
+    } else {
+        $status_class = 'in-stock';
+        $status_label = 'IN STOCK';
+    }
+    ?>
+    <a href="<?php echo esc_url( add_query_arg( 'id', $id ) ); ?>" class="gti-ed-related-card">
+        <div class="gti-ed-related-card-image">
+            <?php if ( $image_url ) : ?>
+                <img src="<?php echo esc_url( $image_url ); ?>" alt="<?php echo esc_attr( $title ); ?>" loading="lazy">
+            <?php else : ?>
+                <div class="placeholder-icon"><i class="fas fa-cogs"></i></div>
+            <?php endif; ?>
+            <span class="gti-ed-related-card-badge <?php echo esc_attr( $status_class ); ?>"><?php echo esc_html( $status_label ); ?></span>
+        </div>
+        <div class="gti-ed-related-card-body">
+            <h3 class="gti-ed-related-card-title"><?php echo esc_html( $title ); ?></h3>
+            <div class="gti-ed-related-card-meta">
+                <?php if ( $part_no ) : ?>
+                    <div class="gti-ed-related-card-meta-row"><i class="fas fa-hashtag"></i> <span><?php echo esc_html( $part_no ); ?></span></div>
+                <?php endif; ?>
+                <?php if ( $brand ) : ?>
+                    <div class="gti-ed-related-card-meta-row"><i class="fas fa-industry"></i> <span><?php echo esc_html( $brand ); ?></span></div>
+                <?php endif; ?>
+                <div class="gti-ed-related-card-meta-row"><i class="fas fa-map-marker-alt"></i> <span><?php echo esc_html( $location ); ?></span></div>
+            </div>
+            <?php if ( $price ) : ?>
+                <div class="gti-ed-related-card-price">Rp <?php echo esc_html( number_format( (float) $price, 0, ',', '.' ) ); ?></div>
+            <?php endif; ?>
+            <span class="gti-ed-related-card-cta">REQUEST QUOTATION</span>
+        </div>
+    </a>
+    <?php
 }
 
 function gti_spare_get_part_by_id( $id ) {
     global $wpdb;
     $table = $wpdb->prefix . 'gti_spare_parts';
 
-    $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
-    if ( $table_exists ) {
-        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d", $id ) );
-        if ( $row ) {
-            $stock     = (int) $row->stock;
-            $min_stock = (int) $row->minimum_stock;
-
-            if ( $stock <= 0 ) {
-                $display_status = 'out_of_stock';
-            } elseif ( $stock <= $min_stock ) {
-                $display_status = 'low_stock';
-            } else {
-                $display_status = 'in_stock';
-            }
-
-            return [
-                'id'            => (int) $row->id,
-                'name'          => $row->name ?: 'Spare Part',
-                'part_number'   => $row->part_number ?: '',
-                'category'      => strtolower( $row->category ?: 'others' ),
-                'brand'         => $row->brand ?: '',
-                'description'   => $row->description ?: '',
-                'stock'         => $stock,
-                'minimum_stock' => $min_stock,
-                'unit_price'    => $row->unit_price ?: '',
-                'supplier'      => $row->supplier ?: '',
-                'location'      => $row->location ?: '',
-                'image'         => $row->image ?: '',
-                'status'        => $display_status,
-            ];
-        }
+    if ( gti_spare_has_published_rows() ) {
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND status != 'draft'", $id ) );
+        return $row ? gti_spare_map_row( $row ) : null;
     }
 
-    // Fallback: dummy data
-    $all_data = gti_get_dummy_spare_parts_data();
-    foreach ( $all_data as $item ) {
+    // Fallback: demo data, only while the catalog has nothing published yet.
+    foreach ( gti_get_dummy_spare_parts_data() as $item ) {
         if ( (int) $item['id'] === (int) $id ) {
             return $item;
         }
     }
 
     return null;
+}
+
+/**
+ * True when the table exists and holds at least one non-draft part. The demo
+ * data may only stand in while that is false — otherwise a draft or deleted
+ * part would quietly render a demo part with the same id.
+ */
+function gti_spare_has_published_rows() {
+    global $wpdb;
+    $table = $wpdb->prefix . 'gti_spare_parts';
+
+    $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
+    if ( ! $table_exists ) {
+        return false;
+    }
+
+    return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table} WHERE status != 'draft'" ) > 0;
 }

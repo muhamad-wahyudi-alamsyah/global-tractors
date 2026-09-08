@@ -13,9 +13,10 @@ $user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 // Get customer ID from URL
 $customer_id_param = isset($_GET['id']) ? sanitize_text_field($_GET['id']) : '';
 
-// Database lookup
 global $wpdb;
-$table_name = $wpdb->prefix . 'gti_customers';
+gti_ensure_customers_table();
+$table_name = gti_customers_table();
+
 $customer = null;
 if ($customer_id_param) {
     $customer = $wpdb->get_row($wpdb->prepare(
@@ -24,106 +25,140 @@ if ($customer_id_param) {
     ));
 }
 
-// Fallback: use demo data if no DB record found
-if (!$customer) {
-    $customer = new stdClass();
-    $customer->customer_id         = 'CUST-230112';
-    $customer->name                = 'Budi Santoso';
-    $customer->email               = 'budi@ptabadi.com';
-    $customer->phone               = '+62 812-3456-7890';
-    $customer->company             = 'PT Abadi Sentosa';
-    $customer->industry            = 'Construction';
-    $customer->city                = 'Jakarta';
-    $customer->province            = 'DKI Jakarta';
-    $customer->country             = 'Indonesia';
-    $customer->address             = 'Jl. Jend. Sudirman No. 52, Jakarta Selatan, DKI Jakarta 12190';
-    $customer->website             = 'www.ptabadi.com';
-    $customer->npwp                = '01.234.567.8-009.000';
-    $customer->contact_person      = 'Budi Santoso';
-    $customer->contact_position    = 'Project Manager';
-    $customer->contact_phone       = '+62 812-3456-7890';
-    $customer->contact_email       = 'budi@ptabadi.com';
-    $customer->contact_whatsapp    = '+62 812-3456-7890';
-    $customer->status              = 'active';
-    $customer->rating              = 4.8;
-    $customer->total_transactions  = 12;
-    $customer->total_spent         = 2450750000;
-    $customer->registered_date     = '2023-01-12 09:00:00';
-    $customer->last_contact        = '2024-05-31 10:25:00';
+// Keep the stored counters honest before rendering them.
+if ($customer) {
+    gti_refresh_customer_stats($customer->customer_id);
+    $customer = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM {$table_name} WHERE customer_id = %s",
+        $customer_id_param
+    ));
 }
 
 // Helpers
 function gti_cd_initials($name) {
-    $parts = explode(' ', trim($name));
+    $parts = explode(' ', trim((string) $name));
     $initials = '';
     foreach (array_slice($parts, 0, 2) as $p) {
         $initials .= mb_strtoupper(mb_substr($p, 0, 1));
     }
-    return $initials;
+    return $initials ?: '?';
 }
 function gti_cd_fmt_date($date) {
-    if (!$date) return '-';
+    if (!$date || $date === '0000-00-00 00:00:00') return '-';
     return date('d M Y', strtotime($date));
 }
 function gti_cd_fmt_datetime($datetime) {
-    if (!$datetime) return '-';
+    if (!$datetime || $datetime === '0000-00-00 00:00:00') return '-';
     return date('d M Y, h:i A', strtotime($datetime));
 }
 function gti_cd_fmt_currency($amount) {
-    return 'IDR ' . number_format((float)$amount, 0, '.', '.');
+    return 'IDR ' . number_format((float) $amount, 0, ',', '.');
+}
+function gti_cd_val($value, $fallback = '—') {
+    $value = trim((string) $value);
+    return $value !== '' ? $value : $fallback;
+}
+function gti_cd_status_label($status) {
+    return ucwords(str_replace('_', ' ', (string) $status));
+}
+function gti_cd_status_class($status) {
+    $map = array(
+        'new' => 'reserved', 'processing' => 'reserved', 'waiting_customer' => 'sold',
+        'proposal_sent' => 'reserved', 'approved' => 'available', 'completed' => 'available',
+        'rejected' => 'price-no-longer-valid', 'closed' => 'sold',
+    );
+    return $map[$status] ?? 'draft';
 }
 
-$initials = gti_cd_initials($customer->name);
-$customer_since = gti_cd_fmt_date($customer->registered_date);
-$last_contact   = gti_cd_fmt_date($customer->last_contact);
-$full_location   = trim($customer->city . ', ' . $customer->province . ', ' . $customer->country, ', ');
+$requests = array();
+$quotations = array();
+$activity_rows = array();
+$stats = array('requests' => 0, 'quotations' => 0, 'total_spent' => 0.0, 'last_contact' => null);
 
-// Dummy recent activity data
-$recent_activities = [
-    [
-        'date'     => '31 May 2024, 10:25 AM',
-        'type'     => 'Request Quotation',
-        'icon'     => 'fas fa-file-invoice',
-        'icon_bg'  => '#fef3c7',
-        'icon_clr' => '#f59e0b',
-        'detail'   => 'RFQ-2405-0012 - 6 items (Total: IDR 1.248.750.000)',
-        'by'       => 'Andi Pratama',
-    ],
-    [
-        'date'     => '30 May 2024, 03:15 PM',
+if ($customer) {
+    $stats = gti_customer_stats($customer);
+
+    // Match on either identifier — inbound forms do not always capture both.
+    $match  = array();
+    $params = array();
+    if ($customer->email) { $match[] = 'customer_email = %s'; $params[] = $customer->email; }
+    if ($customer->phone) { $match[] = 'customer_phone = %s'; $params[] = $customer->phone; }
+    $match_sql = $match ? '(' . implode(' OR ', $match) . ')' : '0';
+
+    $requests_table = $wpdb->prefix . 'gti_requests';
+    if ($params && gti_table_exists($requests_table)) {
+        $requests = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$requests_table} WHERE {$match_sql} ORDER BY created_at DESC LIMIT 50",
+            $params
+        ));
+    }
+
+    $quotations_table = $wpdb->prefix . 'gti_quotations';
+    if ($params && gti_table_exists($quotations_table)) {
+        $quotations = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$quotations_table} WHERE {$match_sql} ORDER BY created_at DESC LIMIT 50",
+            $params
+        ));
+    }
+
+    // Everything the dashboard did to this customer record.
+    $activity_table = gti_activity_log_table();
+    $activity_rows = $wpdb->get_results($wpdb->prepare(
+        "SELECT al.*, u.display_name, u.user_login
+         FROM {$activity_table} al
+         LEFT JOIN {$wpdb->users} u ON al.user_id = u.ID
+         WHERE al.entity_type = 'customer' AND al.entity_id = %d
+         ORDER BY al.created_at DESC
+         LIMIT 50",
+        $customer->id
+    ));
+}
+
+// Recent activity — the customer's own submissions, newest first.
+$recent_activities = array();
+foreach ($requests as $r) {
+    $recent_activities[] = array(
+        'sort'     => strtotime($r->created_at),
+        'date'     => gti_cd_fmt_datetime($r->created_at),
         'type'     => 'Request Equipment',
         'icon'     => 'fas fa-truck',
         'icon_bg'  => '#dbeafe',
         'icon_clr' => '#3b82f6',
-        'detail'   => 'Komatsu PC200-8 - Project Balikpapan',
-        'by'       => 'Dewi Lestari',
-    ],
-    [
-        'date'     => '28 May 2024, 02:20 PM',
-        'type'     => 'Quotation Approved',
-        'icon'     => 'fas fa-check-circle',
-        'icon_bg'  => '#d1fae5',
-        'icon_clr' => '#10b981',
-        'detail'   => 'RFQ-2404-0032 has been approved',
-        'by'       => 'Andi Pratama',
-    ],
-    [
-        'date'     => '20 May 2024, 11:08 AM',
-        'type'     => 'Rental Completed',
-        'icon'     => 'fas fa-flag-checkered',
-        'icon_bg'  => '#fee2e2',
-        'icon_clr' => '#ef4444',
-        'detail'   => 'Rental ID: RENT-2404-0015',
-        'by'       => 'System',
-    ],
-];
+        'detail'   => trim($r->request_id . ' — ' . gti_cd_val($r->equipment, 'Equipment request')
+                      . ($r->quantity > 1 ? ' (x' . (int) $r->quantity . ')' : '')),
+        'by'       => gti_cd_val($r->customer_name, 'Customer'),
+        'status'   => $r->status,
+    );
+}
+foreach ($quotations as $q) {
+    $recent_activities[] = array(
+        'sort'     => strtotime($q->created_at),
+        'date'     => gti_cd_fmt_datetime($q->created_at),
+        'type'     => 'Request Quotation',
+        'icon'     => 'fas fa-file-invoice',
+        'icon_bg'  => '#fef3c7',
+        'icon_clr' => '#f59e0b',
+        'detail'   => trim($q->quotation_id . ' — ' . gti_cd_fmt_currency($q->total)),
+        'by'       => gti_cd_val($q->customer_name, 'Customer'),
+        'status'   => $q->status,
+    );
+}
+usort($recent_activities, function ($a, $b) { return $b['sort'] <=> $a['sort']; });
+$recent_activities = array_slice($recent_activities, 0, 8);
+
+$initials       = $customer ? gti_cd_initials($customer->name) : '?';
+$customer_since = $customer ? gti_cd_fmt_date($customer->registered_date) : '-';
+$last_contact   = $customer ? gti_cd_fmt_date($stats['last_contact'] ?: $customer->last_contact) : '-';
+$full_location  = $customer
+    ? trim(implode(', ', array_filter(array($customer->city, $customer->province, $customer->country))), ', ')
+    : '';
 ?>
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo esc_html($customer->name); ?> - Customer Detail - <?php bloginfo('name'); ?></title>
+    <title><?php echo esc_html($customer ? $customer->name : 'Customer Not Found'); ?> - Customer Detail - <?php bloginfo('name'); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -322,6 +357,26 @@ $recent_activities = [
             <!-- Content -->
             <div class="gti-content" style="flex-direction:column">
 
+                <?php if (!$customer): ?>
+                    <div class="gti-cd-top-bar">
+                        <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-cd-back">
+                            <i class="fas fa-arrow-left"></i> Back to Customers
+                        </a>
+                    </div>
+                    <div class="gti-cd-section" style="text-align:center;padding:64px 24px">
+                        <i class="fas fa-user-slash" style="font-size:48px;color:#d1d5db;display:block;margin-bottom:16px"></i>
+                        <div style="font-size:16px;font-weight:600;color:#374151;margin-bottom:6px">Customer not found</div>
+                        <p style="color:#9ca3af;font-size:14px;margin:0">
+                            <?php echo $customer_id_param
+                                ? 'No customer matches the id "' . esc_html($customer_id_param) . '".'
+                                : 'No customer id was supplied.'; ?>
+                        </p>
+                        <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-cd-btn gti-cd-btn-primary" style="margin-top:20px">
+                            <i class="fas fa-users"></i> Browse Customers
+                        </a>
+                    </div>
+                <?php else: ?>
+
                 <!-- Back Link + Actions (inline) -->
                 <div class="gti-cd-top-bar">
                     <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-cd-back">
@@ -329,9 +384,11 @@ $recent_activities = [
                     </a>
 
                     <div class="gti-cd-action-bar">
+                        <?php if ($customer->email): ?>
                         <a href="mailto:<?php echo esc_attr($customer->email); ?>" class="gti-cd-btn gti-cd-btn-outline">
                             <i class="fas fa-envelope"></i> Send Email
                         </a>
+                        <?php endif; ?>
                         <a href="#" class="gti-cd-btn gti-cd-btn-outline">
                             <i class="fas fa-pen"></i> Edit Customer
                         </a>
@@ -358,10 +415,10 @@ $recent_activities = [
                             <div class="gti-cd-avatar-lg"><?php echo esc_html($initials); ?></div>
                             <div class="gti-cd-profile-info">
                                 <div class="gti-cd-profile-name"><?php echo esc_html($customer->name); ?></div>
-                                <span class="gti-cd-profile-status <?php echo esc_attr($customer->status); ?>">
+                                <span class="gti-cd-profile-status <?php echo esc_attr($customer->status === 'active' ? 'active' : 'inactive'); ?>">
                                     <?php echo $customer->status === 'active' ? 'Active Customer' : 'Inactive Customer'; ?>
                                 </span>
-                                <div class="gti-cd-profile-company"><?php echo esc_html($customer->company); ?></div>
+                                <div class="gti-cd-profile-company"><?php echo esc_html(gti_cd_val($customer->company, 'Individual customer')); ?></div>
                             </div>
                         </div>
                         <div class="gti-cd-profile-right">
@@ -374,11 +431,11 @@ $recent_activities = [
                                 <div class="gti-cd-kpi-label">Customer Rating</div>
                             </div>
                             <div class="gti-cd-kpi-box">
-                                <div class="gti-cd-kpi-value"><?php echo (int) $customer->total_transactions; ?></div>
+                                <div class="gti-cd-kpi-value"><?php echo (int) ($stats['requests'] + $stats['quotations']); ?></div>
                                 <div class="gti-cd-kpi-label">Total Transactions</div>
                             </div>
                             <div class="gti-cd-kpi-box">
-                                <div class="gti-cd-kpi-value" style="font-size:17px"><?php echo esc_html(gti_cd_fmt_currency($customer->total_spent)); ?></div>
+                                <div class="gti-cd-kpi-value" style="font-size:17px"><?php echo esc_html(gti_cd_fmt_currency($stats['total_spent'])); ?></div>
                                 <div class="gti-cd-kpi-label">Total Spent</div>
                             </div>
                         </div>
@@ -392,15 +449,15 @@ $recent_activities = [
                         </div>
                         <div class="gti-cd-meta-item">
                             <i class="fas fa-phone"></i>
-                            <span><?php echo esc_html($customer->phone); ?></span>
+                            <span><?php echo esc_html(gti_cd_val($customer->phone)); ?></span>
                         </div>
                         <div class="gti-cd-meta-item">
                             <i class="fas fa-building"></i>
-                            <span><?php echo esc_html($customer->industry); ?></span>
+                            <span><?php echo esc_html(gti_cd_val($customer->industry)); ?></span>
                         </div>
                         <div class="gti-cd-meta-item">
                             <i class="fas fa-map-marker-alt"></i>
-                            <span><?php echo esc_html($full_location); ?></span>
+                            <span><?php echo esc_html(gti_cd_val($full_location)); ?></span>
                         </div>
                     </div>
 
@@ -441,19 +498,19 @@ $recent_activities = [
                         <div class="gti-cd-info-grid">
                             <div class="gti-cd-info-field">
                                 <label>Company Name</label>
-                                <span><?php echo esc_html($customer->company); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->company)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>NPWP</label>
-                                <span><?php echo esc_html($customer->npwp); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->npwp)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Industry</label>
-                                <span><?php echo esc_html($customer->industry); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->industry)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Company Phone</label>
-                                <span><?php echo esc_html($customer->phone); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->phone)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Company Email</label>
@@ -461,11 +518,15 @@ $recent_activities = [
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Website</label>
-                                <span><a href="https://<?php echo esc_attr($customer->website); ?>" target="_blank"><?php echo esc_html($customer->website); ?></a></span>
+                                <span>
+                                    <?php if ($customer->website): ?>
+                                        <a href="<?php echo esc_url(preg_match('#^https?://#', $customer->website) ? $customer->website : 'https://' . $customer->website); ?>" target="_blank" rel="noopener"><?php echo esc_html($customer->website); ?></a>
+                                    <?php else: ?>—<?php endif; ?>
+                                </span>
                             </div>
                             <div class="gti-cd-info-field gti-cd-info-field-full">
                                 <label>Address</label>
-                                <span><?php echo esc_html($customer->address); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->address)); ?></span>
                             </div>
                         </div>
                     </div>
@@ -476,29 +537,44 @@ $recent_activities = [
                         <div class="gti-cd-info-grid">
                             <div class="gti-cd-info-field">
                                 <label>Contact Name</label>
-                                <span><?php echo esc_html($customer->contact_person); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->contact_person ?: $customer->name)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Position</label>
-                                <span><?php echo esc_html($customer->contact_position); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->contact_position)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Phone</label>
-                                <span><?php echo esc_html($customer->contact_phone); ?></span>
+                                <span><?php echo esc_html(gti_cd_val($customer->contact_phone ?: $customer->phone)); ?></span>
                             </div>
+                            <?php $contact_email = $customer->contact_email ?: $customer->email; ?>
+                            <?php $contact_wa = $customer->contact_whatsapp ?: $customer->phone; ?>
                             <div class="gti-cd-info-field">
                                 <label>Email</label>
-                                <span><a href="mailto:<?php echo esc_attr($customer->contact_email); ?>"><?php echo esc_html($customer->contact_email); ?></a></span>
+                                <span>
+                                    <?php if ($contact_email): ?>
+                                        <a href="mailto:<?php echo esc_attr($contact_email); ?>"><?php echo esc_html($contact_email); ?></a>
+                                    <?php else: ?>—<?php endif; ?>
+                                </span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>WhatsApp</label>
-                                <span><a href="https://wa.me/<?php echo esc_attr(preg_replace('/[^0-9]/', '', $customer->contact_whatsapp)); ?>" target="_blank"><?php echo esc_html($customer->contact_whatsapp); ?></a></span>
+                                <span>
+                                    <?php if ($contact_wa): ?>
+                                        <a href="https://wa.me/<?php echo esc_attr(preg_replace('/[^0-9]/', '', $contact_wa)); ?>" target="_blank" rel="noopener"><?php echo esc_html($contact_wa); ?></a>
+                                    <?php else: ?>—<?php endif; ?>
+                                </span>
                             </div>
                         </div>
                     </div>
 
                     <!-- 7. Customer Statistics -->
                     <div class="gti-cd-section">
+<?php
+                        $approved_quotations = array_values(array_filter($quotations, function ($q) {
+                            return in_array($q->status, array('approved', 'completed'), true);
+                        }));
+                        ?>
                         <div class="gti-cd-section-title"><i class="fas fa-chart-bar"></i> Customer Statistics</div>
                         <div class="gti-cd-stats-grid">
                             <div class="gti-cd-stat-card">
@@ -506,7 +582,7 @@ $recent_activities = [
                                     <div class="gti-cd-stat-card-icon q"><i class="fas fa-file-invoice"></i></div>
                                     <a href="#tab-quotations" class="gti-cd-tab" style="padding:0;border:0;margin:0;font-size:12px" onclick="document.querySelector('[data-tab=quotations]').click()">View Details <i class="fas fa-arrow-right" style="font-size:10px"></i></a>
                                 </div>
-                                <div class="gti-cd-stat-card-value">8</div>
+                                <div class="gti-cd-stat-card-value"><?php echo (int) $stats['quotations']; ?></div>
                                 <div class="gti-cd-stat-card-label">Total Quotation</div>
                             </div>
                             <div class="gti-cd-stat-card">
@@ -514,7 +590,7 @@ $recent_activities = [
                                     <div class="gti-cd-stat-card-icon p"><i class="fas fa-truck"></i></div>
                                     <a href="#tab-transactions" class="gti-cd-tab" style="padding:0;border:0;margin:0;font-size:12px" onclick="document.querySelector('[data-tab=transactions]').click()">View Details <i class="fas fa-arrow-right" style="font-size:10px"></i></a>
                                 </div>
-                                <div class="gti-cd-stat-card-value">4</div>
+                                <div class="gti-cd-stat-card-value"><?php echo count($approved_quotations); ?></div>
                                 <div class="gti-cd-stat-card-label">Total Purchase</div>
                             </div>
                             <div class="gti-cd-stat-card">
@@ -522,7 +598,7 @@ $recent_activities = [
                                     <div class="gti-cd-stat-card-icon r"><i class="fas fa-car"></i></div>
                                     <a href="#tab-rentals" class="gti-cd-tab" style="padding:0;border:0;margin:0;font-size:12px" onclick="document.querySelector('[data-tab=rentals]').click()">View Details <i class="fas fa-arrow-right" style="font-size:10px"></i></a>
                                 </div>
-                                <div class="gti-cd-stat-card-value">3</div>
+                                <div class="gti-cd-stat-card-value">0</div>
                                 <div class="gti-cd-stat-card-label">Total Rental</div>
                             </div>
                             <div class="gti-cd-stat-card">
@@ -530,7 +606,7 @@ $recent_activities = [
                                     <div class="gti-cd-stat-card-icon i"><i class="fas fa-search"></i></div>
                                     <a href="#tab-request" class="gti-cd-tab" style="padding:0;border:0;margin:0;font-size:12px" onclick="document.querySelector('[data-tab=request]').click()">View Details <i class="fas fa-arrow-right" style="font-size:10px"></i></a>
                                 </div>
-                                <div class="gti-cd-stat-card-value">7</div>
+                                <div class="gti-cd-stat-card-value"><?php echo (int) $stats['requests']; ?></div>
                                 <div class="gti-cd-stat-card-label">Total Inquiry</div>
                             </div>
                         </div>
@@ -548,10 +624,15 @@ $recent_activities = [
                                     <th style="width:180px">Date</th>
                                     <th style="width:200px">Activity</th>
                                     <th>Details</th>
-                                    <th style="width:140px">By</th>
+                                    <th style="width:120px">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <?php if (empty($recent_activities)): ?>
+                                    <tr><td colspan="4" style="color:#9ca3af;text-align:center;padding:40px 0">
+                                        No requests or quotations from this customer yet.
+                                    </td></tr>
+                                <?php endif; ?>
                                 <?php foreach ($recent_activities as $act): ?>
                                 <tr>
                                     <td style="white-space:nowrap;color:#6b7280;font-size:12px"><?php echo esc_html($act['date']); ?></td>
@@ -564,7 +645,11 @@ $recent_activities = [
                                         </div>
                                     </td>
                                     <td class="gti-cd-activity-detail"><?php echo esc_html($act['detail']); ?></td>
-                                    <td style="color:#6b7280;font-size:12px"><?php echo esc_html($act['by']); ?></td>
+                                    <td>
+                                        <span class="gti-badge-status <?php echo esc_attr(gti_cd_status_class($act['status'])); ?>">
+                                            <?php echo esc_html(gti_cd_status_label($act['status'])); ?>
+                                        </span>
+                                    </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -576,39 +661,180 @@ $recent_activities = [
                 <div class="gti-cd-tab-content" id="tab-request" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-file-alt"></i> Request &amp; Inquiry</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No requests found for this customer.</p>
+                        <?php if (empty($requests)): ?>
+                            <p style="color:#9ca3af;text-align:center;padding:40px 0">No requests found for this customer.</p>
+                        <?php else: ?>
+                            <table class="gti-cd-activity-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:130px">Request ID</th>
+                                        <th>Equipment</th>
+                                        <th style="width:110px">Quantity</th>
+                                        <th style="width:150px">Budget</th>
+                                        <th style="width:120px">Status</th>
+                                        <th style="width:120px">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($requests as $r): ?>
+                                        <tr>
+                                            <td style="font-family:monospace;font-size:12px"><?php echo esc_html($r->request_id); ?></td>
+                                            <td>
+                                                <strong><?php echo esc_html(gti_cd_val($r->equipment)); ?></strong>
+                                                <?php if ($r->brand || $r->category): ?>
+                                                    <div style="font-size:12px;color:#9ca3af">
+                                                        <?php echo esc_html(trim(implode(' · ', array_filter(array($r->brand, $r->category))))); ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td><?php echo (int) $r->quantity; ?></td>
+                                            <td><?php echo esc_html($r->budget > 0 ? gti_cd_fmt_currency($r->budget) : '—'); ?></td>
+                                            <td>
+                                                <span class="gti-badge-status <?php echo esc_attr(gti_cd_status_class($r->status)); ?>">
+                                                    <?php echo esc_html(gti_cd_status_label($r->status)); ?>
+                                                </span>
+                                            </td>
+                                            <td style="white-space:nowrap;color:#6b7280;font-size:12px"><?php echo esc_html(gti_cd_fmt_date($r->created_at)); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="gti-cd-tab-content" id="tab-quotations" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-file-invoice"></i> Quotations</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No quotations found for this customer.</p>
+                        <?php if (empty($quotations)): ?>
+                            <p style="color:#9ca3af;text-align:center;padding:40px 0">No quotations found for this customer.</p>
+                        <?php else: ?>
+                            <table class="gti-cd-activity-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:150px">Quotation ID</th>
+                                        <th>Items</th>
+                                        <th style="width:160px">Total</th>
+                                        <th style="width:130px">Sales PIC</th>
+                                        <th style="width:130px">Status</th>
+                                        <th style="width:120px">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($quotations as $q): ?>
+                                        <?php
+                                        $items = json_decode($q->items, true);
+                                        $items = is_array($items) ? $items : array();
+                                        $item_names = array();
+                                        foreach ($items as $item) {
+                                            if (!empty($item['name'])) $item_names[] = $item['name'];
+                                        }
+                                        ?>
+                                        <tr>
+                                            <td style="font-family:monospace;font-size:12px"><?php echo esc_html($q->quotation_id); ?></td>
+                                            <td class="gti-cd-activity-detail">
+                                                <?php echo $item_names
+                                                    ? esc_html(implode(', ', $item_names))
+                                                    : '<span style="color:#9ca3af">' . esc_html(gti_cd_val($q->additional_notes, 'No items listed')) . '</span>'; ?>
+                                            </td>
+                                            <td><strong><?php echo esc_html(gti_cd_fmt_currency($q->total)); ?></strong></td>
+                                            <td><?php echo esc_html(gti_cd_val($q->sales_pic, 'Unassigned')); ?></td>
+                                            <td>
+                                                <span class="gti-badge-status <?php echo esc_attr(gti_cd_status_class($q->status)); ?>">
+                                                    <?php echo esc_html(gti_cd_status_label($q->status)); ?>
+                                                </span>
+                                            </td>
+                                            <td style="white-space:nowrap;color:#6b7280;font-size:12px"><?php echo esc_html(gti_cd_fmt_date($q->created_at)); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="gti-cd-tab-content" id="tab-transactions" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-shopping-cart"></i> Transactions</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No transactions found for this customer.</p>
+                        <?php if (empty($approved_quotations)): ?>
+                            <p style="color:#9ca3af;text-align:center;padding:40px 0">No approved or completed quotations yet.</p>
+                        <?php else: ?>
+                            <table class="gti-cd-activity-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:150px">Reference</th>
+                                        <th>Delivery Location</th>
+                                        <th style="width:160px">Amount</th>
+                                        <th style="width:130px">Status</th>
+                                        <th style="width:120px">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($approved_quotations as $q): ?>
+                                        <tr>
+                                            <td style="font-family:monospace;font-size:12px"><?php echo esc_html($q->quotation_id); ?></td>
+                                            <td class="gti-cd-activity-detail"><?php echo esc_html(gti_cd_val($q->delivery_location)); ?></td>
+                                            <td><strong><?php echo esc_html(gti_cd_fmt_currency($q->total)); ?></strong></td>
+                                            <td>
+                                                <span class="gti-badge-status <?php echo esc_attr(gti_cd_status_class($q->status)); ?>">
+                                                    <?php echo esc_html(gti_cd_status_label($q->status)); ?>
+                                                </span>
+                                            </td>
+                                            <td style="white-space:nowrap;color:#6b7280;font-size:12px"><?php echo esc_html(gti_cd_fmt_date($q->created_at)); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" style="font-weight:600">Total Spent</td>
+                                        <td colspan="3" style="font-weight:700"><?php echo esc_html(gti_cd_fmt_currency($stats['total_spent'])); ?></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="gti-cd-tab-content" id="tab-rentals" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-car"></i> Rentals</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No rentals found for this customer.</p>
+                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No rental records are linked to this customer.</p>
                     </div>
                 </div>
                 <div class="gti-cd-tab-content" id="tab-documents" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-folder-open"></i> Documents</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No documents found for this customer.</p>
+                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No documents have been attached to this customer.</p>
                     </div>
                 </div>
                 <div class="gti-cd-tab-content" id="tab-activity" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-history"></i> Activity Log</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">Full activity log coming soon.</p>
+                        <?php if (empty($activity_rows)): ?>
+                            <p style="color:#9ca3af;text-align:center;padding:40px 0">No dashboard actions recorded against this customer yet.</p>
+                        <?php else: ?>
+                            <table class="gti-cd-activity-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:180px">Date</th>
+                                        <th style="width:160px">Action</th>
+                                        <th>Description</th>
+                                        <th style="width:150px">By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($activity_rows as $row): ?>
+                                        <tr>
+                                            <td style="white-space:nowrap;color:#6b7280;font-size:12px"><?php echo esc_html(gti_cd_fmt_datetime($row->created_at)); ?></td>
+                                            <td style="font-weight:600"><?php echo esc_html(ucwords(str_replace('_', ' ', $row->action))); ?></td>
+                                            <td class="gti-cd-activity-detail"><?php echo esc_html(gti_activity_row_description($row)); ?></td>
+                                            <td style="color:#6b7280;font-size:12px"><?php echo esc_html($row->display_name ?: $row->user_login ?: 'System'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php endif; ?>
                     </div>
                 </div>
+
+                <?php endif; ?>
 
             </div>
         </main>
