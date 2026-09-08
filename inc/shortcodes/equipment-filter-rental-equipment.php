@@ -80,7 +80,7 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                                 <?php foreach ( $categories as $cat ) : ?>
                                     <label class="gti-ef-checkbox-item">
                                         <input type="checkbox" name="ef-category" value="<?php echo esc_attr( $cat['value'] ); ?>">
-                                        <span><i class="<?php echo esc_attr( $cat['icon'] ); ?>"></i> <?php echo esc_html( $cat['name'] ); ?> (<?php echo esc_html( $cat['count'] ); ?>)</span>
+                                        <span><?php echo esc_html( $cat['name'] ); ?></span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
