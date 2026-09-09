@@ -28,14 +28,17 @@ class GTI_Ajax {
         
         // Requests AJAX
         add_action('wp_ajax_gti_update_request_status', array(__CLASS__, 'update_request_status'));
+        add_action('wp_ajax_gti_delete_request', array(__CLASS__, 'delete_request'));
         
         // Quotations AJAX
         add_action('wp_ajax_gti_save_quotation', array(__CLASS__, 'save_quotation'));
         add_action('wp_ajax_gti_update_quotation_status', array(__CLASS__, 'update_quotation_status'));
-        
+        add_action('wp_ajax_gti_delete_quotation', array(__CLASS__, 'delete_quotation'));
+
         // Sell Equipment AJAX
         add_action('wp_ajax_gti_get_sell_request_detail', array(__CLASS__, 'get_sell_request_detail'));
         add_action('wp_ajax_gti_update_sell_request_status', array(__CLASS__, 'update_sell_request_status'));
+        add_action('wp_ajax_gti_delete_sell_request', array(__CLASS__, 'delete_sell_request'));
         
         // Customers AJAX
         add_action('wp_ajax_gti_save_customer', array(__CLASS__, 'save_customer'));
@@ -687,6 +690,72 @@ class GTI_Ajax {
         exit;
     }
     
+    /**
+     * Delete Quotation — hard delete (gti_quotations has no deleted_at column)
+     */
+    public static function delete_quotation() {
+        self::verify_nonce();
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_quotations';
+        $id = intval($_POST['id']);
+
+        $result = $wpdb->delete($table, array('id' => $id), array('%d'));
+
+        if ($result) {
+            self::log_activity('delete', 'quotation', $id);
+            wp_send_json_success(array('message' => 'Quotation deleted'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to delete quotation'));
+        }
+
+        exit;
+    }
+
+    /**
+     * Delete Sell Request — hard delete (gti_sell_requests has no deleted_at column)
+     */
+    public static function delete_sell_request() {
+        self::verify_nonce();
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_sell_requests';
+        $id = intval($_POST['id']);
+
+        $result = $wpdb->delete($table, array('id' => $id), array('%d'));
+
+        if ($result) {
+            self::log_activity('delete', 'sell_request', $id);
+            wp_send_json_success(array('message' => 'Sell request deleted'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to delete sell request'));
+        }
+
+        exit;
+    }
+
+    /**
+     * Delete Request — hard delete (gti_requests has no deleted_at column)
+     */
+    public static function delete_request() {
+        self::verify_nonce();
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_requests';
+        $id = intval($_POST['id']);
+
+        $result = $wpdb->delete($table, array('id' => $id), array('%d'));
+
+        if ($result) {
+            self::log_activity('delete', 'request', $id);
+            wp_send_json_success(array('message' => 'Request deleted'));
+        } else {
+            wp_send_json_error(array('message' => 'Failed to delete request'));
+        }
+
+        exit;
+    }
+
     /**
      * Save Quotation
      */

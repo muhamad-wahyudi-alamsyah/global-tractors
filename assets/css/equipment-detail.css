@@ -411,6 +411,14 @@
   display: none;
 }
 
+.gti-ed-form-group input {
+    display: block;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
 .gti-ed-form-group input,
 .gti-ed-form-group textarea {
   width: 100%;

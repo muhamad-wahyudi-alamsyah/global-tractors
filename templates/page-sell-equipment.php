@@ -502,6 +502,82 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
             .gti-drawer-footer { flex-wrap: wrap; }
             .gti-drawer-footer-spacer { display: none; }
         }
+
+        /* ====== Delete Confirmation Modal ====== */
+        .gti-ue-delete-overlay {
+            display: none; position: fixed; inset: 0; z-index: 3000;
+            background: rgba(0,0,0,0.5); align-items: center; justify-content: center;
+        }
+        .gti-ue-delete-overlay.show { display: flex; }
+        .gti-ue-delete-modal {
+            background: #fff; border-radius: 16px; width: 440px; max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden;
+            animation: gti-modal-in 0.25s ease;
+        }
+        @keyframes gti-modal-in { from { opacity:0; transform: scale(0.95); } to { opacity:1; transform: scale(1); } }
+        .gti-ue-delete-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 24px 0;
+        }
+        .gti-ue-delete-icon {
+            width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+            background: #fef2f2; display: flex; align-items: center; justify-content: center;
+            color: #dc2626; font-size: 18px;
+        }
+        .gti-ue-delete-header-text h3 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; }
+        .gti-ue-delete-header-text p { margin: 4px 0 0; font-size: 13px; color: #6b7280; }
+        .gti-ue-delete-body {
+            padding: 16px 24px;
+        }
+        .gti-ue-delete-eq-info {
+            background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 10px;
+            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+        }
+        .gti-ue-delete-eq-thumb {
+            width: 48px; height: 48px; border-radius: 8px; background: #e5e7eb;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            overflow: hidden;
+        }
+        .gti-ue-delete-eq-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .gti-ue-delete-eq-thumb i { color: #9ca3af; font-size: 18px; }
+        .gti-ue-delete-eq-name { font-size: 14px; font-weight: 600; color: #1a1f36; }
+        .gti-ue-delete-eq-code { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+        .gti-ue-delete-warning {
+            margin-top: 14px; padding: 10px 14px; border-radius: 8px;
+            background: #fffbeb; border: 1px solid #fde68a;
+            font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 8px;
+        }
+        .gti-ue-delete-warning i { margin-top: 2px; color: #f59e0b; flex-shrink: 0; }
+        .gti-ue-delete-footer {
+            display: flex; justify-content: flex-end; gap: 10px;
+            padding: 16px 24px; border-top: 1px solid #f3f4f6;
+        }
+        .gti-ue-delete-footer button {
+            padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+            cursor: pointer; font-family: inherit; transition: all 0.15s;
+        }
+        .gti-ue-delete-cancel {
+            border: 1px solid #e5e7eb; background: #fff; color: #374151;
+        }
+        .gti-ue-delete-cancel:hover { background: #f9fafb; }
+        .gti-ue-delete-confirm {
+            border: none; background: #dc2626; color: #fff; font-weight: 600;
+        }
+        .gti-ue-delete-confirm:hover { background: #b91c1c; }
+        .gti-ue-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* ====== Toast Notification ====== */
+        .gti-ue-toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: 5000;
+            padding: 14px 20px; border-radius: 10px; font-size: 13px; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 10px;
+            transform: translateY(120%); opacity: 0; transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .gti-ue-toast.show { transform: translateY(0); opacity: 1; }
+        .gti-ue-toast.success { background: #059669; color: #fff; }
+        .gti-ue-toast.error { background: #991b1b; color: #fff; }
+        .gti-ue-toast.warning { background: #92400e; color: #fff; }
     </style>
 </head>
 <body class="gti-body">
@@ -760,6 +836,9 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
                                                     <button type="button" class="gti-ue-action-item" onclick="updateStatus(<?php echo esc_attr($req->id); ?>, 'rejected')">
                                                         <i class="fas fa-times"></i> Mark Rejected
                                                     </button>
+                                                    <button type="button" class="gti-ue-action-item delete" onclick="openDeleteModal(<?php echo esc_attr($req->id); ?>, '<?php echo esc_js($req->equipment_name); ?>', '<?php echo esc_js($req->customer_name); ?>')">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
                                                 </div>
                                             </div>
                                         </td>
@@ -962,6 +1041,39 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
         </main>
     </div>
 
+    <!-- ====== Delete Confirmation Modal ====== -->
+    <div class="gti-ue-delete-overlay" id="gtiDeleteOverlay">
+        <div class="gti-ue-delete-modal">
+            <div class="gti-ue-delete-header">
+                <div class="gti-ue-delete-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="gti-ue-delete-header-text">
+                    <h3>Delete Sell Request</h3>
+                    <p>This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="gti-ue-delete-body">
+                <div class="gti-ue-delete-eq-info">
+                    <div class="gti-ue-delete-eq-thumb" id="delete-eq-thumb"><i class="fas fa-handshake"></i></div>
+                    <div>
+                        <div class="gti-ue-delete-eq-name" id="delete-eq-name">—</div>
+                        <div class="gti-ue-delete-eq-code" id="delete-eq-code">—</div>
+                    </div>
+                </div>
+                <div class="gti-ue-delete-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Sell request will be permanently removed from the system. This data cannot be recovered.</span>
+                </div>
+            </div>
+            <div class="gti-ue-delete-footer">
+                <button class="gti-ue-delete-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="gti-ue-delete-confirm" id="gti-delete-confirm-btn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== Toast ====== -->
+    <div class="gti-ue-toast" id="gtiUeToast"></div>
+
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Sidebar collapse
@@ -1032,9 +1144,20 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
             closeDetailDrawer();
         });
 
-        // Close drawer on Escape key
+        // Delete modal: confirm button + backdrop click
+        document.getElementById('gti-delete-confirm-btn').addEventListener('click', handleDeleteConfirm);
+        document.getElementById('gtiDeleteOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteModal();
+        });
+
+        // Close drawer / delete modal on Escape key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeDetailDrawer();
+            if (e.key !== 'Escape') return;
+            if (document.getElementById('gtiDeleteOverlay').classList.contains('show')) {
+                closeDeleteModal();
+            } else {
+                closeDetailDrawer();
+            }
         });
 
         // More actions dropdown toggle
@@ -1218,6 +1341,78 @@ $conditions = $wpdb->get_col("SELECT DISTINCT equipment_condition FROM {$table_n
         document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) {
             d.classList.remove('show');
         });
+    }
+
+    // ====== Delete Sell Request — modal + toast ======
+    var _deleteSellId = null;
+
+    function openDeleteModal(sellId, equipmentName, customer) {
+        _deleteSellId = sellId;
+        document.getElementById('delete-eq-name').textContent = equipmentName || '—';
+        document.getElementById('delete-eq-code').textContent = customer || '—';
+
+        var confirmBtn = document.getElementById('gti-delete-confirm-btn');
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+
+        document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) {
+            d.classList.remove('show');
+        });
+        document.getElementById('gtiDeleteOverlay').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('gtiDeleteOverlay').classList.remove('show');
+        _deleteSellId = null;
+    }
+
+    function handleDeleteConfirm() {
+        if (!_deleteSellId) return;
+        var confirmBtn = document.getElementById('gti-delete-confirm-btn');
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+        var deletedId = _deleteSellId;
+        var formData = new FormData();
+        formData.append('action', 'gti_delete_sell_request');
+        formData.append('id', deletedId);
+        formData.append('nonce', gtiAjax.nonce);
+
+        fetch(gtiAjax.ajaxurl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+            if (res.success) {
+                closeDeleteModal();
+                showUeToast(res.data?.message || 'Sell request deleted', 'success');
+                var row = document.querySelector('tr[data-sell-id="' + deletedId + '"]');
+                if (row) {
+                    row.style.transition = 'opacity 0.3s, transform 0.3s';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(function() { row.remove(); }, 350);
+                }
+            } else {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+                showUeToast(res.data?.message || 'Failed to delete sell request', 'error');
+            }
+        })
+        .catch(function() {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            showUeToast('An error occurred while deleting', 'error');
+        });
+    }
+
+    function showUeToast(message, type) {
+        var toast = document.getElementById('gtiUeToast');
+        toast.className = 'gti-ue-toast ' + (type || 'success');
+        toast.innerHTML = '<i class="fas ' + (type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i> ' + message;
+        toast.classList.add('show');
+        setTimeout(function() { toast.classList.remove('show'); }, 3500);
     }
 
     // Contact customer action
