@@ -50,6 +50,8 @@ $team          = array();
 $editable_roles = array();
 
 if ($can_list_users) {
+    // get_editable_roles() is admin-only; this template runs on the front end.
+    require_once ABSPATH . 'wp-admin/includes/user.php';
     $editable_roles = get_editable_roles();
 
     $team_users = get_users(array('orderby' => 'display_name', 'number' => 200));
@@ -435,7 +437,6 @@ if ($can_list_users) {
                     <a href="<?php echo esc_url(gti_dashboard_url('request-equipment')); ?>" class="gti-nav-item"><i class="fas fa-file-alt"></i><span>Request Equipment</span></a>
                     <a href="<?php echo esc_url(gti_dashboard_url('request-quotation')); ?>" class="gti-nav-item"><i class="fas fa-clipboard-list"></i><span>Request Quotation</span></a>
                     <a href="<?php echo esc_url(gti_dashboard_url('sell-equipment')); ?>" class="gti-nav-item"><i class="fas fa-handshake"></i><span>Sell Equipment</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('contact-messages')); ?>" class="gti-nav-item"><i class="fas fa-envelope"></i><span>Contact Messages</span></a>
                 </div>
 
                 <div class="gti-nav-group">
@@ -448,7 +449,6 @@ if ($can_list_users) {
                 <div class="gti-nav-group">
                     <div class="gti-nav-section">SYSTEM</div>
                     <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-nav-item active"><i class="fas fa-user-shield"></i><span>Users</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('website-settings')); ?>" class="gti-nav-item"><i class="fas fa-sliders-h"></i><span>Website Settings</span></a>
                     <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-nav-item"><i class="fas fa-history"></i><span>Activity Log</span></a>
                 </div>
             </nav>

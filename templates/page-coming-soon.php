@@ -78,7 +78,6 @@ $is_equipment_child = in_array($page_slug, ['rental-equipment']);
                     <a href="<?php echo esc_url(gti_dashboard_url('request-equipment')); ?>" class="gti-nav-item<?php echo $page_slug === 'request-equipment' ? ' active' : ''; ?>"><i class="fas fa-file-alt"></i><span>Request Equipment</span></a>
                     <a href="<?php echo esc_url(gti_dashboard_url('request-quotation')); ?>" class="gti-nav-item<?php echo $page_slug === 'request-quotation' ? ' active' : ''; ?>"><i class="fas fa-clipboard-list"></i><span>Request Quotation</span></a>
                     <a href="<?php echo esc_url(gti_dashboard_url('sell-equipment')); ?>" class="gti-nav-item<?php echo $page_slug === 'sell-equipment' ? ' active' : ''; ?>"><i class="fas fa-handshake"></i><span>Sell Equipment</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('contact-messages')); ?>" class="gti-nav-item<?php echo $page_slug === 'contact-messages' ? ' active' : ''; ?>"><i class="fas fa-envelope"></i><span>Contact Messages</span></a>
                 </div>
 
                 <div class="gti-nav-group">
@@ -91,7 +90,6 @@ $is_equipment_child = in_array($page_slug, ['rental-equipment']);
                 <div class="gti-nav-group">
                     <div class="gti-nav-section">SYSTEM</div>
                     <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-nav-item<?php echo $page_slug === 'users' ? ' active' : ''; ?>"><i class="fas fa-user-shield"></i><span>Users</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('website-settings')); ?>" class="gti-nav-item<?php echo $page_slug === 'website-settings' ? ' active' : ''; ?>"><i class="fas fa-sliders-h"></i><span>Website Settings</span></a>
                     <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-nav-item<?php echo $page_slug === 'activity-log' ? ' active' : ''; ?>"><i class="fas fa-history"></i><span>Activity Log</span></a>
                 </div>
             </nav>
