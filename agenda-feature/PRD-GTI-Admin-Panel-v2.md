@@ -22,6 +22,7 @@ Dokumen ini menspesifikasikan **apa yang sudah jalan**, **apa yang belum**, dan 
 10. [Non-Functional Requirements](#10-non-functional-requirements)
 11. [Rencana Implementasi](#11-rencana-implementasi)
 12. [Acceptance Test Scenarios](#12-acceptance-test-scenarios)
+13. [Refactoring — Komponen & Efisiensi Kode](#13-refactoring--komponen--efisiensi-kode)
 
 ---
 
@@ -1092,7 +1093,29 @@ Ini bukan kosmetik: bug seperti A-01 muncul justru karena logika yang sama disal
 
 Capability 3 lapis · sembunyikan menu sidebar sesuai role · indeks DB · uji beban 5.000 baris · uji email dengan SMTP nyata · uji lampiran 10 MB · uji cross-browser.
 
-**Total estimasi: ~10 hari kerja.**
+### 11.1 Penjadwalan gabungan dengan refactoring
+
+Refactoring (§13) **tidak dikerjakan terpisah di akhir** — sebagian harus mendahului pekerjaan fitur, karena Fase 3 menambahkan modal dan drawer baru ke 3 halaman sekaligus. Kalau layout belum dikomponenkan, modal-modal itu akan ditulis 3× dan langsung menjadi utang baru.
+
+| Urutan | Tahap | Hari | Alasan penempatan |
+|---|---|---|---|
+| 1 | **Fase 0** — perbaikan blocking | 0,5 | 404 & data-loss harus berhenti hari ini |
+| 2 | **R6a** — hapus dead code (`admin/`, `roles.php`) | 0,5 | Mengecilkan area kerja sebelum refactor besar |
+| 3 | **R2** — ekstraksi CSS | 1 | Risiko rendah, hasil mudah diverifikasi |
+| 4 | **R1** — layout components | 2 | **Prasyarat Fase 3**; sekalian menutup B-06, B-07, B-09, R-09, §9.4 lapis 1 |
+| 5 | **Fase 1** — fondasi (schema, mailer, status machine, attachment, assignment) | 2 | Butuh capability & layout dari R1 |
+| 6 | **R3** — ekstraksi & modularisasi JS | 2 | **Prasyarat Fase 3**; modal upload/email hanya ditulis 1× |
+| 7 | **Fase 2** — shortcode & intake | 1,5 | Independen; bisa paralel bila ada 2 developer |
+| 8 | **R4** — komponen render PHP | 1 | Dipakai langsung oleh Fase 3 & 4 |
+| 9 | **Fase 3** — inbox (3 halaman) | 3 | Kini memakai komponen bersama, bukan salinan |
+| 10 | **Fase 4** — management & system | 2 | idem |
+| 11 | **R5** — repository | 1,5 | Risiko tertinggi; setelah fitur stabil, 1 entity per PR |
+| 12 | **R6b** — pecah god class AJAX | 1 | Pemindahan fungsi, tanda tangan tetap |
+| 13 | **Fase 5** — pengerasan | 1 | Penutup |
+
+**Total estimasi: ~19 hari kerja** (10 hari fitur + 9 hari refactor).
+
+> Jika waktu terbatas dan harus memilih: **Fase 0 → R6a → R2 → R1 → Fase 1 → Fase 3** adalah jalur minimum yang membuat alur bisnis berjalan tanpa menambah utang baru. R4–R6b bisa menyusul, R3 sebaiknya jangan dilewati kalau Fase 3 dikerjakan.
 
 ---
 
@@ -1150,6 +1173,493 @@ Capability 3 lapis · sembunyikan menu sidebar sesuai role · indeks DB · uji b
 
 ---
 
+## 13. Refactoring — Komponen & Efisiensi Kode
+
+### 13.1 Kenapa ini wajib, bukan opsional
+
+Refactoring di sini **bukan kosmetik**. Duplikasi kode adalah penyebab langsung beberapa bug di §3:
+
+- **A-01** (pagination 404) terjadi karena blok pagination ~45 baris disalin ke **9 template**. Saat parameter `paged` diganti `page_num`, hanya 6 file yang ikut diperbaiki; 3 sisanya tertinggal dan patah.
+- **A-02** (data-loss form rental) terjadi karena form Add Equipment disalin dari used ke rental. Perbaikan duplikat `name=` hanya diterapkan di file sumber, salinannya tidak.
+- **B-06/B-07/B-08** (badge notifikasi `3`, `Super Admin`, tanggal hardcoded) muncul di 17–18 file karena header disalin utuh ke setiap template.
+
+Selama pola salin-tempel ini dipertahankan, **setiap perbaikan berikutnya akan punya risiko yang sama**: 1 bug diperbaiki di 1 tempat, 8 salinan lain tetap rusak.
+
+### 13.2 Kondisi terukur saat ini
+
+Diukur pada `main` @ `03a3a6f`:
+
+| Metrik | Angka |
+|---|---|
+| Total baris `templates/page-*.php` | **21.164** |
+| Total baris PHP di theme | 38.304 |
+| **CSS inline** di dalam `<style>` template | **4.175 baris** |
+| Template dengan >400 baris CSS inline | 6 file (request-quotation 568, request-equipment 532, sell-equipment 483, used 455, rental 443, spare-parts 377) |
+| Template dengan >300 baris JS inline | 6 file (rental-equipment **1.416**, used-equipment 906, spare-parts 543, …) |
+| Blok `<head>` identik disalin | 116 baris × **18 file** |
+| Blok sidebar identik disalin | 56 baris × **18 file** |
+| Blok header identik disalin | 28 baris × **18 file** |
+| Blok pagination disalin | ~45 baris × **9 file** |
+| `formatDateID()` didefinisikan ulang | **5 file** |
+| `showUeToast()` didefinisikan ulang | **6 file** |
+| `closeDetailDrawer()` didefinisikan ulang | **8 file** |
+| Logika action-dropdown + positioning | **8 file** |
+| CSS modal delete | **6 file** |
+| CSS drawer (~200 baris) | **9 file** |
+| Logika sidebar collapse (localStorage) | **16 file** |
+| URL logo hardcode `http://global-tractors.test/…` | **18 file** |
+| `<small>Super Admin</small>` hardcode | **17 file** |
+| Font Awesome + Google Fonts via `<link>` mentah | **18 file** |
+
+**Ironi terbesar:**
+- `template-parts/dashboard-sidebar.php` **sudah ada** — tapi `get_template_part()` hanya dipanggil **1×** di seluruh kodebase. 18 template menyalin sidebar secara manual.
+- `assets/js/dashboard.js` **sudah ada** dan berisi logika collapse — tapi hanya di-load oleh **1 template**. 16 template menulis ulang logika yang sama secara inline.
+- `assets/css/dashboard.css` (23 KB) di-load oleh semua template, tapi 4.175 baris CSS tetap ditulis inline di atasnya.
+
+Infrastruktur untuk berhenti menyalin **sudah tersedia dan tidak dipakai**.
+
+### 13.3 Utang arsitektur
+
+| # | Temuan | Detail |
+|---|---|---|
+| **R-01** | **Dua arsitektur paralel** | `inc/` (gaya fungsional, 44 file) dan `includes/` (gaya OOP, 8 class). Keduanya aktif, tanggung jawabnya tumpang tindih. |
+| **R-02** | **Dua sistem role** | `inc/setup/roles.php` mendaftarkan `gti_editor`; `includes/class-gti-roles.php` mendaftarkan 4 role GTI. Keduanya jalan, tidak saling tahu. |
+| **R-03** | **Tiga lapis akses DB** | `inc/db/queries.php`, `inc/db/schema.php`, dan `includes/class-gti-database.php` — plus query `$wpdb` mentah langsung di dalam template. |
+| **R-04** | **God class AJAX** | `includes/class-gti-ajax.php` = **1.279 baris**, 21 handler untuk 8 domain berbeda dalam satu file. |
+| **R-05** | **Dead code** | `admin/views/` = **2.867 baris** di 10 file, **nol referensi** dari mana pun (`grep -rn "admin/views"` di luar folder itu sendiri: 0 hasil). |
+| **R-06** | **Business logic di dalam template** | `page-customers.php` mendefinisikan `gti_fmt_currency()`, `gti_fmt_date()`, `gti_customer_initials()` di scope global; `page-customer-detail.php` mendefinisikan 6 fungsi lagi. Fatal error kalau template ter-include dua kali. |
+| **R-07** | **Query dirakit di template** | Setiap halaman list merakit `WHERE` + `prepare()` sendiri (~40 baris). Inilah sumber inkonsistensi `prepare()` di §10.1. |
+| **R-08** | **Cache-busting manual** | `?v=<?php echo GTI_VERSION; ?>` harus di-bump manual; sebagian aset tidak diberi versi sama sekali. |
+| **R-09** | **Deploy blocker** | URL logo `http://global-tractors.test/wp-content/uploads/...` hardcode di 18 file. Begitu domain produksi berbeda, **logo mati di seluruh dashboard**. |
+
+### 13.4 Non-goals — yang TIDAK boleh dilakukan
+
+Refactor ini harus mengurangi kode, bukan menambah lapisan baru. Secara eksplisit **dilarang** dalam scope ini:
+
+| ❌ Jangan | Alasan |
+|---|---|
+| React / Vue / Alpine.js | Vanilla JS yang ada sudah cukup; menambah framework = menambah build step + kurva belajar tanpa manfaat yang bisa diukur |
+| Build step (npm / webpack / vite / Sass) | Theme ini di-deploy lewat file copy. Build step menambah satu cara baru untuk gagal di produksi |
+| Rewrite PSR-4 / Composer / namespace | Fungsi WordPress bergaya prosedural sudah idiomatik; rewrite = risiko tinggi, manfaat nol untuk pengguna |
+| Tailwind / Bootstrap | Design system sudah jadi dan konsisten (§7 PRD v1); ganti framework CSS = menulis ulang seluruh UI |
+| Custom Post Type untuk equipment | Tabel custom sudah berisi data produksi; migrasi ke CPT = risiko besar tanpa manfaat |
+| Template engine (Twig/Blade) | `get_template_part()` sudah menyelesaikan masalah yang sama, tanpa dependency |
+| **Perubahan visual apa pun** | Refactor ini wajib **pixel-identical**. Kalau tampilan berubah, itu bug, bukan fitur |
+
+Aturannya sederhana: **setiap PR refactor harus menghapus lebih banyak baris daripada yang ditambahkan**, dan tampilan tidak boleh berubah sedikit pun.
+
+### 13.5 Target terukur
+
+| Metrik | Sekarang | Target | Cara ukur |
+|---|---|---|---|
+| Baris `templates/page-*.php` | 21.164 | **≤ 12.000** (−43%) | `cat templates/page-*.php \| wc -l` |
+| CSS inline di template | 4.175 | **0** | `for f in templates/page-*.php; do awk '/<style>/,/<\/style>/' $f; done \| wc -l` |
+| JS inline di template | ~5.500 | **≤ 1.500** (hanya glue spesifik halaman) | idem untuk `<script>` |
+| Definisi fungsi JS duplikat | 19 | **0** | `grep -c "function formatDateID\|function showUeToast\|function closeDetailDrawer" templates/*.php` |
+| Blok pagination duplikat | 9 | **1** | `grep -l "gti-ue-page-btn" templates/*.php \| wc -l` → hanya template-part |
+| Dead code | 2.867 baris | **0** | folder `admin/` dihapus |
+| File berubah untuk menambah 1 menu sidebar | 18 | **1** | manual |
+| File berubah untuk memperbaiki 1 bug pagination | 9 | **1** | manual |
+| Baris PHP total | 38.304 | **≤ 27.000** | `find . -name '*.php' -not -path './.git/*' -exec cat {} + \| wc -l` |
+
+### 13.6 R1 — Layout Components (dampak terbesar)
+
+**Masalah:** 200 baris (`<head>` + sidebar + header) × 18 file = **±3.600 baris duplikat**.
+
+**Solusi:** dua fungsi layout, bukan 18 salinan.
+
+```
+template-parts/dashboard/
+├── head.php            ← <head> + enqueue (menggantikan 116 baris × 18)
+├── sidebar.php         ← sidebar dari array menu (56 × 18)
+├── header.php          ← topbar: judul, tanggal, notifikasi, user menu (28 × 18)
+├── footer.php          ← penutup + script
+├── drawer.php          ← shell drawer detail (parameterized)
+├── modal-delete.php    ← modal konfirmasi hapus
+├── modal-email.php     ← modal Compose Email (§6.6.4)
+├── modal-upload.php    ← modal upload dokumen (§6.5.4 / §6.6.3)
+├── toast.php           ← container toast
+├── stat-cards.php      ← baris stat card
+├── pagination.php      ← blok pagination (menggantikan 9 salinan)
+├── table-empty.php     ← empty state tabel
+└── action-menu.php     ← dropdown tiga-titik per baris
+```
+
+Helper di `inc/helpers/layout-helpers.php`:
+
+```php
+/**
+ * Membuka layout dashboard: doctype, head, sidebar, header, pembuka <main>.
+ * $args: page (slug), title, subtitle, body_class, extra_css[], extra_js[]
+ */
+function gti_dashboard_open(array $args) { /* ... */ }
+
+/** Menutup </main>, merender modal & toast bersama, memuat footer script. */
+function gti_dashboard_close(array $args = []) { /* ... */ }
+```
+
+**Sebelum** — `page-customers.php` baris 100–310 (±210 baris boilerplate):
+```php
+<!DOCTYPE html><html …><head>… 116 baris …</head>
+<body class="gti-body"><div class="gti-wrapper">
+  <aside class="gti-sidebar">… 56 baris …</aside>
+  <main class="gti-main"><header …>… 28 baris …</header>
+```
+
+**Sesudah** — 6 baris:
+```php
+<?php
+gti_dashboard_open([
+    'page'      => 'customers',
+    'title'     => 'Customers',
+    'subtitle'  => 'Manage customer data and relationships 👥',
+    'extra_css' => ['dashboard-table', 'dashboard-drawer'],
+]);
+```
+
+Penutup halaman:
+```php
+<?php
+gti_dashboard_close([
+    'modals' => ['delete', 'email'],
+    'js'     => ['customers'],
+]);
+```
+
+**Menu sidebar sebagai data**, bukan HTML — `inc/helpers/dashboard-menu.php`:
+
+```php
+function gti_dashboard_menu() {
+    return [
+        ['type' => 'item',    'slug' => '',                  'label' => 'Dashboard',        'icon' => 'fa-th-large'],
+        ['type' => 'section', 'label' => 'EQUIPMENT'],
+        ['type' => 'parent',  'label' => 'Equipment', 'icon' => 'fa-truck', 'cap' => 'gti_manage_equipment', 'children' => [
+            ['slug' => 'used-equipment',   'label' => 'Used Equipment'],
+            ['slug' => 'rental-equipment', 'label' => 'Rental Equipment'],
+        ]],
+        ['type' => 'item',    'slug' => 'spare-parts',       'label' => 'Spare Parts',      'icon' => 'fa-cog',           'cap' => 'gti_manage_spare_parts'],
+        ['type' => 'section', 'label' => 'REQUEST & INQUIRY'],
+        ['type' => 'item',    'slug' => 'request-equipment', 'label' => 'Request Equipment','icon' => 'fa-file-alt',      'cap' => 'gti_manage_requests', 'badge' => 'requests_new'],
+        ['type' => 'item',    'slug' => 'request-quotation', 'label' => 'Request Quotation','icon' => 'fa-clipboard-list','cap' => 'gti_manage_quotations','badge' => 'quotations_new'],
+        ['type' => 'item',    'slug' => 'sell-equipment',    'label' => 'Sell Equipment',   'icon' => 'fa-handshake',     'cap' => 'gti_manage_requests'],
+        // … MANAGEMENT & SYSTEM
+    ];
+}
+```
+
+Sekali kerjakan, langsung menyelesaikan **tiga** masalah lain:
+- **§9.4 lapis 1** — item tanpa capability otomatis disembunyikan (`'cap' =>`).
+- **B-06** — badge notifikasi diisi dari `'badge' =>` (count status `new`), bukan angka `3` hardcoded.
+- Menambah/mengubah menu = edit **1 file**, bukan 18.
+
+**R-09 (deploy blocker)** ikut selesai di `head.php`/`sidebar.php`: URL logo diambil dari `get_theme_mod('gti_logo')` dengan fallback `GTI_CHILD_URL . '/assets/img/logo.png'` — tidak ada lagi `global-tractors.test`.
+
+**Perkiraan pengurangan: ±4.000 baris.**
+
+### 13.7 R2 — Ekstraksi CSS
+
+4.175 baris CSS inline dipindahkan ke file, dipecah per tanggung jawab:
+
+| File baru | Isi | Sumber |
+|---|---|---|
+| `assets/css/dashboard-layout.css` | wrapper, sidebar, header, main, responsive | inline di 18 template |
+| `assets/css/dashboard-table.css` | tabel, kolom, badge status, action menu, pagination | 9 template |
+| `assets/css/dashboard-drawer.css` | drawer in-flow/fixed/bottom-sheet, section, row, timeline, footer | 9 template (~200 baris masing-masing) |
+| `assets/css/dashboard-modal.css` | modal delete, modal upload, modal email, overlay, animasi | 6 template |
+| `assets/css/dashboard-toast.css` | toast success/error/warning | 6 template |
+| `assets/css/dashboard-forms.css` | field, grid, stepper, upload area | add-equipment.css (dirapikan) |
+
+**Aturan:**
+- CSS di-enqueue lewat `inc/setup/enqueue.php`, bukan `<link>` mentah di `<head>`.
+- Versi otomatis: `filemtime()`, bukan `GTI_VERSION` manual (menyelesaikan R-08).
+  ```php
+  wp_enqueue_style('gti-dashboard-drawer',
+      GTI_CHILD_URL . '/assets/css/dashboard-drawer.css',
+      ['gti-dashboard'],
+      filemtime(GTI_CHILD_DIR . '/assets/css/dashboard-drawer.css'));
+  ```
+- Font Awesome & Google Fonts di-enqueue sekali di `head.php`, tidak diulang 18×. Pertimbangkan self-host font agar tidak bergantung CDN pihak ketiga.
+- **Token warna** dipusatkan sebagai CSS custom property di `:root` (`--gti-primary: #F5A623` dst.). Saat ini `#F5A623` ditulis literal **puluhan kali** di file berbeda; ganti warna brand = cari-ganti di seluruh repo.
+
+**Perkiraan pengurangan: ±4.100 baris dari template** (pindah, bukan hilang — tapi menjadi 1 salinan, bukan 6–9).
+
+### 13.8 R3 — Ekstraksi & modularisasi JS
+
+**File baru `assets/js/dashboard-ui.js`** — satu namespace, semua perilaku UI bersama:
+
+```js
+window.GTI = window.GTI || {};
+
+GTI.ui = {
+  toast(message, type)                  // menggantikan 6 salinan showUeToast()
+  confirm(opts)                         // Promise — menggantikan confirm() native
+  drawer: { open(id), close(id), bind() }   // menggantikan 8 salinan
+  dropdown: { bindAll() }               // action menu + positioning, 8 salinan
+  modal: { open(id), close(id), bindAll() }
+  sidebar: { init() }                   // collapse + localStorage, 16 salinan
+  form: { serialize(f), validate(f), lockButton(btn) }
+};
+
+GTI.fmt = {
+  dateID(str)      // 5 salinan
+  currencyIDR(n)   // beberapa salinan
+  number(n)
+};
+
+GTI.api = {
+  post(action, data, opts)   // wrapper fetch: inject nonce, parse JSON,
+                             // tangani non-JSON, tampilkan toast error otomatis
+};
+```
+
+`GTI.api.post()` menyelesaikan masalah nyata: saat ini setiap template menulis blok `fetch()` sendiri, dan penanganan response non-JSON hanya ada di **satu** tempat (`page-add-spare-part.php:541-546`). Di tempat lain, PHP warning yang bocor ke output membuat `r.json()` throw dan UI diam tanpa pesan.
+
+**Per halaman**, sisakan hanya glue spesifik di `assets/js/pages/{slug}.js`:
+```
+assets/js/pages/
+├── used-equipment.js      ← edit modal, auto-code, publish
+├── rental-equipment.js
+├── spare-parts.js
+├── request-equipment.js   ← upload proposal, timeline
+├── request-quotation.js   ← create quotation, assign PIC
+├── sell-equipment.js      ← WA link, request invoice
+├── customers.js
+├── media-library.js
+├── news-articles.js
+└── users.js
+```
+
+Dimuat via `gti_dashboard_close(['js' => ['request-quotation']])`, dengan `wp_localize_script()` untuk `gtiAjax` — menggantikan blok `var gtiAjax = {...}` inline yang saat ini ditulis ulang di setiap template (dan di 2 tempat memakai pola `var gtiAjax = gtiAjax || {…}` yang rapuh).
+
+**Catatan khusus:** `page-rental-equipment.php` punya **1.416 baris JS inline** — terbesar di kodebase, dan sebagian besar adalah salinan dari `page-used-equipment.php` (906 baris). Keduanya harus digabung menjadi satu `equipment-page.js` yang di-parameterisasi lewat `data-type="used|rental"`. Ini juga mencegah A-02 terulang.
+
+**Perkiraan pengurangan: ±4.000 baris.**
+
+### 13.9 R4 — Komponen render PHP
+
+Menghapus pengulangan markup yang dirakit tangan di setiap halaman list.
+
+```php
+// inc/helpers/render-helpers.php
+
+gti_render_stat_cards(array $cards)
+// [['label'=>'New','value'=>12,'icon'=>'fa-plus-circle','tone'=>'available'], …]
+
+gti_render_toolbar(array $args)
+// search + filter select + tombol reset + tombol aksi kanan
+
+gti_render_pagination(array $args)
+// $args: total, per_page, current, base_url, query_params
+// SATU implementasi — parameter halaman dikunci ke 'page_num' di sini,
+// sehingga A-01 tidak mungkin terulang
+
+gti_render_status_badge($entity_type, $status)
+// label + class diambil dari gti_status_map() (§5.1) — bukan if/elseif
+// yang saat ini disalin di setiap template
+
+gti_render_action_menu(array $items)
+
+gti_render_empty_state($icon, $title, $description)
+
+gti_render_table(array $columns, array $rows, array $args)
+// opsional — untuk halaman list yang strukturnya seragam
+```
+
+`gti_render_status_badge()` menyelesaikan inkonsistensi nyata: `page-request-equipment.php:864-877` memetakan status ke class lewat rantai `if/elseif` dengan nama class katalog (`available`/`reserved`/`sold`), sementara `page-sell-equipment.php:818` memakai konvensi berbeda (`status-{key}`). Dua konvensi untuk hal yang sama, di dua file bersebelahan.
+
+**Perkiraan pengurangan: ±1.200 baris.**
+
+### 13.10 R5 — Lapisan data terpadu
+
+**Masalah (R-07):** setiap halaman list merakit `WHERE` + `prepare()` + count + fetch sendiri (~40 baris), dengan kualitas yang tidak seragam.
+
+**Solusi** — `inc/db/repository.php`:
+
+```php
+/**
+ * Query list generik dengan filter, search, scoping PIC, dan pagination.
+ *
+ * @param string $entity  equipment|spare_parts|requests|quotations|customers|sell_requests
+ * @param array  $args    search, filters[], page, per_page, orderby, order
+ * @return array{items: array, total: int, pages: int, page: int}
+ */
+function gti_query_list($entity, array $args = []) { /* ... */ }
+
+function gti_get_row($entity, $id);
+function gti_save_row($entity, array $data, $id = 0);
+function gti_delete_row($entity, $id, $soft = true);
+function gti_count_by_status($entity);   // 1 query GROUP BY, bukan 4-6 COUNT(*)
+```
+
+Definisi field yang boleh difilter/dicari dideklarasikan sekali per entity, sehingga:
+- `prepare()` **selalu** dipakai (menutup temuan §10.1),
+- scoping PIC (§5.4) diterapkan otomatis dan konsisten antara list, count, dan stat card,
+- `gti_count_by_status()` menggantikan pola 4–6 `COUNT(*)` terpisah di `page-customers.php:70-73` (§10.2).
+
+Halaman list menyusut dari ~40 baris query menjadi:
+```php
+$result = gti_query_list('quotations', [
+    'search'   => $search,
+    'filters'  => ['status' => $status_filter, 'sales_pic' => $pic_filter],
+    'page'     => $paged,
+    'per_page' => 10,
+]);
+```
+
+`includes/class-gti-database.php` dipensiunkan setelah semua pemanggil dipindah (R-03).
+
+**Perkiraan pengurangan: ±800 baris.**
+
+### 13.11 R6 — Konsolidasi arsitektur & pembersihan
+
+| Tugas | Aksi |
+|---|---|
+| **R-05 dead code** | Hapus folder `admin/` (**2.867 baris**, nol referensi). Verifikasi dengan `grep -rn "admin/views" --include="*.php" .` sebelum hapus. |
+| **R-02 dua sistem role** | Hapus `inc/setup/roles.php` (`gti_editor` tidak dipakai di mana pun). `includes/class-gti-roles.php` menjadi satu-satunya sumber. |
+| **R-04 god class AJAX** | Pecah `class-gti-ajax.php` (1.279 baris) menjadi `inc/ajax/admin/{equipment,spare-parts,requests,quotations,sell-requests,customers,users}.php`. Setiap file memakai `gti_ajax_guard($cap)` yang menyeragamkan nonce + capability + sanitasi (§10.1). |
+| **R-06 logic di template** | Pindahkan `gti_fmt_currency()`, `gti_fmt_date()`, `gti_customer_initials()`, `gti_cd_*()` ke `inc/helpers/format-helpers.php` dengan guard `function_exists`. |
+| **R-03 lapisan DB** | Setelah R5, hapus `inc/db/queries.php` & `includes/class-gti-database.php`; sisakan `inc/db/repository.php` + `class-gti-activator.php` (schema/migrasi). |
+| **Template mati** | Cek `page-orders.php` (97 baris) — modul Orders tidak ada di navigasi. Hapus bila tidak dipakai. |
+| **Debug artefak** | Hapus `console.log` debug row-click/drawer (ditambahkan Sep 8 untuk diagnosis, tidak pernah dibersihkan). |
+
+**Perkiraan pengurangan: ±3.500 baris.**
+
+### 13.12 Struktur akhir yang dituju
+
+```
+global-tractors/
+├── functions.php                 ← bootstrap saja
+├── inc/
+│   ├── bootstrap.php
+│   ├── constants.php
+│   ├── helpers/                  ← url, format, layout, dashboard-menu, render, taxonomy
+│   ├── security/                 ← sanitize, nonce, rate-limit, capabilities, ajax-guard
+│   ├── db/
+│   │   ├── repository.php        ← 🆕 satu lapisan data
+│   │   ├── activity-log.php
+│   │   └── customers-sync.php
+│   ├── modules/                  ← 🆕 domain logic
+│   │   ├── status-machine.php
+│   │   ├── attachments.php
+│   │   ├── mailer.php
+│   │   ├── assignment.php
+│   │   ├── email-templates/
+│   │   ├── news-articles.php
+│   │   └── media-library.php
+│   ├── ajax/
+│   │   ├── public/               ← login, register, filter, quotation
+│   │   └── admin/                ← 🆕 per domain, bukan 1 god class
+│   ├── setup/                    ← rewrite, enqueue, install
+│   └── shortcodes/
+├── includes/
+│   ├── class-gti-activator.php   ← schema + migrasi
+│   ├── class-gti-roles.php       ← satu-satunya sumber role
+│   └── class-gti-helpers.php
+├── template-parts/dashboard/     ← 🆕 13 komponen
+├── templates/                    ← tipis: query + markup spesifik halaman
+└── assets/
+    ├── css/  (layout, table, drawer, modal, toast, forms, + publik)
+    └── js/   (dashboard-ui.js + pages/*.js + publik)
+```
+
+### 13.13 Urutan & strategi eksekusi
+
+**Refactor R1–R3 harus dikerjakan SEBELUM Fase 3 (Inbox).** Alasannya konkret: Fase 3 menambahkan modal upload, modal email, dan drawer baru ke **3 halaman**. Kalau layout belum dikomponenkan, ketiga modal itu akan ditulis 3× — memperbesar utang yang sedang kita bayar, dan menjamin bug yang sama muncul 3×.
+
+Urutan aman (dari risiko terendah):
+
+| Urutan | Tahap | Risiko | Kenapa urutan ini |
+|---|---|---|---|
+| 1 | **R6a** — hapus `admin/` + `inc/setup/roles.php` | Sangat rendah | Dead code; menghapusnya mengecilkan area yang harus dipikirkan di tahap berikutnya |
+| 2 | **R2** — ekstraksi CSS | Rendah | Murni pemindahan; hasil visual mudah diverifikasi |
+| 3 | **R1** — layout components | Sedang | Menyentuh 18 file, tapi mekanis dan berulang |
+| 4 | **R3** — ekstraksi JS | Sedang | Butuh pengujian interaksi per halaman |
+| 5 | **R4** — komponen render PHP | Sedang | Tergantung R1 |
+| 6 | **R5** — repository | Tinggi | Menyentuh query; kerjakan paling akhir, satu entity per PR |
+| 7 | **R6b** — pecah god class AJAX | Sedang | Pemindahan fungsi, tanda tangan tidak berubah |
+
+**Aturan per PR:**
+- **Satu tahap, satu PR.** Jangan campur refactor dengan perubahan fitur — kalau tercampur, tidak ada yang bisa membedakan regresi refactor dari bug fitur baru.
+- **Migrasi bertahap.** Untuk R1, konversi 2–3 template per PR, bukan 18 sekaligus. Template lama dan baru bisa hidup berdampingan selama transisi.
+- **Baris terhapus > baris ditambah.** Cantumkan `git diff --stat` di deskripsi PR.
+- **Bukti visual.** Screenshot before/after untuk setiap halaman yang disentuh.
+
+### 13.14 Verifikasi regresi
+
+Karena refactor harus pixel-identical dan perilakunya tidak boleh berubah, siapkan **satu** skrip cek — bukan test suite penuh.
+
+`tests/refactor-check.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Cek invarian refactor. Keluar non-zero kalau ada regresi.
+set -u
+cd "$(dirname "$0")/.." || exit 1
+fail=0
+chk() { # nama, nilai_aktual, batas_maks
+  if [ "$2" -gt "$3" ]; then echo "FAIL $1: $2 (maks $3)"; fail=1
+  else echo "ok   $1: $2"; fi
+}
+
+inline_css=0
+for f in templates/page-*.php; do
+  inline_css=$((inline_css + $(awk '/<style>/,/<\/style>/' "$f" | wc -l)))
+done
+chk "CSS inline di template"        "$inline_css" 0
+chk "baris templates/"              "$(cat templates/page-*.php | wc -l)" 12000
+chk "salinan pagination"            "$(grep -l 'gti-ue-page-btn' templates/*.php | wc -l)" 0
+chk "salinan showUeToast()"         "$(grep -l 'function showUeToast' templates/*.php | wc -l)" 0
+chk "salinan formatDateID()"        "$(grep -l 'function formatDateID' templates/*.php | wc -l)" 0
+chk "salinan closeDetailDrawer()"   "$(grep -l 'function closeDetailDrawer' templates/*.php | wc -l)" 0
+chk "URL hardcode .test"            "$(grep -rl 'global-tractors.test' templates/ | wc -l)" 0
+chk "'Super Admin' hardcode"        "$(grep -l '<small>Super Admin</small>' templates/*.php | wc -l)" 0
+chk "query var 'paged'"             "$(grep -l "_GET\['paged'\]" templates/*.php | wc -l)" 0
+chk "alert()/confirm() native"      "$(grep -l 'alert(\|confirm(' templates/*.php | wc -l)" 0
+chk "console.log tersisa"           "$(grep -rc 'console.log' templates/*.php assets/js/ 2>/dev/null | grep -v ':0' | wc -l)" 0
+
+# name= duplikat dalam satu form (penyebab A-02)
+for f in templates/page-add-*.php; do
+  d=$(grep -o 'name="[a-z_]*"' "$f" | sort | uniq -d | wc -l)
+  chk "name= duplikat $(basename "$f")" "$d" 0
+done
+
+exit $fail
+```
+
+Jalankan sebelum setiap PR refactor di-merge. Angka batasnya diturunkan bertahap seiring tahap R1–R6 selesai — dimulai dari angka §13.2, berakhir di angka §13.5.
+
+**Cek manual per halaman yang disentuh** (tidak bisa diotomatiskan tanpa menambah tooling):
+1. Sidebar collapse tersimpan setelah reload
+2. Dropdown aksi terbuka pada posisi benar, termasuk di baris terakhir dekat tepi viewport
+3. Drawer: in-flow ≥1600px, slide-in <1600px, bottom-sheet ≤560px
+4. Escape menutup modal terlebih dahulu, drawer kemudian
+5. Toast muncul dan hilang setelah 3,5 detik
+6. Pagination halaman 2 dan 3 memuat data yang benar
+7. Filter + search + pagination bekerja bersamaan (parameter tidak saling hapus)
+
+### 13.15 Ringkasan dampak
+
+| Tahap | Fokus | Perkiraan baris berkurang | Hari |
+|---|---|---|---|
+| R6a | Hapus dead code | −2.900 | 0,5 |
+| R2 | Ekstraksi CSS | −4.100 dari template | 1 |
+| R1 | Layout components | −4.000 | 2 |
+| R3 | Ekstraksi & modularisasi JS | −4.000 | 2 |
+| R4 | Komponen render PHP | −1.200 | 1 |
+| R5 | Repository | −800 | 1,5 |
+| R6b | Pecah god class AJAX | −600 | 1 |
+| | **Total** | **≈ −17.600 baris kotor**<br>(**≈ −11.000 bersih** setelah file bersama) | **9** |
+
+**Manfaat yang bisa dirasakan langsung:**
+- Menambah menu sidebar: 18 file → **1 file**
+- Memperbaiki bug pagination: 9 file → **1 file**
+- Menambah halaman dashboard baru: ~800 baris → **~150 baris**
+- Ganti warna brand: cari-ganti di seluruh repo → **1 blok `:root`**
+- Ganti domain saat deploy: 18 file → **1 theme option**
+- Bug kelas A-01/A-02 (perbaikan tidak menyeluruh) menjadi **tidak mungkin terjadi secara struktural**
+
+---
+
 ## Lampiran A — Checklist Review Setiap PR
 
 - [ ] Tidak ada `name=` duplikat dalam satu form
@@ -1162,3 +1672,15 @@ Capability 3 lapis · sembunyikan menu sidebar sesuai role · indeks DB · uji b
 - [ ] Tidak ada `location.reload()` untuk perubahan yang bisa di-patch di DOM
 - [ ] Kolom baru punya entri migrasi di `class-gti-activator.php`
 - [ ] Tidak ada penulisan file debug di path produksi
+
+**Khusus refactor (§13):**
+
+- [ ] `tests/refactor-check.sh` lulus
+- [ ] `git diff --stat` menunjukkan baris terhapus > baris ditambah
+- [ ] Tidak ada CSS atau `<style>` baru di dalam template
+- [ ] Tidak ada fungsi JS yang didefinisikan ulang — pakai `GTI.ui.*` / `GTI.fmt.*`
+- [ ] Markup berulang dirender lewat `template-parts/dashboard/*` atau `gti_render_*()`
+- [ ] Query list lewat `gti_query_list()`, bukan `WHERE` rakitan tangan
+- [ ] Tidak ada URL, nama role, atau tanggal yang di-hardcode
+- [ ] Screenshot before/after dilampirkan; tampilan **tidak berubah sama sekali**
+- [ ] Tidak mencampur refactor dengan perubahan fitur dalam satu PR
