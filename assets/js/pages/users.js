@@ -291,3 +291,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 })();
+
+
+/**
+ * My Profile / System Users tabs (PRD §6.12 gap 1).
+ *
+ * The two sections used to be stacked on one page, so reaching the directory
+ * meant scrolling past the whole profile form.
+ */
+(function () {
+    'use strict';
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var tabs = document.querySelectorAll('#gti-users-tabs .gti-cd-tab');
+        if (!tabs.length) return;
+
+        function show(name) {
+            tabs.forEach(function (t) {
+                t.classList.toggle('active', t.dataset.tab === name);
+            });
+            document.querySelectorAll('.gti-cd-tab-content').forEach(function (panel) {
+                panel.style.display = panel.id === 'tab-' + name ? 'block' : 'none';
+            });
+            GTI.storage.set('gti-users-tab', name);
+        }
+
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function (e) {
+                e.preventDefault();
+                show(this.dataset.tab);
+            });
+        });
+
+        // A filter or page link lands back here; stay on the directory.
+        var params = new URLSearchParams(window.location.search);
+        if (params.has('user_search') || params.has('role') || params.has('page_num')) {
+            show('team');
+        } else {
+            show(GTI.storage.get('gti-users-tab') || 'profile');
+        }
+    });
+})();

@@ -312,6 +312,9 @@ function gti_spare_render_part_card( $item ) {
 
 function gti_spare_render_pagination( $total, $per_page ) {
     $total_pages = max( 1, ceil( $total / $per_page ) );
+    // Always 1: this is the first paint only. Paging is client-side from here —
+    // equipment-filter.js tracks state.currentPage and re-renders these buttons
+    // with the active class, so the server never needs the current page (§7.5).
     $current     = 1;
 
     echo '<button class="gti-ef-page-btn" data-page="prev" disabled><i class="fas fa-chevron-left"></i></button>';

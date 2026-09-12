@@ -54,7 +54,32 @@ if ($can_list_users) {
     require_once ABSPATH . 'wp-admin/includes/user.php';
     $editable_roles = get_editable_roles();
 
-    $team_users = get_users(array('orderby' => 'display_name', 'number' => 200));
+    // §6.12 gaps 2-3: the directory used to fetch 200 rows with no search,
+    // filter or paging, so a team of any size was simply truncated.
+    $user_search = isset($_GET['user_search']) ? sanitize_text_field(wp_unslash($_GET['user_search'])) : '';
+    $role_filter = isset($_GET['role']) ? sanitize_text_field(wp_unslash($_GET['role'])) : '';
+    $users_per_page = 15;
+    $users_page  = gti_current_page_num();
+
+    $user_query_args = array(
+        'orderby' => 'display_name',
+        'order'   => 'ASC',
+        'number'  => $users_per_page,
+        'offset'  => ($users_page - 1) * $users_per_page,
+        'count_total' => true,
+    );
+    if ($user_search !== '') {
+        $user_query_args['search']         = '*' . $user_search . '*';
+        $user_query_args['search_columns'] = array('user_login', 'user_email', 'display_name', 'user_nicename');
+    }
+    if ($role_filter !== '' && isset($editable_roles[$role_filter])) {
+        $user_query_args['role'] = $role_filter;
+    }
+
+    $user_query  = new WP_User_Query($user_query_args);
+    $team_users  = $user_query->get_results();
+    $users_total = (int) $user_query->get_total();
+    $users_pages = (int) ceil($users_total / $users_per_page);
 
     // One grouped query beats a COUNT(*) per user.
     $activity_by_user = array();
@@ -100,6 +125,17 @@ gti_dashboard_open( array(
             <!-- Content -->
             <div class="gti-content">
                 <div class="gti-content-left">
+
+                    <?php if ($can_list_users) : ?>
+                        <?php /* Two tabs instead of one long stack (PRD §6.12 gap 1).
+                                 The second only exists for users who may list others. */ ?>
+                        <div class="gti-cd-tabs" id="gti-users-tabs">
+                            <a href="#tab-profile" class="gti-cd-tab active" data-tab="profile">My Profile</a>
+                            <a href="#tab-team" class="gti-cd-tab" data-tab="team">System Users</a>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="gti-cd-tab-content" id="tab-profile">
 
                     <!-- Profile Header Card -->
                     <div class="gti-profile-header-card">
@@ -243,11 +279,14 @@ gti_dashboard_open( array(
                         </div>
                     </div>
 
+                    </div><!-- /#tab-profile -->
+
                     <!-- Team Directory -->
                     <?php if ($can_list_users): ?>
-                    <div class="gti-profile-card" style="margin-top: 24px;">
+                    <div class="gti-cd-tab-content" id="tab-team" style="display:none">
+                    <div class="gti-profile-card">
                         <div class="gti-profile-card-header">
-                            <h3><i class="fas fa-user-shield"></i> System Users <span style="font-weight:500;color:#9ca3af;font-size:13px;">(<?php echo count($team); ?>)</span></h3>
+                            <h3><i class="fas fa-user-shield"></i> System Users <span style="font-weight:500;color:#9ca3af;font-size:13px;">(<?php echo (int) $users_total; ?>)</span></h3>
                             <?php if ($can_create_users): ?>
                                 <button type="button" class="gti-btn-primary" id="gti-add-user-btn">
                                     <i class="fas fa-plus"></i> <span>Add User</span>
@@ -256,6 +295,32 @@ gti_dashboard_open( array(
                         </div>
                         <div class="gti-profile-card-body" style="padding: 0;">
                             <div id="gti-users-alert" class="gti-alert" role="alert" style="margin: 20px 28px 0;"></div>
+
+                            <form class="gti-ue-toolbar" method="get" style="padding: 16px 28px 0;">
+                                <input type="hidden" name="gti_page" value="users">
+                                <div class="gti-ue-toolbar-left">
+                                    <div class="gti-ue-search">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" name="user_search" placeholder="Search users…"
+                                               value="<?php echo esc_attr($user_search); ?>">
+                                    </div>
+                                    <div class="gti-ue-filter">
+                                        <select name="role">
+                                            <option value="">All Roles</option>
+                                            <?php foreach ($editable_roles as $gti_role_key => $gti_role) : ?>
+                                                <option value="<?php echo esc_attr($gti_role_key); ?>" <?php selected($role_filter, $gti_role_key); ?>>
+                                                    <?php echo esc_html(translate_user_role($gti_role['name'])); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="gti-ue-btn-reset"><i class="fas fa-filter"></i> Apply</button>
+                                    <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-ue-btn-reset">
+                                        <i class="fas fa-rotate-right"></i> Reset
+                                    </a>
+                                </div>
+                            </form>
+
                             <div style="overflow-x:auto;">
                                 <table class="gti-users-table">
                                     <thead>
@@ -325,9 +390,27 @@ gti_dashboard_open( array(
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
+                                <?php if ($users_pages > 1) : ?>
+                                    <div style="padding: 0 28px 20px;">
+                                        <?php
+                                        gti_render_pagination(array(
+                                            'total'    => $users_total,
+                                            'per_page' => $users_per_page,
+                                            'current'  => $users_page,
+                                            'base_url' => gti_dashboard_url('users'),
+                                            'params'   => array_filter(array(
+                                                'gti_page'    => 'users',
+                                                'user_search' => $user_search,
+                                                'role'        => $role_filter,
+                                            )),
+                                        ));
+                                        ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
+                    </div><!-- /#tab-team -->
                     <?php endif; ?>
 
                 </div>

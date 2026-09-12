@@ -85,3 +85,27 @@
     .gti-users-table thead th, .gti-users-table tbody td { padding-left: 16px; padding-right: 16px; }
     .gti-users-modal-box { padding: 20px; }
 }
+
+/* My Profile / System Users tabs (PRD §6.12 gap 1). Shares the look of the
+   customer-detail tabs so the dashboard reads as one system. */
+#gti-users-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+#gti-users-tabs .gti-cd-tab {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #6b7280;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.15s, border-color 0.15s;
+}
+#gti-users-tabs .gti-cd-tab:hover { color: #1a1f36; }
+#gti-users-tabs .gti-cd-tab.active {
+    color: #1a1f36;
+    border-bottom-color: #F5A623;
+}
