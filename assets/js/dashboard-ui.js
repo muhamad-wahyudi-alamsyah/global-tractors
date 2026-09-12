@@ -354,6 +354,40 @@
         });
     }
 
+    /** Header user menu, including the only Log Out control on the dashboard. */
+    function initUserMenu() {
+        var toggle = document.getElementById('gti-user-menu-toggle');
+        var menu = document.getElementById('gti-user-dropdown');
+
+        if (toggle && menu) {
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var open = menu.classList.toggle('show');
+                toggle.setAttribute('aria-expanded', String(open));
+            });
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.gti-user-menu-wrap')) {
+                    menu.classList.remove('show');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        var logout = document.getElementById('gti-logout-btn');
+        if (logout) {
+            logout.addEventListener('click', function (e) {
+                e.preventDefault();
+                var unlock = GTI.ui.lockButton(logout, 'Keluar…');
+
+                GTI.api.post('gti_logout', {})
+                    .then(function (data) {
+                        window.location.href = (data && data.redirect) || '/';
+                    })
+                    .catch(function () { unlock(); });
+            });
+        }
+    }
+
     function initDismissers() {
         // Any [data-gti-close="overlayId"] closes that overlay.
         document.addEventListener('click', function (e) {
@@ -399,6 +433,7 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initSidebar();
+        initUserMenu();
         initActionMenus();
         initDismissers();
         initHighlight();

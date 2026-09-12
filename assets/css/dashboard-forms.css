@@ -235,3 +235,55 @@ body.gti-modal-open { overflow: hidden; }
     accent-color: var(--gti-primary);
     cursor: pointer;
 }
+
+/* ── Header user menu (holds the only Log Out control) ───────────────────── */
+.gti-user-menu-wrap { position: relative; }
+.gti-user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 8px;
+}
+.gti-user-menu:hover { background: var(--gti-line-soft); }
+
+.gti-user-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: var(--gti-surface);
+    border: 1px solid var(--gti-line);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    padding: 6px;
+    z-index: 900;
+}
+.gti-user-dropdown.show { display: block; }
+.gti-user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--gti-text);
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+.gti-user-dropdown-item:hover { background: var(--gti-surface-alt); }
+.gti-user-dropdown-item i { width: 14px; color: var(--gti-faint); font-size: 12px; }
+.gti-user-dropdown-item.danger { color: var(--gti-danger); }
+.gti-user-dropdown-item.danger i { color: var(--gti-danger); }
+.gti-user-dropdown-item.danger:hover { background: #fee2e2; }
+.gti-user-dropdown-sep { height: 1px; background: var(--gti-line); margin: 6px 4px; }

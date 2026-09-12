@@ -83,10 +83,6 @@ function gti_enqueue_dashboard_assets() {
         }
     }
 
-    if ($page === 'dashboard' || $page === '') {
-        wp_enqueue_script('gti-chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js', [], '4.4.0', true);
-    }
-
     // The article form renders wp_editor(); on a front-end route its scripts and
     // styles are not registered unless we ask for them here (PRD §6.10 gap 2).
     if ($page === 'add-news-article') {

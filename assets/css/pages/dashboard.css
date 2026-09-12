@@ -1,0 +1,64 @@
+/* Dashboard home (PRD §6.14). */
+
+.gti-dash-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.gti-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.gti-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.gti-card-header h3 { margin: 0; font-size: 15px; font-weight: 600; color: #1a1f36; }
+.gti-card-hint { font-size: 12px; color: #9ca3af; text-decoration: none; }
+a.gti-card-hint:hover { color: #F5A623; }
+.gti-card-body { padding: 8px 20px 16px; }
+
+.gti-dash-list { list-style: none; margin: 0; padding: 0; }
+.gti-dash-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+.gti-dash-list li:last-child { border-bottom: none; }
+.gti-dash-list a { text-decoration: none; flex: 1; min-width: 0; }
+.gti-dash-list strong {
+    display: block;
+    font-size: 13px;
+    color: #1a1f36;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.gti-dash-list span { font-size: 12px; color: #9ca3af; }
+.gti-dash-list time { font-size: 11px; color: #9ca3af; white-space: nowrap; flex-shrink: 0; }
+.gti-dash-list > li > div { flex: 1; min-width: 0; }
+
+.gti-dash-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 1100px) {
+    .gti-dash-columns { grid-template-columns: 1fr; }
+}

@@ -1,253 +1,190 @@
 <?php
 /**
- * Template: Dashboard Home (/dashboard)
+ * Dashboard home — /dashboard  (PRD §6.14)
+ *
+ * Every figure on this page used to be a literal in the markup: 148 used units,
+ * 86 rentals, 256 spare parts, and "View More" links pointing at "#". They are
+ * now real counts, scoped the same way the inbox pages are — a sales user sees
+ * their own workload, not the company's.
+ *
  * @package global-tractors
  */
-if (!defined('ABSPATH')) exit;
+
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+global $wpdb;
+
+$counts = array(
+    'used'       => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_equipment WHERE type = 'used' AND deleted_at IS NULL" ),
+    'rental'     => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_equipment WHERE type = 'rental' AND deleted_at IS NULL" ),
+    'spare'      => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_spare_parts WHERE deleted_at IS NULL" ),
+    'customers'  => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_customers" ),
+);
+
+$requests   = gti_count_by_status( 'requests' );
+$quotations = gti_count_by_status( 'quotations' );
+$sells      = gti_count_by_status( 'sell_requests' );
+
+$inbox_total = ( $requests['all'] ?? 0 ) + ( $quotations['all'] ?? 0 ) + ( $sells['all'] ?? 0 );
+$inbox_new   = ( $requests['new'] ?? 0 ) + ( $quotations['new'] ?? 0 ) + ( $sells['new'] ?? 0 );
+
+// Rows that have gone quiet: new for over a day, or a quotation past its
+// validity date with no answer (PRD §6.14).
+$stale_requests = $wpdb->get_results(
+    "SELECT id, request_id AS ref, customer_name, created_at, 'request' AS entity
+       FROM {$wpdb->prefix}gti_requests
+      WHERE status = 'new' AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
+    . gti_scope_where_sql( 'request' ) . ' ORDER BY created_at ASC LIMIT 10',
+    ARRAY_A
+);
+
+$stale_quotations = $wpdb->get_results(
+    "SELECT id, quotation_id AS ref, customer_name, created_at, 'quotation' AS entity
+       FROM {$wpdb->prefix}gti_quotations
+      WHERE ( status = 'new' AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR) )
+         OR ( status = 'waiting_customer' AND valid_until IS NOT NULL
+              AND valid_until <> '0000-00-00' AND valid_until < CURDATE() )"
+    . gti_scope_where_sql( 'quotation' ) . ' ORDER BY created_at ASC LIMIT 10',
+    ARRAY_A
+);
+
+$needs_attention = array_merge( (array) $stale_requests, (array) $stale_quotations );
+
+$recent_activity = $wpdb->get_results(
+    "SELECT l.*, u.display_name
+       FROM {$wpdb->prefix}gti_activity_log l
+  LEFT JOIN {$wpdb->users} u ON u.ID = l.user_id
+   ORDER BY l.created_at DESC
+      LIMIT 10",
+    ARRAY_A
+);
+
+$slug = array( 'request' => 'request-equipment', 'quotation' => 'request-quotation', 'sell' => 'sell-equipment' );
 
 gti_dashboard_open( array(
     'page'     => 'dashboard',
     'title'    => 'Dashboard',
     'subtitle' => 'Overview of activity across GTI 📊',
     'cap'      => 'gti_access',
-    'js'       => array( 'dashboard' ),
 ) );
 ?>
 
+<div class="gti-content">
+    <div class="gti-content-left">
 
-            <!-- Content -->
-            <div class="gti-content">
-                <!-- Stats Row 1 -->
-                <div class="gti-stats-grid">
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-content">
-                            <div class="gti-stat-icon"><i class="fas fa-truck"></i></div>
-                            <div class="gti-stat-info">
-                                <p class="gti-stat-title">Used Equipment</p>
-                                <p class="gti-stat-value">148</p>
-                                <p class="gti-stat-label">Total Unit</p>
-                            </div>
-                        </div>
-                        <div class="gti-stat-footer">
-                            <a href="#">View More</a>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-content">
-                            <div class="gti-stat-icon"><i class="fas fa-calendar-check"></i></div>
-                            <div class="gti-stat-info">
-                                <p class="gti-stat-title">Rental Equipment</p>
-                                <p class="gti-stat-value">86</p>
-                                <p class="gti-stat-label">Total Unit</p>
-                            </div>
-                        </div>
-                        <div class="gti-stat-footer">
-                            <a href="#">View More</a>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-content">
-                            <div class="gti-stat-icon"><i class="fas fa-cogs"></i></div>
-                            <div class="gti-stat-info">
-                                <p class="gti-stat-title">Spare Parts</p>
-                                <p class="gti-stat-value">256</p>
-                                <p class="gti-stat-label">Total Unit</p>
-                            </div>
-                        </div>
-                        <div class="gti-stat-footer">
-                            <a href="#">View More</a>
-                            <i class="fas fa-arrow-right"></i>
+        <div class="gti-stats-grid">
+            <?php
+            $cards = array();
+
+            if ( current_user_can( 'gti_manage_equipment' ) ) {
+                $cards[] = array( 'title' => 'Used Equipment',   'value' => $counts['used'],   'label' => 'Total unit', 'icon' => 'fa-truck',          'slug' => 'used-equipment' );
+                $cards[] = array( 'title' => 'Rental Equipment', 'value' => $counts['rental'], 'label' => 'Total unit', 'icon' => 'fa-calendar-check', 'slug' => 'rental-equipment' );
+            }
+            if ( current_user_can( 'gti_manage_spare_parts' ) ) {
+                $cards[] = array( 'title' => 'Spare Parts', 'value' => $counts['spare'], 'label' => 'Total part', 'icon' => 'fa-cogs', 'slug' => 'spare-parts' );
+            }
+            if ( current_user_can( 'gti_manage_customers' ) ) {
+                $cards[] = array( 'title' => 'Customers', 'value' => $counts['customers'], 'label' => 'Registered', 'icon' => 'fa-users', 'slug' => 'customers' );
+            }
+            if ( current_user_can( 'gti_manage_requests' ) ) {
+                $cards[] = array( 'title' => 'Request Equipment', 'value' => $requests['all'] ?? 0,   'label' => ( $requests['new'] ?? 0 ) . ' new',   'icon' => 'fa-file-alt',       'slug' => 'request-equipment' );
+                $cards[] = array( 'title' => 'Sell Equipment',    'value' => $sells['all'] ?? 0,      'label' => ( $sells['new'] ?? 0 ) . ' new',      'icon' => 'fa-handshake',      'slug' => 'sell-equipment' );
+            }
+            if ( current_user_can( 'gti_manage_quotations' ) ) {
+                $cards[] = array( 'title' => 'Request Quotation', 'value' => $quotations['all'] ?? 0, 'label' => ( $quotations['new'] ?? 0 ) . ' new', 'icon' => 'fa-clipboard-list', 'slug' => 'request-quotation' );
+            }
+
+            foreach ( $cards as $card ) :
+                ?>
+                <div class="gti-stat-card">
+                    <div class="gti-stat-content">
+                        <div class="gti-stat-icon"><i class="fas <?php echo esc_attr( $card['icon'] ); ?>"></i></div>
+                        <div class="gti-stat-info">
+                            <p class="gti-stat-title"><?php echo esc_html( $card['title'] ); ?></p>
+                            <p class="gti-stat-value"><?php echo esc_html( number_format_i18n( $card['value'] ) ); ?></p>
+                            <p class="gti-stat-label"><?php echo esc_html( $card['label'] ); ?></p>
                         </div>
                     </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-content">
-                            <div class="gti-stat-icon"><i class="fas fa-users"></i></div>
-                            <div class="gti-stat-info">
-                                <p class="gti-stat-title">Customers</p>
-                                <p class="gti-stat-value">120</p>
-                                <p class="gti-stat-label">Total Customer</p>
-                            </div>
-                        </div>
-                        <div class="gti-stat-footer">
-                            <a href="#">View More</a>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                    </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-content">
-                            <div class="gti-stat-icon"><i class="fas fa-file-invoice"></i></div>
-                            <div class="gti-stat-info">
-                                <p class="gti-stat-title">Request</p>
-                                <p class="gti-stat-value">42</p>
-                                <p class="gti-stat-label">Total Request</p>
-                            </div>
-                        </div>
-                        <div class="gti-stat-footer">
-                            <a href="#">View More</a>
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
+                    <div class="gti-stat-footer">
+                        <a href="<?php echo esc_url( gti_dashboard_url( $card['slug'] ) ); ?>">View More</a>
+                        <i class="fas fa-arrow-right"></i>
                     </div>
                 </div>
+            <?php endforeach; ?>
+        </div>
 
-                <!-- Stats Row 2 -->
-                <div class="gti-stats-row">
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-icon"><i class="fas fa-file-alt"></i></div>
-                        <div class="gti-stat-info">
-                            <p>Request Quotation</p>
-                            <strong>31</strong>
-                            <span>New Request</span>
-                        </div>
-                        <div class="gti-stat-growth">
-                            <b>12%</b>
-                            <span>vs last month</span>
-                        </div>
-                    </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-icon"><i class="fas fa-envelope"></i></div>
-                        <div class="gti-stat-info">
-                            <p>Contact Messages</p>
-                            <strong>23</strong>
-                            <span>New Messages</span>
-                        </div>
-                        <div class="gti-stat-growth">
-                            <b>8%</b>
-                            <span>vs last month</span>
-                        </div>
-                    </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-icon"><i class="fas fa-newspaper"></i></div>
-                        <div class="gti-stat-info">
-                            <p>News &amp; Articles</p>
-                            <strong>12</strong>
-                            <span>Published</span>
-                        </div>
-                        <div class="gti-stat-growth">
-                            <b>4%</b>
-                            <span>vs last month</span>
-                        </div>
-                    </div>
-                    <div class="gti-stat-card">
-                        <div class="gti-stat-icon"><i class="fas fa-globe"></i></div>
-                        <div class="gti-stat-info">
-                            <p>Website Visitors</p>
-                            <strong>12,540</strong>
-                            <span>Total Visitors</span>
-                        </div>
-                        <div class="gti-stat-growth">
-                            <b>15%</b>
-                            <span>vs last month</span>
-                        </div>
-                    </div>
+        <div class="gti-dash-columns">
+            <div class="gti-card">
+                <div class="gti-card-header">
+                    <h3>Needs Attention</h3>
+                    <span class="gti-card-hint"><?php echo count( $needs_attention ); ?> item(s)</span>
                 </div>
-
-                <!-- Charts Row -->
-                <div class="gti-charts-row">
-                    <div class="gti-card gti-chart-card">
-                        <div class="gti-card-header">
-                            <h3>Website Visitors</h3>
-                            <div class="gti-dropdown"><span>Last 30 Days</span> <i class="fas fa-chevron-down"></i></div>
-                        </div>
-                        <div class="gti-card-body"><canvas id="visitorsChart"></canvas></div>
-                    </div>
-                    <div class="gti-card gti-chart-card">
-                        <div class="gti-card-header">
-                            <h3>Request Overview</h3>
-                            <div class="gti-dropdown"><span>Last 30 Days</span> <i class="fas fa-chevron-down"></i></div>
-                        </div>
-                        <div class="gti-card-body gti-donut-wrapper">
-                            <div class="gti-donut-chart"><canvas id="requestChart"></canvas></div>
-                            <div class="gti-donut-legend">
-                                <div class="gti-legend-item"><span class="gti-legend-dot" style="background:#F5A623"></span><span class="gti-legend-label">Request Equipment</span><span class="gti-legend-value">18 (22%)</span></div>
-                                <div class="gti-legend-item"><span class="gti-legend-dot" style="background:#1a1f36"></span><span class="gti-legend-label">Request Quotation</span><span class="gti-legend-value">31 (38%)</span></div>
-                                <div class="gti-legend-item"><span class="gti-legend-dot" style="background:#6b7280"></span><span class="gti-legend-label">Sell Equipment</span><span class="gti-legend-value">14 (17%)</span></div>
-                                <div class="gti-legend-item"><span class="gti-legend-dot" style="background:#d1d5db"></span><span class="gti-legend-label">Contact Messages</span><span class="gti-legend-value">19 (23%)</span></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Row -->
-                <div class="gti-bottom-row">
-                    <!-- Latest Activities -->
-                    <div class="gti-card">
-                        <div class="gti-card-header"><h3>Latest Activities</h3></div>
-                        <div class="gti-card-body">
-                            <div class="gti-activity-list">
-                                <div class="gti-activity-item">
-                                    <div class="gti-activity-icon orange"><i class="fas fa-file-alt"></i></div>
-                                    <div class="gti-activity-info"><p><strong>New request equipment from PT. Bumi Karya</strong></p><small>REQ-240531-001</small></div>
-                                    <div class="gti-activity-time">31 May 2024, 10:32 AM</div>
-                                </div>
-                                <div class="gti-activity-item">
-                                    <div class="gti-activity-icon blue"><i class="fas fa-clipboard-list"></i></div>
-                                    <div class="gti-activity-info"><p><strong>New quotation request for KOMATSU PC200-8</strong></p><small>RFQ-240531-002</small></div>
-                                    <div class="gti-activity-time">31 May 2024, 10:15 AM</div>
-                                </div>
-                                <div class="gti-activity-item">
-                                    <div class="gti-activity-icon green"><i class="fas fa-handshake"></i></div>
-                                    <div class="gti-activity-info"><p><strong>New sell equipment submission from CV. Mandiri</strong></p><small>SELL-240531-001</small></div>
-                                    <div class="gti-activity-time">31 May 2024, 09:48 AM</div>
-                                </div>
-                                <div class="gti-activity-item">
-                                    <div class="gti-activity-icon purple"><i class="fas fa-envelope"></i></div>
-                                    <div class="gti-activity-info"><p><strong>New message from Andi Wijaya</strong></p><small>Contact Message</small></div>
-                                    <div class="gti-activity-time">31 May 2024, 09:20 AM</div>
-                                </div>
-                                <div class="gti-activity-item">
-                                    <div class="gti-activity-icon gray"><i class="fas fa-newspaper"></i></div>
-                                    <div class="gti-activity-info"><p><strong>Artikel "Tips Merawat Excavator" telah dipublish</strong></p></div>
-                                    <div class="gti-activity-time">31 May 2024, 08:55 AM</div>
-                                </div>
-                            </div>
-                            <div class="gti-card-footer"><a href="#">View All Activities <i class="fas fa-arrow-right"></i></a></div>
-                        </div>
-                    </div>
-
-                    <!-- Pending Approval -->
-                    <div class="gti-card">
-                        <div class="gti-card-header"><h3>Pending Approval</h3></div>
-                        <div class="gti-card-body">
-                            <div class="gti-pending-list">
-                                <div class="gti-pending-item">
-                                    <div class="gti-pending-thumb orange"><i class="fas fa-truck"></i></div>
-                                    <div class="gti-pending-info"><p><strong>Sell Equipment Submission</strong></p><p class="detail">KOMATSU PC200-8 - CV. Mandiri</p><small>Submitted on 31 May 2024</small></div>
-                                    <button class="gti-btn-review">Review</button>
-                                </div>
-                                <div class="gti-pending-item">
-                                    <div class="gti-pending-thumb blue"><i class="fas fa-clipboard-list"></i></div>
-                                    <div class="gti-pending-info"><p><strong>Request Quotation</strong></p><p class="detail">CAT 320D - PT. Karya Indah</p><small>Submitted on 31 May 2024</small></div>
-                                    <button class="gti-btn-review">Review</button>
-                                </div>
-                                <div class="gti-pending-item">
-                                    <div class="gti-pending-thumb gray"><i class="fas fa-user-plus"></i></div>
-                                    <div class="gti-pending-info"><p><strong>New User Registration</strong></p><p class="detail">Sales - Budi Santoso</p><small>Requested on 31 May 2024</small></div>
-                                    <button class="gti-btn-review">Review</button>
-                                </div>
-                            </div>
-                            <div class="gti-card-footer"><a href="#">View All Pending <i class="fas fa-arrow-right"></i></a></div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Summary -->
-                    <div class="gti-card">
-                        <div class="gti-card-header"><h3>Quick Summary</h3></div>
-                        <div class="gti-card-body">
-                            <div class="gti-summary-list">
-                                <div class="gti-summary-item"><span>Total Products</span><strong>520</strong></div>
-                                <div class="gti-summary-item"><span>Active Rental</span><strong>25</strong></div>
-                                <div class="gti-summary-item warning"><span>Low Stock Parts</span><strong class="text-warning">17</strong></div>
-                                <div class="gti-summary-item"><span>Total Customers</span><strong>236</strong></div>
-                                <div class="gti-summary-item"><span>Total Users</span><strong>18</strong></div>
-                                <div class="gti-summary-item"><span>Total Articles</span><strong>12</strong></div>
-                            </div>
-                            <button class="gti-btn-generate"><i class="fas fa-file-pdf"></i> Generate Report</button>
-                        </div>
-                    </div>
+                <div class="gti-card-body">
+                    <?php if ( ! $needs_attention ) : ?>
+                        <p class="gti-drawer-empty">Nothing is waiting. Everything new has been picked up.</p>
+                    <?php else : ?>
+                        <ul class="gti-dash-list">
+                            <?php foreach ( $needs_attention as $item ) : ?>
+                                <li>
+                                    <a href="<?php echo esc_url( gti_dashboard_url( $slug[ $item['entity'] ] ) . '?highlight=' . (int) $item['id'] ); ?>">
+                                        <strong><?php echo esc_html( $item['ref'] ?: '#' . $item['id'] ); ?></strong>
+                                        <span><?php echo esc_html( $item['customer_name'] ); ?></span>
+                                    </a>
+                                    <time><?php echo esc_html( gti_time_ago( $item['created_at'] ) ); ?></time>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
                 </div>
             </div>
 
+            <div class="gti-card">
+                <div class="gti-card-header">
+                    <h3>Recent Activity</h3>
+                    <?php if ( current_user_can( 'gti_manage_settings' ) ) : ?>
+                        <a href="<?php echo esc_url( gti_dashboard_url( 'activity-log' ) ); ?>" class="gti-card-hint">View all</a>
+                    <?php endif; ?>
+                </div>
+                <div class="gti-card-body">
+                    <?php if ( ! $recent_activity ) : ?>
+                        <p class="gti-drawer-empty">No activity recorded yet.</p>
+                    <?php else : ?>
+                        <ul class="gti-dash-list">
+                            <?php foreach ( $recent_activity as $entry ) :
+                                $icon = gti_get_action_icon( $entry['action'] );
+                                ?>
+                                <li>
+                                    <span class="gti-dash-icon" style="background:<?php echo esc_attr( $icon['bg'] ); ?>;color:<?php echo esc_attr( $icon['color'] ); ?>">
+                                        <i class="fas <?php echo esc_attr( $icon['icon'] ); ?>"></i>
+                                    </span>
+                                    <div>
+                                        <strong><?php echo esc_html( $entry['description'] ?: ucwords( str_replace( '_', ' ', $entry['action'] ) ) ); ?></strong>
+                                        <span><?php echo esc_html( $entry['display_name'] ?: 'System' ); ?></span>
+                                    </div>
+                                    <time><?php echo esc_html( gti_time_ago( $entry['created_at'] ) ); ?></time>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <?php if ( $inbox_total > 0 ) : ?>
+            <div class="gti-card">
+                <div class="gti-card-header"><h3>Inbox Summary</h3></div>
+                <div class="gti-card-body">
+                    <div class="gti-summary-rows">
+                        <div class="gti-summary-row"><span>Total incoming</span><strong><?php echo esc_html( number_format_i18n( $inbox_total ) ); ?></strong></div>
+                        <div class="gti-summary-row"><span>Awaiting first response</span><strong><?php echo esc_html( number_format_i18n( $inbox_new ) ); ?></strong></div>
+                        <div class="gti-summary-row"><span>Quotations awaiting approval</span><strong><?php echo esc_html( number_format_i18n( $quotations['waiting_customer'] ?? 0 ) ); ?></strong></div>
+                        <div class="gti-summary-row"><span>Offers approved</span><strong><?php echo esc_html( number_format_i18n( $sells['approved'] ?? 0 ) ); ?></strong></div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
 <?php
-gti_dashboard_close(  );
+gti_dashboard_close();

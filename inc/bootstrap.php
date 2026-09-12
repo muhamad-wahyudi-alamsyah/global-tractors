@@ -74,6 +74,14 @@ require_once GTI_CHILD_DIR . '/inc/ajax/ajax-customer-quotation.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-dashboard.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/admin/inbox.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/admin/management.php';
+
+// Domain traits must load before the class that composes them (R6b).
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/equipment.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/spare-parts.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/inbox-legacy.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/customers.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/users.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/dashboard.php';
 require_once GTI_CHILD_DIR . '/includes/class-gti-ajax.php';
 
 add_action( 'init', function () {

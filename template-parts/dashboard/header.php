@@ -37,13 +37,33 @@ $gti_unread     = gti_notification_count();
                 <span class="gti-badge"><?php echo esc_html( $gti_unread > 99 ? '99+' : $gti_unread ); ?></span>
             <?php endif; ?>
         </div>
-        <div class="gti-user-menu">
-            <img src="<?php echo esc_url( get_avatar_url( $gti_user->ID, array( 'size' => 80 ) ) ); ?>" alt="" class="gti-avatar">
-            <div class="gti-user-info">
-                <strong><?php echo esc_html( $gti_user->display_name ); ?></strong>
-                <?php if ( $gti_role_label ) : ?><small><?php echo esc_html( $gti_role_label ); ?></small><?php endif; ?>
+        <div class="gti-user-menu-wrap">
+            <button type="button" class="gti-user-menu" id="gti-user-menu-toggle" aria-haspopup="true" aria-expanded="false">
+                <img src="<?php echo esc_url( get_avatar_url( $gti_user->ID, array( 'size' => 80 ) ) ); ?>" alt="" class="gti-avatar">
+                <div class="gti-user-info">
+                    <strong><?php echo esc_html( $gti_user->display_name ); ?></strong>
+                    <?php if ( $gti_role_label ) : ?><small><?php echo esc_html( $gti_role_label ); ?></small><?php endif; ?>
+                </div>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            <?php
+            // The old sidebar carried the only Log Out control on the dashboard;
+            // it lives here now that the sidebar is generated from the menu array.
+            ?>
+            <div class="gti-user-dropdown" id="gti-user-dropdown">
+                <a href="<?php echo esc_url( gti_dashboard_url( 'users' ) ); ?>" class="gti-user-dropdown-item">
+                    <i class="fas fa-user"></i> My Profile
+                </a>
+                <?php if ( current_user_can( 'gti_manage_settings' ) ) : ?>
+                    <a href="<?php echo esc_url( gti_dashboard_url( 'activity-log' ) ); ?>" class="gti-user-dropdown-item">
+                        <i class="fas fa-history"></i> Activity Log
+                    </a>
+                <?php endif; ?>
+                <div class="gti-user-dropdown-sep"></div>
+                <button type="button" class="gti-user-dropdown-item danger" id="gti-logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Log Out
+                </button>
             </div>
-            <i class="fas fa-chevron-down"></i>
         </div>
     </div>
 </header>
