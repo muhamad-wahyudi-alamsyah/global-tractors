@@ -86,6 +86,17 @@ gti_dashboard_open( array(
                     </div>
 
                     <!-- Toolbar -->
+                    <div class="gti-ml-bulkbar" id="gti-ml-bulkbar" hidden>
+                        <label class="gti-checkbox">
+                            <input type="checkbox" id="gti-ml-select-all">
+                            <span>Select all on this page</span>
+                        </label>
+                        <span class="gti-ml-bulkinfo"><strong id="gti-ml-bulkcount">0</strong> selected</span>
+                        <button type="button" class="gti-btn-secondary" id="gti-ml-bulkdelete">
+                            <i class="fas fa-trash"></i> Delete selected
+                        </button>
+                    </div>
+
                     <form class="gti-ml-toolbar" method="get">
                         <input type="hidden" name="gti_page" value="media-library">
                         <div class="gti-ml-toolbar-left">
@@ -155,7 +166,11 @@ gti_dashboard_open( array(
                                         <?php else: ?>
                                             <i class="fas fa-file-alt gti-ml-doc-icon"></i>
                                         <?php endif; ?>
-                                        <div class="gti-ml-card-check"><i class="fas fa-check"></i></div>
+                                        <label class="gti-ml-card-check-wrap" onclick="event.stopPropagation();">
+                                            <input type="checkbox" class="gti-ml-card-check"
+                                                   value="<?php echo (int) $item['id']; ?>"
+                                                   aria-label="Select <?php echo esc_attr($item['filename']); ?>">
+                                        </label>
                                     </div>
                                     <div class="gti-ml-card-info">
                                         <div class="gti-ml-card-name" title="<?php echo esc_attr($item['filename']); ?>"><?php echo esc_html($item['filename']); ?></div>
@@ -264,14 +279,6 @@ gti_dashboard_open( array(
                                 <span class="gti-drawer-value" id="drawer-dims">-</span>
                             </div>
                             <div class="gti-drawer-row">
-                                <span class="gti-drawer-label">Title</span>
-                                <span class="gti-drawer-value" id="drawer-title-val">-</span>
-                            </div>
-                            <div class="gti-drawer-row">
-                                <span class="gti-drawer-label">Alt Text</span>
-                                <span class="gti-drawer-value" id="drawer-alt">-</span>
-                            </div>
-                            <div class="gti-drawer-row">
                                 <span class="gti-drawer-label">Uploaded By</span>
                                 <span class="gti-drawer-value" id="drawer-uploader">-</span>
                             </div>
@@ -279,6 +286,39 @@ gti_dashboard_open( array(
                                 <span class="gti-drawer-label">Attached To</span>
                                 <span class="gti-drawer-value" id="drawer-attached">-</span>
                             </div>
+                        </div>
+
+                        <?php
+                        // B-11: gti_update_media has been registered all along with no
+                        // interface behind it. Title / Alt / Caption / Description are
+                        // editable here and save straight back to the attachment.
+                        ?>
+                        <div class="gti-drawer-section">
+                            <div class="gti-drawer-section-title">
+                                <i class="fas fa-pen"></i> Edit Details
+                            </div>
+                            <form id="gti-media-meta-form">
+                                <input type="hidden" name="id" id="gti-media-id" value="">
+                                <div class="gti-field">
+                                    <label for="gti-media-title">Title</label>
+                                    <input type="text" id="gti-media-title" name="title">
+                                </div>
+                                <div class="gti-field">
+                                    <label for="gti-media-alt">Alt Text
+                                        <span class="gti-field-hint">describes the image for screen readers</span>
+                                    </label>
+                                    <input type="text" id="gti-media-alt" name="alt">
+                                </div>
+                                <div class="gti-field">
+                                    <label for="gti-media-caption">Caption</label>
+                                    <textarea id="gti-media-caption" name="caption" rows="2"></textarea>
+                                </div>
+                                <div class="gti-field">
+                                    <label for="gti-media-description">Description</label>
+                                    <textarea id="gti-media-description" name="description" rows="3"></textarea>
+                                </div>
+                                <button type="submit" class="gti-btn-primary"><i class="fas fa-save"></i> Save Details</button>
+                            </form>
                         </div>
 
                         <!-- URL Section -->

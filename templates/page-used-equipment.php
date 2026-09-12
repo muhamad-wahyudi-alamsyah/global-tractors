@@ -118,17 +118,6 @@ $_gti_eq_fmt = function($amount) {
     return 'Rp ' . number_format((float)$amount, 0, ',', '.');
 };
 
-// Helper function to check if price is valid
-if ( ! function_exists( 'gti_is_price_valid' ) ) {
-    function gti_is_price_valid( $price_valid_until ) {
-        if ( empty( $price_valid_until ) ) {
-            return true;
-        }
-        $valid_until = strtotime( $price_valid_until );
-        $today = strtotime( current_time( 'Y-m-d' ) );
-        return $valid_until >= $today;
-    }
-}
 
 // Status badge helper
 $_gti_eq_status_badge = function($status, $price_valid_until = null) {

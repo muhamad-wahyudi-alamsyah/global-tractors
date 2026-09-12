@@ -46,25 +46,7 @@ $total_views     = $counts['views'];
 // Categories for filter
 $categories = gti_article_used_categories();
 
-function gti_na_category_label($cat) {
-    return gti_article_category_label($cat);
-}
-function gti_na_category_color($cat) {
-    return gti_article_category_color($cat);
-}
-function gti_na_status_class($status) {
-    return $status === 'published' ? 'available' : ($status === 'draft' ? 'reserved' : 'sold');
-}
-function gti_na_excerpt($text, $len = 80) {
-    if (!$text) return '-';
-    return mb_strlen($text) > $len ? mb_substr($text, 0, $len) . '...' : $text;
-}
-function gti_na_format_views($views) {
-    if ($views >= 1000) {
-        return number_format($views / 1000, 1) . 'K';
-    }
-    return number_format($views);
-}
+// Display helpers live in inc/modules/news-articles.php (R-06).
 
 gti_dashboard_open( array(
     'page'     => 'news-articles',

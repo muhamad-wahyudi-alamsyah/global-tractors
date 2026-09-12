@@ -53,6 +53,8 @@ function gti_media_item($post) {
         'title'       => $post->post_title,
         'alt'         => (string) get_post_meta($post->ID, '_wp_attachment_image_alt', true),
         'caption'     => $post->post_excerpt,
+        // Needed so the drawer's edit form can prefill it (B-11).
+        'description' => $post->post_content,
         'url'         => $url,
         'thumb'       => $is_image ? (wp_get_attachment_image_url($post->ID, 'medium') ?: $url) : '',
         'type'        => $is_image ? 'image' : 'document',

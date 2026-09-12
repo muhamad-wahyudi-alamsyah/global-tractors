@@ -75,22 +75,7 @@ $source_labels = array(
     'sell-equipment'    => 'Sell Equipment',
 );
 
-// Format currency
-function gti_fmt_currency($amount) {
-    return 'IDR ' . number_format((float)$amount, 0, ',', '.');
-}
-function gti_fmt_date($date) {
-    if (!$date) return '-';
-    return date('d M Y', strtotime($date));
-}
-function gti_customer_initials($name) {
-    $parts = explode(' ', trim($name));
-    $initials = '';
-    foreach (array_slice($parts, 0, 2) as $p) {
-        $initials .= mb_strtoupper(mb_substr($p, 0, 1));
-    }
-    return $initials;
-}
+// Display helpers live in inc/helpers/format-helpers.php (R-06).
 
 gti_dashboard_open( array(
     'page'     => 'customers',

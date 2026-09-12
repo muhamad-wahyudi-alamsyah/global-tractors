@@ -29,41 +29,7 @@ if ($customer) {
     ));
 }
 
-// Helpers
-function gti_cd_initials($name) {
-    $parts = explode(' ', trim((string) $name));
-    $initials = '';
-    foreach (array_slice($parts, 0, 2) as $p) {
-        $initials .= mb_strtoupper(mb_substr($p, 0, 1));
-    }
-    return $initials ?: '?';
-}
-function gti_cd_fmt_date($date) {
-    if (!$date || $date === '0000-00-00 00:00:00') return '-';
-    return date('d M Y', strtotime($date));
-}
-function gti_cd_fmt_datetime($datetime) {
-    if (!$datetime || $datetime === '0000-00-00 00:00:00') return '-';
-    return date('d M Y, h:i A', strtotime($datetime));
-}
-function gti_cd_fmt_currency($amount) {
-    return 'IDR ' . number_format((float) $amount, 0, ',', '.');
-}
-function gti_cd_val($value, $fallback = '—') {
-    $value = trim((string) $value);
-    return $value !== '' ? $value : $fallback;
-}
-function gti_cd_status_label($status) {
-    return ucwords(str_replace('_', ' ', (string) $status));
-}
-function gti_cd_status_class($status) {
-    $map = array(
-        'new' => 'reserved', 'processing' => 'reserved', 'waiting_customer' => 'sold',
-        'proposal_sent' => 'reserved', 'approved' => 'available', 'completed' => 'available',
-        'rejected' => 'price-no-longer-valid', 'closed' => 'sold',
-    );
-    return $map[$status] ?? 'draft';
-}
+// Display helpers live in inc/helpers/format-helpers.php (R-06).
 
 $requests = array();
 $quotations = array();
@@ -148,9 +114,16 @@ $full_location  = $customer
     ? trim(implode(', ', array_filter(array($customer->city, $customer->province, $customer->country))), ', ')
     : '';
 
+// The edit modal and the row actions read the record from here rather than
+// from PHP interpolated into a <script> block (PRD §13.8).
+gti_page_data( array(
+    'customer' => $customer ? array_map( 'strval', (array) $customer ) : array(),
+) );
+
 gti_dashboard_open( array(
     'page'     => 'customer-detail',
-    'title'    => 'Customer Detail',
+    'title'    => $customer ? $customer->name : 'Customer Detail',
+    'subtitle' => $customer && $customer->company ? $customer->company : '',
     'cap'      => 'gti_manage_customers',
     'js'       => array( 'customer-detail' ),
 ) );
@@ -188,24 +161,28 @@ gti_dashboard_open( array(
 
                     <div class="gti-cd-action-bar">
                         <?php if ($customer->email): ?>
-                        <a href="mailto:<?php echo esc_attr($customer->email); ?>" class="gti-cd-btn gti-cd-btn-outline">
+                        <button type="button" class="gti-cd-btn gti-cd-btn-outline" id="cd-email-btn">
                             <i class="fas fa-envelope"></i> Send Email
-                        </a>
+                        </button>
                         <?php endif; ?>
-                        <a href="#" class="gti-cd-btn gti-cd-btn-outline">
+                        <button type="button" class="gti-cd-btn gti-cd-btn-outline" id="cd-edit-btn">
                             <i class="fas fa-pen"></i> Edit Customer
-                        </a>
+                        </button>
                     <div class="gti-cd-more-wrap">
                         <button class="gti-cd-more-btn" id="cd-more-toggle">
                             More Actions <i class="fas fa-chevron-down"></i>
                         </button>
+                        <?php /* Create Quotation, Request Equipment, Log Call and Export Data
+                                 were href="#" with nothing behind them and no module to build
+                                 on, so they are gone rather than left as decoration (B-05). */ ?>
                         <div class="gti-cd-more-dropdown" id="cd-more-dropdown">
-                            <a href="#" class="gti-cd-more-item"><i class="fas fa-file-invoice"></i> Create Quotation</a>
-                            <a href="#" class="gti-cd-more-item"><i class="fas fa-file-alt"></i> Request Equipment</a>
-                            <a href="#" class="gti-cd-more-item"><i class="fas fa-phone"></i> Log Call</a>
-                            <a href="#" class="gti-cd-more-item"><i class="fas fa-tag"></i> Change Status</a>
-                            <a href="#" class="gti-cd-more-item"><i class="fas fa-download"></i> Export Data</a>
-                            <a href="#" class="gti-cd-more-item" style="color:#dc2626"><i class="fas fa-trash" style="color:#dc2626"></i> Delete Customer</a>
+                            <button type="button" class="gti-cd-more-item" id="cd-status-btn">
+                                <i class="fas fa-tag"></i>
+                                <?php echo $customer->status === 'active' ? 'Set Inactive' : 'Set Active'; ?>
+                            </button>
+                            <button type="button" class="gti-cd-more-item" id="cd-delete-btn" style="color:#dc2626">
+                                <i class="fas fa-trash" style="color:#dc2626"></i> Delete Customer
+                            </button>
                         </div>
                     </div>
                     </div>
@@ -225,14 +202,6 @@ gti_dashboard_open( array(
                             </div>
                         </div>
                         <div class="gti-cd-profile-right">
-                            <div class="gti-cd-kpi-box">
-                                <div class="gti-cd-kpi-value" style="color:#f59e0b">
-                                    <i class="fas fa-star" style="font-size:16px"></i>
-                                    <?php echo esc_html(number_format((float)$customer->rating, 1)); ?>
-                                    <span style="font-size:13px;color:#9ca3af;font-weight:400">/ 5.0</span>
-                                </div>
-                                <div class="gti-cd-kpi-label">Customer Rating</div>
-                            </div>
                             <div class="gti-cd-kpi-box">
                                 <div class="gti-cd-kpi-value"><?php echo (int) ($stats['requests'] + $stats['quotations']); ?></div>
                                 <div class="gti-cd-kpi-label">Total Transactions</div>
@@ -287,8 +256,6 @@ gti_dashboard_open( array(
                     <a href="#tab-request" class="gti-cd-tab" data-tab="request">Request &amp; Inquiry</a>
                     <a href="#tab-quotations" class="gti-cd-tab" data-tab="quotations">Quotations</a>
                     <a href="#tab-transactions" class="gti-cd-tab" data-tab="transactions">Transactions</a>
-                    <a href="#tab-rentals" class="gti-cd-tab" data-tab="rentals">Rentals</a>
-                    <a href="#tab-documents" class="gti-cd-tab" data-tab="documents">Documents</a>
                     <a href="#tab-activity" class="gti-cd-tab" data-tab="activity">Activity Log</a>
                 </div>
 
@@ -399,7 +366,6 @@ gti_dashboard_open( array(
                             <div class="gti-cd-stat-card">
                                 <div class="gti-cd-stat-card-header">
                                     <div class="gti-cd-stat-card-icon r"><i class="fas fa-car"></i></div>
-                                    <a href="#tab-rentals" class="gti-cd-tab" style="padding:0;border:0;margin:0;font-size:12px" onclick="document.querySelector('[data-tab=rentals]').click()">View Details <i class="fas fa-arrow-right" style="font-size:10px"></i></a>
                                 </div>
                                 <div class="gti-cd-stat-card-value">0</div>
                                 <div class="gti-cd-stat-card-label">Total Rental</div>
@@ -595,18 +561,6 @@ gti_dashboard_open( array(
                         <?php endif; ?>
                     </div>
                 </div>
-                <div class="gti-cd-tab-content" id="tab-rentals" style="display:none">
-                    <div class="gti-cd-section">
-                        <div class="gti-cd-section-title"><i class="fas fa-car"></i> Rentals</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No rental records are linked to this customer.</p>
-                    </div>
-                </div>
-                <div class="gti-cd-tab-content" id="tab-documents" style="display:none">
-                    <div class="gti-cd-section">
-                        <div class="gti-cd-section-title"><i class="fas fa-folder-open"></i> Documents</div>
-                        <p style="color:#9ca3af;text-align:center;padding:40px 0">No documents have been attached to this customer.</p>
-                    </div>
-                </div>
                 <div class="gti-cd-tab-content" id="tab-activity" style="display:none">
                     <div class="gti-cd-section">
                         <div class="gti-cd-section-title"><i class="fas fa-history"></i> Activity Log</div>
@@ -643,5 +597,5 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'email' ),
+    'modals' => array( 'delete', 'email', 'customer' ),
 ) );

@@ -72,6 +72,9 @@ if ($can_list_users) {
             'role_label' => $role_labels[$role_key] ?? ($editable_roles[$role_key]['name'] ?? ucfirst((string) $role_key)),
             'avatar'     => get_avatar_url($team_user->ID, array('size' => 64)),
             'activities' => $activity_by_user[$team_user->ID] ?? 0,
+            // Supports the PIC workflow: who is carrying what (PRD §6.12 gap 6).
+            'assigned'   => gti_assigned_order_count($team_user->ID),
+            'owned_posts'=> (int) count_user_posts($team_user->ID, 'post', true),
             'last_login' => get_user_meta($team_user->ID, 'gti_last_login', true),
             'registered' => $team_user->user_registered,
             'is_self'    => ((int) $team_user->ID === (int) $current_user->ID),
@@ -255,6 +258,7 @@ gti_dashboard_open( array(
                                             <th>User</th>
                                             <th style="width:170px;">Role</th>
                                             <th style="width:150px;">Phone</th>
+                                            <th style="width:120px;text-align:center;">Assigned Orders</th>
                                             <th style="width:110px;text-align:center;">Activities</th>
                                             <th style="width:160px;">Last Login</th>
                                             <?php if ($can_edit_users || $can_delete_users): ?>
@@ -276,6 +280,13 @@ gti_dashboard_open( array(
                                                 </td>
                                                 <td><span class="gti-users-role"><?php echo esc_html($member['role_label']); ?></span></td>
                                                 <td><?php echo esc_html($member['phone'] ?: '—'); ?></td>
+                                                <td style="text-align:center;">
+                                                    <?php if ($member['assigned'] > 0) : ?>
+                                                        <strong><?php echo (int) $member['assigned']; ?></strong>
+                                                    <?php else : ?>
+                                                        <span style="color:#9ca3af;">&mdash;</span>
+                                                    <?php endif; ?>
+                                                </td>
                                                 <td style="text-align:center;"><?php echo esc_html($member['activities']); ?></td>
                                                 <td style="color:#6b7280;font-size:13px;">
                                                     <?php echo esc_html($member['last_login'] ? date('M j, Y H:i', strtotime($member['last_login'])) : 'Never'); ?>
@@ -290,8 +301,13 @@ gti_dashboard_open( array(
                                                         </button>
                                                     <?php endif; ?>
                                                     <?php if ($can_delete_users && !$member['is_self']): ?>
-                                                        <button type="button" class="gti-users-icon-btn danger" title="Delete user"
-                                                                onclick="gtiDeleteUser(<?php echo (int) $member['id']; ?>, '<?php echo esc_js($member['name']); ?>')">
+                                                        <button type="button" class="gti-users-icon-btn danger js-delete-user" title="Delete user"
+                                                                data-user='<?php echo esc_attr(wp_json_encode(array(
+                                                                    'id'    => $member['id'],
+                                                                    'name'  => $member['name'],
+                                                                    'email' => $member['email'],
+                                                                    'posts' => $member['owned_posts'],
+                                                                ))); ?>'>
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     <?php endif; ?>
@@ -300,7 +316,7 @@ gti_dashboard_open( array(
                                             </tr>
                                         <?php endforeach; ?>
                                         <?php if (empty($team)): ?>
-                                            <tr><td colspan="6" style="text-align:center;padding:40px;color:#9ca3af;">No users found.</td></tr>
+                                            <tr><td colspan="7" style="text-align:center;padding:40px;color:#9ca3af;">No users found.</td></tr>
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
@@ -314,5 +330,5 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete' ),
+    'modals' => array( 'delete', 'user-delete' ),
 ) );

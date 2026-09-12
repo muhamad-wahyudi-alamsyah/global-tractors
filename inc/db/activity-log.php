@@ -365,3 +365,51 @@ function gti_activity_on_post_transition($new_status, $old_status, $post) {
         'new_status' => $new_status,
     ));
 }
+
+// ── Icon/colour per action type (moved out of the template, R-06) ───────────
+if ( ! function_exists( 'gti_get_action_icon' ) ) {
+    function gti_get_action_icon($action) {
+        $icons = array(
+            'login'              => array('icon' => 'fa-sign-in-alt', 'color' => '#059669', 'bg' => '#d1fae5'),
+            'logout'             => array('icon' => 'fa-sign-out-alt', 'color' => '#6b7280', 'bg' => '#f3f4f6'),
+            'create'             => array('icon' => 'fa-plus-circle', 'color' => '#2563eb', 'bg' => '#dbeafe'),
+            'update'             => array('icon' => 'fa-edit', 'color' => '#d97706', 'bg' => '#fef3c7'),
+            'delete'             => array('icon' => 'fa-trash-alt', 'color' => '#dc2626', 'bg' => '#fee2e2'),
+            'view'               => array('icon' => 'fa-eye', 'color' => '#6366f1', 'bg' => '#e0e7ff'),
+            'publish'            => array('icon' => 'fa-bullhorn', 'color' => '#047857', 'bg' => '#d1fae5'),
+            'unpublish'          => array('icon' => 'fa-eye-slash', 'color' => '#b45309', 'bg' => '#fef3c7'),
+            'upload'             => array('icon' => 'fa-cloud-arrow-up', 'color' => '#0891b2', 'bg' => '#cffafe'),
+            'status_change'      => array('icon' => 'fa-exchange-alt', 'color' => '#8b5cf6', 'bg' => '#ede9fe'),
+            'password_change'    => array('icon' => 'fa-key', 'color' => '#ec4899', 'bg' => '#fce7f3'),
+            'profile_update'     => array('icon' => 'fa-user-edit', 'color' => '#0891b2', 'bg' => '#cffafe'),
+            'export'             => array('icon' => 'fa-download', 'color' => '#059669', 'bg' => '#d1fae5'),
+            'import'             => array('icon' => 'fa-upload', 'color' => '#2563eb', 'bg' => '#dbeafe'),
+            'register'           => array('icon' => 'fa-user-plus', 'color' => '#059669', 'bg' => '#d1fae5'),
+            'failed_login'       => array('icon' => 'fa-exclamation-triangle', 'color' => '#dc2626', 'bg' => '#fee2e2'),
+        );
+        return $icons[$action] ?? array('icon' => 'fa-circle', 'color' => '#6b7280', 'bg' => '#f3f4f6');
+    }
+}
+
+/**
+ * Users that appear in the activity log, for the filter dropdown (PRD §6.13).
+ *
+ * Driven by the log itself rather than the full user list, so the dropdown only
+ * offers people who actually have entries.
+ */
+function gti_activity_log_users() {
+    global $wpdb;
+
+    $table = gti_activity_log_table();
+    $ids   = $wpdb->get_col( "SELECT DISTINCT user_id FROM {$table} WHERE user_id > 0" );
+
+    if ( ! $ids ) {
+        return array();
+    }
+
+    return get_users( array(
+        'include' => array_map( 'intval', $ids ),
+        'orderby' => 'display_name',
+        'order'   => 'ASC',
+    ) );
+}

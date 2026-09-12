@@ -234,24 +234,60 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    function gtiDeleteUser(userId, name) {
-        if (!confirm('Delete the account for ' + name + '? This cannot be undone.')) return;
 
-        var data = new FormData();
-        data.append('action', 'gti_delete_user');
-        data.append('id', userId);
-        data.append('nonce', gtiAjax.nonce);
 
-        fetch(gtiAjax.ajaxurl, { method: 'POST', body: data })
-            .then(function(r) { return r.json(); })
-            .then(function(res) {
-                if (res.success) {
-                    location.reload();
-                } else {
-                    gtiUsersAlert('gti-users-alert', 'error', (res.data && res.data.message) || 'Failed to delete user.');
-                }
-            })
-            .catch(function() {
-                gtiUsersAlert('gti-users-alert', 'error', 'Network error. Please try again.');
-            });
+/**
+ * Delete a user, handing their articles to someone else first.
+ *
+ * wp_delete_user() with no reassign target deletes everything the user wrote,
+ * so the server refuses when they own content and none is named (PRD §6.12).
+ */
+(function () {
+    'use strict';
+
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('.js-delete-user');
+        if (!trigger) return;
+
+        var user;
+        try { user = JSON.parse(trigger.dataset.user); } catch (err) { return; }
+
+        document.getElementById('gti-user-delete-id').value = user.id;
+        document.getElementById('gti-user-delete-name').textContent = user.name;
+        document.getElementById('gti-user-delete-email').textContent = user.email || '—';
+        document.getElementById('gti-user-delete-count').textContent = user.posts;
+
+        var owns = Number(user.posts) > 0;
+        document.getElementById('gti-user-delete-owns').hidden = !owns;
+        document.getElementById('gti-user-delete-reassign-field').hidden = !owns;
+
+        var select = document.getElementById('gti-user-delete-reassign');
+        select.required = owns;
+        select.value = '';
+        // Never offer the account being deleted as its own inheritor.
+        Array.prototype.forEach.call(select.options, function (opt) {
+            opt.hidden = opt.value === String(user.id);
+        });
+
+        GTI.ui.modal.open('gtiUserDeleteOverlay');
+    });
+
+    var form = document.getElementById('gti-user-delete-form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var submit = form.querySelector('button[type="submit"]');
+            var unlock = GTI.ui.lockButton(submit, 'Menghapus…');
+
+            GTI.api.post('gti_delete_user', new FormData(form))
+                .then(function (res) {
+                    GTI.ui.modal.close('gtiUserDeleteOverlay');
+                    GTI.ui.toast(res.message || 'User dihapus.', 'success');
+                    setTimeout(function () { window.location.reload(); }, 700);
+                })
+                .catch(function () {})
+                .then(unlock);
+        });
     }
+})();

@@ -15,6 +15,7 @@ $search        = isset($_GET['search'])      ? sanitize_text_field($_GET['search
 $action_filter = isset($_GET['action_type']) ? sanitize_text_field($_GET['action_type']) : '';
 $date_from     = isset($_GET['date_from'])   ? sanitize_text_field($_GET['date_from'])   : '';
 $date_to       = isset($_GET['date_to'])     ? sanitize_text_field($_GET['date_to'])     : '';
+$user_filter   = isset($_GET['user_id'])     ? (int) $_GET['user_id']                    : 0;
 
 // Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
 // Filters carried across pagination links.
@@ -24,6 +25,7 @@ $query_params = array_filter( array(
     'action_type' => $action_filter,
     'date_from'   => $date_from,
     'date_to'     => $date_to,
+    'user_id'     => $user_filter ?: '',
 ) );
 
 $paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
@@ -45,6 +47,10 @@ if ($action_filter) {
     $params[] = $action_filter;
 }
 
+if ($user_filter) {
+    $where   .= " AND al.user_id = %d";
+    $params[] = $user_filter;
+}
 if ($date_from) {
     $where .= " AND al.created_at >= %s";
     $params[] = $date_from . ' 00:00:00';
@@ -92,28 +98,7 @@ $my_count = (int) $wpdb->get_var($wpdb->prepare(
     $current_user->ID
 ));
 
-// Action icon mapping
-function gti_get_action_icon($action) {
-    $icons = array(
-        'login'              => array('icon' => 'fa-sign-in-alt', 'color' => '#059669', 'bg' => '#d1fae5'),
-        'logout'             => array('icon' => 'fa-sign-out-alt', 'color' => '#6b7280', 'bg' => '#f3f4f6'),
-        'create'             => array('icon' => 'fa-plus-circle', 'color' => '#2563eb', 'bg' => '#dbeafe'),
-        'update'             => array('icon' => 'fa-edit', 'color' => '#d97706', 'bg' => '#fef3c7'),
-        'delete'             => array('icon' => 'fa-trash-alt', 'color' => '#dc2626', 'bg' => '#fee2e2'),
-        'view'               => array('icon' => 'fa-eye', 'color' => '#6366f1', 'bg' => '#e0e7ff'),
-        'publish'            => array('icon' => 'fa-bullhorn', 'color' => '#047857', 'bg' => '#d1fae5'),
-        'unpublish'          => array('icon' => 'fa-eye-slash', 'color' => '#b45309', 'bg' => '#fef3c7'),
-        'upload'             => array('icon' => 'fa-cloud-arrow-up', 'color' => '#0891b2', 'bg' => '#cffafe'),
-        'status_change'      => array('icon' => 'fa-exchange-alt', 'color' => '#8b5cf6', 'bg' => '#ede9fe'),
-        'password_change'    => array('icon' => 'fa-key', 'color' => '#ec4899', 'bg' => '#fce7f3'),
-        'profile_update'     => array('icon' => 'fa-user-edit', 'color' => '#0891b2', 'bg' => '#cffafe'),
-        'export'             => array('icon' => 'fa-download', 'color' => '#059669', 'bg' => '#d1fae5'),
-        'import'             => array('icon' => 'fa-upload', 'color' => '#2563eb', 'bg' => '#dbeafe'),
-        'register'           => array('icon' => 'fa-user-plus', 'color' => '#059669', 'bg' => '#d1fae5'),
-        'failed_login'       => array('icon' => 'fa-exclamation-triangle', 'color' => '#dc2626', 'bg' => '#fee2e2'),
-    );
-    return $icons[$action] ?? array('icon' => 'fa-circle', 'color' => '#6b7280', 'bg' => '#f3f4f6');
-}
+// gti_get_action_icon() lives in inc/db/activity-log.php (R-06).
 
 gti_dashboard_open( array(
     'page'     => 'activity-log',
@@ -183,9 +168,25 @@ gti_dashboard_open( array(
                             <div class="gti-ue-filter">
                                 <input type="date" name="date_to" value="<?php echo esc_attr($date_to); ?>" style="padding:9px 12px;border-radius:8px;border:1px solid #d1d5db;font-size:13px;font-family:inherit;color:#374151;background:#fff;" title="To date">
                             </div>
+                            <div class="gti-ue-filter">
+                                <select name="user_id">
+                                    <option value="">All Users</option>
+                                    <?php foreach (gti_activity_log_users() as $gti_log_user) : ?>
+                                        <option value="<?php echo (int) $gti_log_user->ID; ?>" <?php selected($user_filter, $gti_log_user->ID); ?>>
+                                            <?php echo esc_html($gti_log_user->display_name); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button type="submit" class="gti-ue-btn-reset"><i class="fas fa-filter"></i> Apply</button>
                             <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-ue-btn-reset">
                                 <i class="fas fa-rotate-right"></i> Reset
                             </a>
+                            <?php if (current_user_can('gti_manage_settings')) : ?>
+                                <button type="button" class="gti-ue-btn-reset" id="gti-export-log">
+                                    <i class="fas fa-download"></i> Export CSV
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </form>
 
@@ -228,7 +229,7 @@ gti_dashboard_open( array(
                                             $description   = gti_activity_row_description($log);
                                             $entity_label  = !empty($log->entity_type) ? gti_activity_entity_label($log->entity_type) : '';
                                             ?>
-                                            <tr>
+                                            <tr data-log-id="<?php echo (int) $log->id; ?>" style="cursor:pointer;">
                                                 <td>
                                                     <div class="gti-al-user">
                                                         <?php if ($is_guest): ?>
@@ -294,6 +295,51 @@ gti_dashboard_open( array(
                             <?php endif; ?>
                     </div>
 
+                </div>
+            </div>
+
+            <?php
+            // Detail drawer — clicking a row shows the stored `details` JSON in a
+            // readable form, including a before/after pair for status changes
+            // (PRD §6.13 gap 2).
+            ?>
+            <div class="gti-drawer" id="detailDrawer">
+                <div class="gti-drawer-header">
+                    <div class="gti-drawer-header-left">
+                        <h2 data-field="action">Activity</h2>
+                    </div>
+                    <button type="button" class="gti-drawer-close" onclick="GTI.ui.drawer.close()" aria-label="Close">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="gti-drawer-body">
+                    <div class="gti-drawer-section">
+                        <div class="gti-drawer-section-title"><i class="fas fa-info-circle"></i> Entry</div>
+                        <div class="gti-drawer-row">
+                            <span class="gti-drawer-label">User</span>
+                            <span class="gti-drawer-value" data-field="actor">&mdash;</span>
+                        </div>
+                        <div class="gti-drawer-row">
+                            <span class="gti-drawer-label">Entity</span>
+                            <span class="gti-drawer-value" data-field="entity">&mdash;</span>
+                        </div>
+                        <div class="gti-drawer-row">
+                            <span class="gti-drawer-label">When</span>
+                            <span class="gti-drawer-value" data-field="when">&mdash;</span>
+                        </div>
+                        <div class="gti-drawer-row">
+                            <span class="gti-drawer-label">IP</span>
+                            <span class="gti-drawer-value" data-field="ip">&mdash;</span>
+                        </div>
+                        <div class="gti-drawer-row gti-drawer-row-stacked">
+                            <span class="gti-drawer-label">Description</span>
+                            <span class="gti-drawer-value is-message" data-field="description">&mdash;</span>
+                        </div>
+                    </div>
+                    <div class="gti-drawer-section">
+                        <div class="gti-drawer-section-title"><i class="fas fa-code"></i> Details</div>
+                        <div data-field="details"><p class="gti-drawer-empty">Pilih satu baris.</p></div>
+                    </div>
                 </div>
             </div>
 

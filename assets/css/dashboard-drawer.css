@@ -183,3 +183,21 @@
 @media (max-width: 560px) {
     .gti-drawer-gallery { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Before → after pair for a status_change entry (PRD §6.13 gap 2). */
+.gti-diff {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 13px;
+}
+.gti-diff-before,
+.gti-diff-after {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.gti-diff-before { background: #fee2e2; color: #b91c1c; }
+.gti-diff-after  { background: #d1fae5; color: #047857; }
+.gti-diff i      { color: #9ca3af; font-size: 11px; }

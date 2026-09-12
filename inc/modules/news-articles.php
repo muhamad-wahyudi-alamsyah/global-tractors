@@ -148,6 +148,7 @@ function gti_article_from_post($post) {
     $a->featured_image = get_the_post_thumbnail_url($post->ID, 'medium') ?: '';
     $a->status         = gti_article_status_from_post($post->post_status);
     $a->views          = (int) get_post_meta($post->ID, GTI_ARTICLE_VIEWS_META, true);
+    $a->slug           = $post->post_name;
     $a->is_featured    = (int) get_post_meta($post->ID, GTI_ARTICLE_FEATURED_META, true);
     $a->published_at   = ($post->post_status === 'publish') ? $post->post_date : null;
     $a->created_at     = $post->post_date;
@@ -266,6 +267,12 @@ function gti_save_article($data) {
         $postarr['post_author'] = (int) $data['author_id'];
     }
 
+    // An explicit slug wins; leaving it blank lets WordPress derive one from the
+    // title, which is the behaviour editors expect (PRD §6.10 gap 5).
+    if (!empty($data['slug'])) {
+        $postarr['post_name'] = sanitize_title($data['slug']);
+    }
+
     if ($id > 0) {
         $postarr['ID'] = $id;
         $post_id = wp_update_post($postarr, true);
@@ -305,15 +312,41 @@ function gti_save_article($data) {
 
 /**
  * Count a public read of an article.
+ *
+ * Throttled to once per visitor per article per 12 hours (PRD §6.10). Without
+ * that, a reload — or any bot — inflated the number, which made the figure
+ * shown in the dashboard meaningless.
+ *
+ * @param bool $force Skip the throttle (used by the importer).
  */
-function gti_article_register_view($post_id) {
+function gti_article_register_view($post_id, $force = false) {
+    $post_id = (int) $post_id;
+    if (!$post_id) {
+        return false;
+    }
+
+    if (!$force) {
+        // Keyed by IP hash rather than a cookie so it still works for visitors
+        // who block cookies; the hash is never reversible to an address.
+        $key = 'gti_view_' . $post_id . '_' . substr(md5(gti_get_client_ip() . wp_salt()), 0, 12);
+        if (get_transient($key)) {
+            return false;
+        }
+        set_transient($key, 1, 12 * HOUR_IN_SECONDS);
+    }
+
     $views = (int) get_post_meta($post_id, GTI_ARTICLE_VIEWS_META, true);
     update_post_meta($post_id, GTI_ARTICLE_VIEWS_META, $views + 1);
+
+    return true;
 }
 
 add_action('wp_head', 'gti_article_count_single_view');
 function gti_article_count_single_view() {
-    if (!is_singular('post') || is_user_logged_in()) return;
+    // Staff reading their own drafts should not move the counter.
+    if (!is_singular('post') || is_user_logged_in()) {
+        return;
+    }
     gti_article_register_view(get_queried_object_id());
 }
 
@@ -403,4 +436,35 @@ function gti_attachment_id_from_url($url) {
     // attachment_url_to_postid() misses resized URLs; retry on the original file.
     $stripped = preg_replace('/-\d+x\d+(\.[a-zA-Z0-9]+)$/', '$1', $url);
     return $stripped !== $url ? (int) attachment_url_to_postid($stripped) : 0;
+}
+
+// ── Display helpers (moved out of templates/page-news-articles.php, R-06) ───
+if ( ! function_exists( 'gti_na_category_label' ) ) {
+    function gti_na_category_label($cat) {
+        return gti_article_category_label($cat);
+    }
+    function gti_na_category_color($cat) {
+        return gti_article_category_color($cat);
+    }
+    function gti_na_status_class($status) {
+        return $status === 'published' ? 'available' : ($status === 'draft' ? 'reserved' : 'sold');
+    }
+    function gti_na_excerpt($text, $len = 80) {
+        if (!$text) return '-';
+        return mb_strlen($text) > $len ? mb_substr($text, 0, $len) . '...' : $text;
+    }
+    function gti_na_format_views($views) {
+        if ($views >= 1000) {
+            return number_format($views / 1000, 1) . 'K';
+        }
+        return number_format($views);
+    }
+}
+
+if ( ! function_exists( 'gti_na_value' ) ) {
+    function gti_na_value($field, $article, $default = '') {
+        if (isset($_POST[$field])) return $_POST[$field];
+        if ($article && isset($article->$field)) return $article->$field;
+        return $default;
+    }
 }

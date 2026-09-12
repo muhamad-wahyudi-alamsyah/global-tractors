@@ -58,6 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
                     'category'          => $category,
                     'excerpt'           => sanitize_textarea_field($_POST['excerpt'] ?? ''),
                     'content'           => wp_kses_post($_POST['content'] ?? ''),
+                    'slug'              => sanitize_title($_POST['slug'] ?? ''),
                     'tags'              => sanitize_text_field($_POST['tags'] ?? ''),
                     'status'            => $status,
                     'is_featured'       => isset($_POST['is_featured']) ? 1 : 0,
@@ -82,11 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
 }
 
 // Field values: what was just submitted wins, then the stored article, then a default.
-function gti_na_value($field, $article, $default = '') {
-    if (isset($_POST[$field])) return $_POST[$field];
-    if ($article && isset($article->$field)) return $article->$field;
-    return $default;
-}
+// gti_na_value() lives in inc/modules/news-articles.php (R-06).
 
 $page_title  = $editing_id ? 'Edit Article' : 'Add New Article';
 $page_intro  = $editing_id ? 'Update an existing news or article post' : 'Create a new news or article post';
@@ -147,6 +144,10 @@ gti_dashboard_open( array(
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>Title <span class="required">*</span></label>
                                     <input type="text" name="title" placeholder="Enter article title..." required value="<?php echo esc_attr(gti_na_value('title', $article)); ?>">
+                                </div>
+                                <div class="gti-ae-field gti-ae-field-full">
+                                    <label>Slug <span class="gti-field-hint">leave blank to derive it from the title</span></label>
+                                    <input type="text" name="slug" placeholder="article-url-slug" value="<?php echo esc_attr(gti_na_value('slug', $article)); ?>">
                                 </div>
                             </div>
                             <div class="gti-ae-form-grid">
@@ -242,7 +243,21 @@ gti_dashboard_open( array(
                             <div class="gti-ae-form-grid">
                                 <div class="gti-ae-field gti-ae-field-full">
                                     <label>Article Content <span class="required">*</span></label>
-                                    <textarea name="content" class="gti-na-content-editor" placeholder="Write your article content here... Use double line breaks for paragraph separation."><?php echo esc_textarea(gti_na_value('content', $article)); ?></textarea>
+                                    <?php
+                                    // TinyMCE rather than a plain textarea, so formatting written
+                                    // here survives and matches wp-admin (PRD §6.10 gap 2).
+                                    wp_editor(
+                                        gti_na_value( 'content', $article ),
+                                        'gti-article-content',
+                                        array(
+                                            'textarea_name' => 'content',
+                                            'textarea_rows' => 18,
+                                            'media_buttons' => current_user_can( 'upload_files' ),
+                                            'teeny'         => false,
+                                            'quicktags'     => true,
+                                        )
+                                    );
+                                    ?>
                                 </div>
                             </div>
                         </div>

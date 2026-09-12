@@ -76,6 +76,14 @@ function gti_ajax_upload_media() {
         wp_send_json_error(array('message' => $errors ? implode(' ', $errors) : 'Nothing was uploaded.'));
     }
 
+    gti_log_current_activity(
+        'upload',
+        sprintf('Uploaded %d file(s) to the media library', count($uploaded)),
+        'media',
+        0,
+        array('count' => count($uploaded))
+    );
+
     wp_send_json_success(array(
         'message'  => count($uploaded) . ' file(s) uploaded.',
         'uploaded' => $uploaded,
@@ -111,15 +119,32 @@ function gti_ajax_update_media() {
     $id = (int) ($_POST['id'] ?? 0);
     $attachment = $id ? get_post($id) : null;
     if (!$attachment || $attachment->post_type !== 'attachment') {
-        wp_send_json_error(array('message' => 'That file no longer exists.'));
+        wp_send_json_error(array('message' => 'That file no longer exists.', 'code' => 'not_found'), 404);
+    }
+    // upload_files says you may add files, not that you may edit this one.
+    if (!current_user_can('edit_post', $id)) {
+        wp_send_json_error(array('message' => 'You cannot edit that file.', 'code' => 'forbidden'), 403);
     }
 
+    $post = array('ID' => $id);
     if (isset($_POST['title'])) {
-        wp_update_post(array('ID' => $id, 'post_title' => sanitize_text_field($_POST['title'])));
+        $post['post_title'] = sanitize_text_field(wp_unslash($_POST['title']));
     }
+    if (isset($_POST['caption'])) {
+        $post['post_excerpt'] = sanitize_textarea_field(wp_unslash($_POST['caption']));
+    }
+    if (isset($_POST['description'])) {
+        $post['post_content'] = wp_kses_post(wp_unslash($_POST['description']));
+    }
+    if (count($post) > 1) {
+        wp_update_post($post);
+    }
+
     if (isset($_POST['alt'])) {
-        update_post_meta($id, '_wp_attachment_image_alt', sanitize_text_field($_POST['alt']));
+        update_post_meta($id, '_wp_attachment_image_alt', sanitize_text_field(wp_unslash($_POST['alt'])));
     }
+
+    gti_log_current_activity('update', 'Updated media details: ' . get_the_title($id), 'media', $id);
 
     wp_send_json_success(array('message' => 'File details saved.', 'item' => gti_media_item($id)));
 }
@@ -155,6 +180,14 @@ function gti_ajax_update_article_status() {
         wp_send_json_error(array('message' => $result->get_error_message()));
     }
 
+    gti_log_current_activity(
+        in_array($status, array('published', 'archived'), true) ? 'publish' : 'unpublish',
+        sprintf('%s: %s', $post->post_title, $status),
+        'article',
+        $id,
+        array('from' => gti_article_status_from_post($post->post_status), 'to' => $status)
+    );
+
     wp_send_json_success(array('message' => 'Article status updated.', 'status' => $status));
 }
 
@@ -172,9 +205,23 @@ function gti_ajax_delete_article() {
         wp_send_json_error(array('message' => 'You do not have permission to delete that article.'), 403);
     }
 
+    // Something already in the trash is deleted for real; anything else is
+    // trashed first, so a mis-click stays recoverable (PRD §6.10 gap 3).
+    $permanent = !empty($_POST['permanent']) || $post->post_status === 'trash';
+
+    if ($permanent) {
+        if (!wp_delete_post($id, true)) {
+            wp_send_json_error(array('message' => 'Failed to delete the article.'));
+        }
+        gti_log_current_activity('delete', 'Permanently deleted article: ' . $post->post_title, 'article', $id);
+        wp_send_json_success(array('message' => 'Article permanently deleted.', 'permanent' => true));
+    }
+
     if (!wp_trash_post($id)) {
         wp_send_json_error(array('message' => 'Failed to delete the article.'));
     }
+
+    gti_log_current_activity('delete', 'Trashed article: ' . $post->post_title, 'article', $id);
 
     wp_send_json_success(array('message' => 'Article moved to trash.'));
 }
@@ -247,4 +294,53 @@ function gti_ajax_change_password() {
     wp_set_auth_cookie($user->ID, true);
 
     wp_send_json_success(array('message' => 'Password updated successfully.'));
+}
+
+
+add_action('wp_ajax_gti_bulk_delete_media', 'gti_ajax_bulk_delete_media');
+/**
+ * Delete several media items at once (PRD §6.11 gap 4).
+ *
+ * The grid already rendered a checkbox on every card; nothing was wired to it.
+ * Each id is checked individually — holding upload_files does not imply the
+ * right to delete someone else's file.
+ */
+function gti_ajax_bulk_delete_media() {
+    gti_ajax_guard('upload_files');
+
+    $ids = array_filter(array_map('intval', (array) ($_POST['ids'] ?? array())));
+    if (!$ids) {
+        wp_send_json_error(array('message' => 'No files were selected.', 'code' => 'empty'));
+    }
+
+    $deleted = 0;
+    $skipped = 0;
+
+    foreach ($ids as $id) {
+        $attachment = get_post($id);
+        if (!$attachment || $attachment->post_type !== 'attachment' || !current_user_can('delete_post', $id)) {
+            $skipped++;
+            continue;
+        }
+        if (wp_delete_attachment($id, true)) {
+            $deleted++;
+        } else {
+            $skipped++;
+        }
+    }
+
+    if (!$deleted) {
+        wp_send_json_error(array('message' => 'Nothing could be deleted.', 'code' => 'none_deleted'));
+    }
+
+    gti_log_current_activity('delete', sprintf('Deleted %d media file(s)', $deleted), 'media', 0,
+        array('deleted' => $deleted, 'skipped' => $skipped));
+
+    wp_send_json_success(array(
+        'message' => $skipped
+            ? sprintf('%d file(s) deleted, %d skipped.', $deleted, $skipped)
+            : sprintf('%d file(s) deleted.', $deleted),
+        'deleted' => $deleted,
+        'skipped' => $skipped,
+    ));
 }

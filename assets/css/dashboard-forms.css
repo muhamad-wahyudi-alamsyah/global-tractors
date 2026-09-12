@@ -200,3 +200,38 @@ body.gti-modal-open { overflow: hidden; }
     .gti-modal { max-width: 100%; }
     .gti-toast-container { left: 16px; right: 16px; align-items: stretch; }
 }
+
+/* ── Media library bulk selection (PRD §6.11 gap 4) ──────────────────────── */
+.gti-ml-bulkbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: #fffbf3;
+    border: 1px solid var(--gti-primary);
+    border-radius: 10px;
+}
+.gti-ml-bulkbar .gti-checkbox { margin-bottom: 0; }
+.gti-ml-bulkinfo { font-size: 13px; color: var(--gti-muted); margin-right: auto; }
+.gti-ml-bulkbar button { border-color: var(--gti-danger); color: var(--gti-danger); }
+.gti-ml-bulkbar button:hover { background: #fee2e2; }
+
+/* The checkbox sits over the thumbnail; it appears on hover or once checked. */
+.gti-ml-card-check-wrap {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.gti-ml-card:hover .gti-ml-card-check-wrap,
+.gti-ml-card-check-wrap:has(input:checked) { opacity: 1; }
+.gti-ml-card-check {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--gti-primary);
+    cursor: pointer;
+}

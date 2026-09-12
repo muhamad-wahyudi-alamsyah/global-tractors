@@ -87,6 +87,13 @@ function gti_enqueue_dashboard_assets() {
         wp_enqueue_script('gti-chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js', [], '4.4.0', true);
     }
 
+    // The article form renders wp_editor(); on a front-end route its scripts and
+    // styles are not registered unless we ask for them here (PRD §6.10 gap 2).
+    if ($page === 'add-news-article') {
+        wp_enqueue_editor();
+        wp_enqueue_media();
+    }
+
     if (in_array($page, ['add-equipment', 'add-used-equipment', 'add-rental-equipment', 'add-spare-part'], true)) {
         gti_enqueue_style('gti-add-equipment', 'assets/css/add-equipment.css', ['gti-dashboard']);
         gti_enqueue_script('gti-add-equipment', 'assets/js/add-equipment.js', ['gti-dashboard-ui']);

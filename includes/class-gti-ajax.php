@@ -624,6 +624,7 @@ private static function verify_nonce() {
         $status = gti_spare_stock_status($row->stock, $row->minimum_stock);
         $result = $wpdb->update($table, array('status' => $status), array('id' => $id));
         if ($result !== false) {
+            self::log_activity('publish', 'spare_part', $id, array('status' => $status));
             wp_send_json_success(array('message' => 'Spare part published successfully'));
         } else {
             wp_send_json_error(array('message' => 'Failed to publish spare part'));
@@ -997,25 +998,80 @@ public static function update_sell_request_status() {
         }
 
         $user_id = intval($_POST['id']);
-        
+
         // Don't allow deleting yourself
         if ($user_id == get_current_user_id()) {
-            wp_send_json_error(array('message' => 'Cannot delete your own account'));
+            wp_send_json_error(array('message' => 'Cannot delete your own account', 'code' => 'self_delete'));
             exit;
         }
-        
+
         $doomed = get_userdata($user_id);
-        $result = wp_delete_user($user_id);
+        if (!$doomed) {
+            wp_send_json_error(array('message' => 'That user no longer exists.', 'code' => 'not_found'), 404);
+            exit;
+        }
+
+        // PRD §6.12 gap 5 — never leave the panel without a super admin.
+        if (in_array('gti_super_admin', (array) $doomed->roles, true)) {
+            $remaining = get_users(array(
+                'role'    => 'gti_super_admin',
+                'exclude' => array($user_id),
+                'fields'  => 'ID',
+                'number'  => 1,
+            ));
+            if (empty($remaining) && count(get_users(array('role' => 'administrator', 'fields' => 'ID', 'number' => 1))) === 0) {
+                wp_send_json_error(array(
+                    'message' => 'This is the last super admin. Promote someone else first.',
+                    'code'    => 'last_super_admin',
+                ));
+                exit;
+            }
+        }
+
+        // PRD §6.12 gap 4 — wp_delete_user() with no reassign target DELETES
+        // everything the user authored. Content is handed over instead, and the
+        // caller must say to whom when there is any.
+        $reassign = isset($_POST['reassign_to']) ? (int) $_POST['reassign_to'] : 0;
+        $owned    = (int) count_user_posts($user_id, 'post', true);
+
+        if ($owned > 0 && $reassign <= 0) {
+            wp_send_json_error(array(
+                'message' => sprintf(
+                    'This user has %d article(s). Choose who should inherit them before deleting.',
+                    $owned
+                ),
+                'code'  => 'reassign_required',
+                'posts' => $owned,
+            ));
+            exit;
+        }
+
+        if ($reassign > 0 && (!get_userdata($reassign) || $reassign === $user_id)) {
+            wp_send_json_error(array('message' => 'That reassignment target is not valid.', 'code' => 'bad_reassign'));
+            exit;
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/user.php';
+
+        $result = $reassign > 0
+            ? wp_delete_user($user_id, $reassign)
+            : wp_delete_user($user_id);
 
         if ($result) {
             self::log_activity('delete', 'user', $user_id, array(
-                'name' => $doomed ? $doomed->display_name : '',
+                'name'        => $doomed->display_name,
+                'reassign_to' => $reassign ?: null,
+                'posts_moved' => $reassign ? $owned : 0,
             ));
-            wp_send_json_success(array('message' => 'User deleted'));
+            wp_send_json_success(array(
+                'message' => $reassign
+                    ? sprintf('User deleted; %d article(s) reassigned.', $owned)
+                    : 'User deleted.',
+            ));
         } else {
-            wp_send_json_error(array('message' => 'Failed to delete user'));
+            wp_send_json_error(array('message' => 'Failed to delete user', 'code' => 'db_error'));
         }
-        
+
         exit;
     }
     
