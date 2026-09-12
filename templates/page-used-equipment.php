@@ -480,5 +480,5 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete' ),
+    'modals' => array( 'delete', 'edit-equipment' ),
 ) );

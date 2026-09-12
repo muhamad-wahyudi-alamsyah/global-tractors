@@ -4,6 +4,11 @@
  * @package global-tractors
  */
 if (!defined('ABSPATH')) exit;
+
+// Restored during the layout refactor: the shared header renders the user
+// chrome, but this page still reads the record itself.
+$current_user = wp_get_current_user();
+$user_avatar = get_avatar_url($current_user->ID, array('size' => 80));
 $profile = gti_get_user_profile($current_user->ID);
 
 // Role labels
@@ -330,5 +335,5 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'user-delete' ),
+    'modals' => array( 'delete', 'user-delete', 'user' ),
 ) );

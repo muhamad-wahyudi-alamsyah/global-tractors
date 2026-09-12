@@ -127,27 +127,8 @@ document.addEventListener('DOMContentLoaded', function() {
         var spSubmitBtn = document.getElementById('gti-sp-submit');
         var spDraftBtn = document.getElementById('gti-sp-draft');
 
-        function showSpToast(message, type) {
-            var toast = document.getElementById('gti-sp-toast');
-            if (!toast) {
-                toast = document.createElement('div');
-                toast.id = 'gti-sp-toast';
-                toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:5000;padding:14px 20px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.15);display:flex;align-items:center;gap:10px;transform:translateY(120%);opacity:0;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);';
-                document.body.appendChild(toast);
-            }
-            var bgColor = type === 'error' ? '#991b1b' : type === 'warning' ? '#92400e' : '#059669';
-            var icon = type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-check-circle';
-            toast.style.background = bgColor;
-            toast.style.color = '#fff';
-            toast.innerHTML = '<i class="fas ' + icon + '"></i> ' + message;
-            toast.classList.add('show');
-            toast.style.transform = 'translateY(0)';
-            toast.style.opacity = '1';
-            setTimeout(function() {
-                toast.style.transform = 'translateY(120%)';
-                toast.style.opacity = '0';
-            }, 3500);
-        }
+        // Toast comes from dashboard-ui.js; this page had its own copy.
+        function showSpToast(message, type) { GTI.ui.toast(message, type); }
 
         function handleSpSubmit(isDraft) {
             if (!spForm) return;

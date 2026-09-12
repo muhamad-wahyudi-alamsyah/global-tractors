@@ -450,9 +450,10 @@ document.addEventListener('DOMContentLoaded', function() {
     var _deleteCurrentSp = null;
     function openDeleteModal(sp) {
         _deleteCurrentSp = sp;
-        document.getElementById('delete-sp-name').textContent = sp.name || '\u2014';
-        document.getElementById('delete-sp-code').textContent = sp.part_number || '\u2014';
-        var thumb = document.getElementById('delete-sp-thumb');
+        document.getElementById('delete-eq-name').textContent = sp.name || '\u2014';
+        document.getElementById('delete-eq-code').textContent = sp.part_number || '\u2014';
+        // Shared delete modal (template-parts/dashboard/modal-delete.php).
+        var thumb = document.getElementById('delete-eq-thumb');
         if (sp.image) { thumb.innerHTML = '<img src="' + sp.image + '" alt="">'; }
         else { thumb.innerHTML = '<i class="fas fa-cog"></i>'; }
         var confirmBtn = document.getElementById('gti-delete-confirm-btn');

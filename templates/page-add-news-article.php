@@ -5,6 +5,10 @@
  */
 if (!defined('ABSPATH')) exit;
 
+// Restored during the layout refactor: the shared header renders the user
+// chrome, but this page still reads the record itself.
+$current_user = wp_get_current_user();
+
 // Articles are native WordPress posts — see inc/modules/news-articles.php
 $editing_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $article    = $editing_id ? gti_article_from_post($editing_id) : null;

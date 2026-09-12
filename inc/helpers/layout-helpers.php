@@ -85,7 +85,8 @@ function gti_dashboard_open( array $args = array() ) {
     include GTI_CHILD_DIR . '/template-parts/dashboard/head.php';
     include GTI_CHILD_DIR . '/template-parts/dashboard/sidebar.php';
 
-    echo '<main class="gti-main">';
+    // id is kept because page scripts resolve the main region by getElementById.
+    echo '<main class="gti-main" id="gti-main">';
 
     include GTI_CHILD_DIR . '/template-parts/dashboard/header.php';
 }

@@ -5,6 +5,10 @@
  */
 if (!defined('ABSPATH')) exit;
 
+// Restored during the layout refactor: the shared header renders the user
+// chrome, but this page still reads the record itself.
+$current_user = wp_get_current_user();
+
 // The activity log table ships in two historic shapes; this creates or patches it.
 global $wpdb;
 gti_ensure_activity_log_table();
