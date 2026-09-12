@@ -25,50 +25,35 @@ $paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset   = ($paged - 1) * $per_page;
 
-// Build query
-$where  = "WHERE 1=1";
-$params = [];
+// Replaces the hand-built WHERE / prepare / count / fetch, plus the four
+// separate COUNT(*) queries behind the stat cards — gti_count_by_status() is
+// one GROUP BY (PRD §10.2 and §13.10).
+$query_args = array(
+    'search'   => $search,
+    'filters'  => array(
+        'status' => $status_filter,
+        'source' => $source_filter,
+    ),
+    'page'     => $paged,
+    'per_page' => $per_page,
+    'output'   => OBJECT,
+);
 
-if ($search) {
-    $where      .= " AND (name LIKE %s OR company LIKE %s OR email LIKE %s OR phone LIKE %s OR customer_id LIKE %s)";
-    $search_like = '%' . $wpdb->esc_like($search) . '%';
-    $params      = array_merge($params, [$search_like, $search_like, $search_like, $search_like, $search_like]);
-}
-if ($status_filter) {
-    $where   .= " AND status = %s";
-    $params[] = $status_filter;
-}
-if ($source_filter) {
-    $where   .= " AND source = %s";
-    $params[] = $source_filter;
-}
+$result      = gti_query_list( 'customers', $query_args );
+$customers   = $result['items'];
+$total       = $result['total'];
+$total_pages = $result['pages'];
+$offset      = $result['offset'];
 
-// Count
-$count_query = "SELECT COUNT(*) FROM {$table_name} {$where}";
-$total       = !empty($params) ? $wpdb->get_var($wpdb->prepare($count_query, $params)) : $wpdb->get_var($count_query);
-$total_pages = ceil($total / $per_page);
-
-// Fetch
-if (!empty($params)) {
-    $customers = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table_name} {$where} ORDER BY registered_date DESC LIMIT %d OFFSET %d",
-        array_merge($params, [$per_page, $offset])
-    ));
-} else {
-    $customers = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table_name} {$where} ORDER BY registered_date DESC LIMIT %d OFFSET %d",
-        $per_page, $offset
-    ));
-}
-
-// Status counts — unfiltered, so the stat cards do not move with the search box
-$total_customers = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name}");
-$active_count    = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status = 'active'");
-$inactive_count  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_name} WHERE status <> 'active'");
-$total_requests  = (int) $wpdb->get_var("SELECT COALESCE(SUM(total_transactions), 0) FROM {$table_name}");
+// Unfiltered on purpose: the cards describe the whole book, not the search.
+$customer_counts = gti_count_by_status( 'customers', array( 'ignore_scope' => true ) );
+$total_customers = $customer_counts['all'];
+$active_count    = $customer_counts['active'] ?? 0;
+$inactive_count  = $total_customers - $active_count;
+$total_requests  = (int) $wpdb->get_var( "SELECT COALESCE(SUM(total_transactions), 0) FROM {$table_name}" );
 
 // Where customers came from, for the filter dropdown
-$sources = $wpdb->get_col("SELECT DISTINCT source FROM {$table_name} WHERE source <> '' ORDER BY source");
+$sources = gti_distinct_values( 'customers', 'source' );
 $source_labels = array(
     'request-equipment' => 'Request Equipment',
     'request-quotation' => 'Request Quotation',

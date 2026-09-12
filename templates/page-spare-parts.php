@@ -52,52 +52,31 @@ $paged = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset = ($paged - 1) * $per_page;
 
-// Build WHERE clause
-$where = "WHERE 1=1";
-$params = array();
+// Replaces the hand-assembled WHERE / prepare / count / fetch. The stat cards
+// below read the same args as the list, so they cannot drift (PRD §13.10 / R5).
+$query_args = array(
+    'search'   => $search,
+    'filters'  => array(
+        'category' => $category,
+        'brand'    => $brand,
+        'status'   => $status_filter,
+        'supplier' => $supplier_filter,
+    ),
+    'page'     => $paged,
+    'per_page' => $per_page,
+    'output'   => OBJECT,
+);
 
-if ($search) {
-    $where .= " AND (name LIKE %s OR part_number LIKE %s OR brand LIKE %s)";
-    $search_term = '%' . $wpdb->esc_like($search) . '%';
-    $params[] = $search_term;
-    $params[] = $search_term;
-    $params[] = $search_term;
-}
-if ($category) {
-    $where .= " AND category = %s";
-    $params[] = $category;
-}
-if ($brand) {
-    $where .= " AND brand = %s";
-    $params[] = $brand;
-}
-if ($status_filter) {
-    $where .= " AND status = %s";
-    $params[] = $status_filter;
-}
-if ($supplier_filter) {
-    $where .= " AND supplier = %s";
-    $params[] = $supplier_filter;
-}
+$result      = gti_query_list( 'spare_parts', $query_args );
+$spare_parts = $result['items'];
+$total       = $result['total'];
+$total_pages = $result['pages'];
+$offset      = $result['offset'];
 
-// Get total count
-$count_sql = "SELECT COUNT(*) FROM {$table} {$where}";
-$total = !empty($params) ? (int) $wpdb->get_var($wpdb->prepare($count_sql, $params)) : (int) $wpdb->get_var($count_sql);
-$total_pages = (int) ceil($total / $per_page);
-
-// Get spare parts
-$spare_parts = $wpdb->get_results($wpdb->prepare(
-    "SELECT * FROM {$table} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d",
-    array_merge($params, array($per_page, $offset))
-));
-
-// Status counts
-$status_counts = $wpdb->get_results("SELECT status, COUNT(*) as count FROM {$table} GROUP BY status");
-$status_count_map = array();
-foreach ($status_counts as $sc) {
-    $status_count_map[$sc->status] = (int) $sc->count;
-}
-$total_parts     = array_sum($status_count_map);
+$status_count_map = gti_count_by_status( 'spare_parts', $query_args );
+// gti_count_by_status() already returns the total under 'all'; summing the
+// whole map would count it twice.
+$total_parts     = $status_count_map['all'];
 $in_stock        = isset($status_count_map['in_stock']) ? $status_count_map['in_stock'] : 0;
 $low_stock       = isset($status_count_map['low_stock']) ? $status_count_map['low_stock'] : 0;
 $out_of_stock    = isset($status_count_map['out_of_stock']) ? $status_count_map['out_of_stock'] : 0;
@@ -105,9 +84,9 @@ $draft_count     = isset($status_count_map['draft']) ? $status_count_map['draft'
 $inventory_value = (float) $wpdb->get_var("SELECT SUM(stock * unit_price) FROM {$table} WHERE status != 'draft'");
 
 // Filter options
-$categories = $wpdb->get_col("SELECT DISTINCT category FROM {$table} WHERE category != '' ORDER BY category");
-$brands = $wpdb->get_col("SELECT DISTINCT brand FROM {$table} WHERE brand != '' ORDER BY brand");
-$suppliers = $wpdb->get_col("SELECT DISTINCT supplier FROM {$table} WHERE supplier IS NOT NULL AND supplier != '' ORDER BY supplier");
+$categories = gti_distinct_values( 'spare_parts', 'category' );
+$brands = gti_distinct_values( 'spare_parts', 'brand' );
+$suppliers = gti_distinct_values( 'spare_parts', 'supplier' );
 
 // Format currency inline to avoid redeclaration errors
 $_gti_sp_fmt = function($amount) {

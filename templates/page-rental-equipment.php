@@ -52,65 +52,30 @@ $paged = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 10;
 $offset = ($paged - 1) * $per_page;
 
-// Build WHERE clause
-$where = "WHERE type = 'rental' AND deleted_at IS NULL";
-$params = array();
-
-if ($search) {
-    $where .= ' AND (name LIKE %s OR equipment_code LIKE %s OR brand LIKE %s)';
-    $search_like = '%' . $wpdb->esc_like($search) . '%';
-    $params[] = $search_like;
-    $params[] = $search_like;
-    $params[] = $search_like;
-}
-if ($category) {
-    $where .= ' AND category = %s';
-    $params[] = $category;
-}
-if ($brand) {
-    $where .= ' AND brand = %s';
-    $params[] = $brand;
-}
-if ($status_filter) {
-    $where .= ' AND status = %s';
-    $params[] = $status_filter;
-}
-if ($condition_filter) {
-    $where .= ' AND condition_status = %s';
-    $params[] = $condition_filter;
-}
-
-// Get total count
-$count_sql = "SELECT COUNT(*) FROM {$table} {$where}";
-$total = !empty($params) ? (int) $wpdb->get_var($wpdb->prepare($count_sql, $params)) : (int) $wpdb->get_var($count_sql);
-$total_pages = ceil($total / $per_page);
-
-// Get equipment
-if (!empty($params)) {
-    $equipments = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d",
-        array_merge($params, array($per_page, $offset))
-    ));
-} else {
-    $equipments = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM {$table} {$where} ORDER BY created_at DESC LIMIT %d OFFSET %d",
-        $per_page, $offset
-    ));
-}
-
-// Status counts
-$status_counts = $wpdb->get_results(
-    "SELECT status, COUNT(*) as count FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL GROUP BY status"
+// One call replaces ~45 lines of hand-assembled WHERE / prepare / count /
+// fetch. prepare() is then guaranteed, and the stat cards below use the same
+// args as the list so the two cannot disagree (PRD §13.10 / R5).
+$query_args = array(
+    'search'   => $search,
+    'fixed'    => array( 'type' => 'rental' ),
+    'filters'  => array( 'category' => $category, 'brand' => $brand, 'status' => $status_filter, 'condition_status' => $condition_filter ),
+    'page'     => $paged,
+    'per_page' => $per_page,
+    'output'   => OBJECT,
 );
-$status_count_map = array();
-foreach ($status_counts as $sc) {
-    $status_count_map[$sc->status] = $sc->count;
-}
-$total_equipment = array_sum(array_column($status_counts, 'count'));
+
+$result      = gti_query_list( 'equipment', $query_args );
+$equipments  = $result['items'];
+$total       = $result['total'];
+$total_pages = $result['pages'];
+$offset      = $result['offset'];
+
+$status_count_map = gti_count_by_status( 'equipment', $query_args );
+$total_equipment  = $status_count_map['all'];
 
 // Filter options
-$categories = $wpdb->get_col("SELECT DISTINCT category FROM {$table} WHERE type = 'rental' AND category != '' AND deleted_at IS NULL ORDER BY category");
-$brands = $wpdb->get_col("SELECT DISTINCT brand FROM {$table} WHERE type = 'rental' AND brand != '' AND deleted_at IS NULL ORDER BY brand");
+$categories = gti_distinct_values( 'equipment', 'category', array( 'type' => 'rental' ) );
+$brands = gti_distinct_values( 'equipment', 'brand', array( 'type' => 'rental' ) );
 
 // Format currency inline to avoid redeclaration errors
 $_gti_re_fmt = function($amount) {

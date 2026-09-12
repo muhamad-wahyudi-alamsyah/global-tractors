@@ -34,7 +34,7 @@ function gti_entity_schema( $entity = null ) {
         'spare_parts' => array(
             'table'   => $wpdb->prefix . 'gti_spare_parts',
             'search'  => array( 'name', 'part_code', 'brand', 'part_number' ),
-            'filters' => array( 'category', 'brand', 'status' ),
+            'filters' => array( 'category', 'brand', 'status', 'supplier' ),
             'soft'    => 'deleted_at',
             'order'   => 'created_at',
             'scope'   => null,
@@ -66,9 +66,9 @@ function gti_entity_schema( $entity = null ) {
         'customers' => array(
             'table'   => $wpdb->prefix . 'gti_customers',
             'search'  => array( 'name', 'company', 'email', 'phone', 'customer_id' ),
-            'filters' => array( 'status', 'industry', 'city', 'province' ),
+            'filters' => array( 'status', 'industry', 'city', 'province', 'source' ),
             'soft'    => null,
-            'order'   => 'created_at',
+            'order'   => 'registered_date',
             'scope'   => null,
         ),
     );
@@ -107,6 +107,12 @@ function gti_build_where( $entity, array $args ) {
             $params[] = $like;
         }
         $where[] = '(' . implode( ' OR ', $parts ) . ')';
+    }
+
+    // Filters the caller pins (e.g. type = 'used'), not settable from the request.
+    foreach ( (array) ( $args['fixed'] ?? array() ) as $field => $value ) {
+        $where[]  = "`{$field}` = %s";
+        $params[] = (string) $value;
     }
 
     foreach ( (array) ( $args['filters'] ?? array() ) as $field => $value ) {
@@ -158,6 +164,9 @@ function gti_query_list( $entity, array $args = array() ) {
     $args = array_merge( array(
         'search' => '', 'filters' => array(), 'page' => 1, 'per_page' => 10,
         'orderby' => '', 'order' => 'DESC', 'date_from' => '', 'date_to' => '',
+        // Templates written against $wpdb->get_results() read rows as objects;
+        // pass OBJECT so they can adopt this without rewriting their markup.
+        'output' => ARRAY_A,
     ), $args );
 
     $schema = gti_entity_schema( $entity );
@@ -186,7 +195,7 @@ function gti_query_list( $entity, array $args = array() ) {
 
     $items = $wpdb->get_results(
         $wpdb->prepare( $list_sql, array_merge( $where['params'], array( $per_page, $offset ) ) ),
-        ARRAY_A
+        $args['output']
     );
 
     return array(
@@ -213,7 +222,8 @@ function gti_count_by_status( $entity, array $args = array() ) {
         return array( 'all' => 0 );
     }
 
-    // Status itself must not narrow the per-status counts.
+    // Status itself must not narrow the per-status counts, but a pinned filter
+    // like type = 'used' must still apply or the cards count the wrong table half.
     unset( $args['filters']['status'] );
 
     $where = gti_build_where( $entity, $args );
@@ -319,7 +329,7 @@ function gti_delete_row( $entity, $id, $soft = true ) {
 /**
  * Distinct values of a column, for populating filter dropdowns.
  */
-function gti_distinct_values( $entity, $column ) {
+function gti_distinct_values( $entity, $column, array $fixed = array() ) {
     global $wpdb;
 
     $schema = gti_entity_schema( $entity );
@@ -327,11 +337,27 @@ function gti_distinct_values( $entity, $column ) {
         return array();
     }
 
-    $sql = "SELECT DISTINCT `{$column}` FROM {$schema['table']} WHERE `{$column}` <> '' AND `{$column}` IS NOT NULL";
+    $sql    = "SELECT DISTINCT `{$column}` FROM {$schema['table']} WHERE `{$column}` <> '' AND `{$column}` IS NOT NULL";
+    $params = array();
+
     if ( $schema['soft'] ) {
         $sql .= " AND `{$schema['soft']}` IS NULL";
     }
+
+    // Without this, the Used Equipment page offers categories that only exist
+    // among rental units, and vice versa.
+    foreach ( $fixed as $field => $value ) {
+        if ( in_array( $field, $schema['filters'], true ) ) {
+            $sql     .= " AND `{$field}` = %s";
+            $params[] = (string) $value;
+        }
+    }
+
     $sql .= " ORDER BY `{$column}` ASC";
 
-    return array_filter( (array) $wpdb->get_col( $sql ) );
+    $values = $params
+        ? $wpdb->get_col( $wpdb->prepare( $sql, $params ) )
+        : $wpdb->get_col( $sql );
+
+    return array_filter( (array) $values );
 }
