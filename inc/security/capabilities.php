@@ -10,7 +10,7 @@ function gti_is_admin() {
 }
 
 function gti_is_editor() {
-    return current_user_can('edit_posts') || current_user_can('gti_editor');
+    return current_user_can('edit_posts');
 }
 
 function gti_require_capability($capability = 'manage_options') {

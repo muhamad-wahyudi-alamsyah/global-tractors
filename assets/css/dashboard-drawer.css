@@ -1,0 +1,185 @@
+/* dashboard-drawer
+   Extracted from the <style> blocks that were duplicated across the
+   dashboard templates (PRD §13.7 / R2). Shared rules load before each
+   page's own stylesheet, so page-level overrides still win. */
+
+.gti-drawer { width: 320px; max-width: calc(33vw - 100px); flex-shrink: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; display: flex; flex-direction: column; height: fit-content; }
+.gti-drawer-body { overflow-y: visible; }
+.gti-drawer .gti-drawer-close { display: none; }
+.gti-drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+.gti-drawer-backdrop.show { display: block; opacity: 1; }
+@media (max-width: 1599px) {
+    .gti-content { display: block; }
+    .gti-drawer { position: fixed; top: 0; right: 0; bottom: 0; left: auto; width: 420px; max-width: 100vw; max-height: 100vh; border-radius: 12px 0 0 12px; border: none; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 1001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); height: auto; }
+    .gti-drawer.open { transform: translateX(0); }
+    .gti-drawer .gti-drawer-close { display: flex; }
+    .gti-drawer-body { overflow-y: auto; flex: 1; }
+}
+@media (max-width: 560px) {
+    .gti-drawer { width: 100%; border-radius: 16px 16px 0 0; top: auto; max-height: 85vh; transform: translateY(100%); }
+    .gti-drawer.open { transform: translateY(0); }
+}
+.gti-drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+.gti-drawer-header-left { display: flex; align-items: center; gap: 12px; }
+.gti-drawer-header-left h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; }
+.gti-drawer-status { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.gti-drawer-close { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; transition: all 0.15s; flex-shrink: 0; }
+.gti-drawer-close:hover { background: #f3f4f6; }
+.gti-drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+.gti-drawer-section { margin-bottom: 24px; }
+.gti-drawer-section:last-child { margin-bottom: 0; }
+.gti-drawer-section-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; }
+.gti-drawer-section-title i { color: #F5A623; font-size: 14px; }
+.gti-drawer-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; gap: 12px; }
+.gti-drawer-row + .gti-drawer-row { border-top: 1px solid #f9fafb; }
+.gti-drawer-value { font-size: 13px; font-weight: 500; color: #1a1f36; text-align: right; word-break: break-word; }
+.gti-drawer-value.is-link { color: #2563eb; }
+.gti-drawer-footer { display: flex; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #e5e7eb; flex-shrink: 0; background: #fff; }
+.gti-drawer-btn:hover { background: #f9fafb; }
+.gti-drawer-btn-primary { background: #F5A623; color: #1a1f36; border-color: #F5A623; font-weight: 600; }
+.gti-drawer-btn-primary:hover { background: #e6991a; }
+.gti-drawer-label { font-size: 13px; color: #9ca3af; flex-shrink: 0; min-width: 100px; }
+.gti-drawer-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid #e5e7eb; background: #fff; color: #374151; font-family: inherit; }
+.gti-drawer-footer-spacer { flex: 1; }
+@media (max-width: 768px) {
+    .gti-ue-stats-row .gti-ue-stat-card { flex: 1 1 calc(50% - 12px); }
+    .gti-ue-toolbar-left { flex-direction: column; }
+    .gti-ue-search { width: 100%; }
+    .gti-ue-search input { width: 100%; }
+    .gti-ue-filter { width: 100%; }
+    .gti-ue-filter select { width: 100%; }
+    .gti-ue-table-card { overflow-x: auto; }
+    .gti-drawer-footer { flex-wrap: wrap; }
+    .gti-drawer-footer-spacer { display: none; }
+}
+.gti-drawer-timeline { position: relative; padding-left: 28px; }
+.gti-drawer-timeline::before { content: ''; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: #e5e7eb; border-radius: 1px; }
+.gti-drawer-timeline-item { position: relative; padding-bottom: 20px; }
+.gti-drawer-timeline-item:last-child { padding-bottom: 0; }
+.gti-drawer-timeline-dot { position: absolute; left: -18px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: #6B7280; transform: translateX(-50%); }
+.gti-drawer-timeline-dot.is-active { width: 14px; height: 14px; top: 2px; left: -18px; background: #F59E0B; z-index: 1; }
+.gti-drawer-timeline-dot.is-active::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto; width: 6px; height: 6px; border-radius: 50%; background: #000; z-index: -1; }
+.gti-drawer-timeline-event { font-size: 13px; font-weight: 500; color: #1a1f36; }
+.gti-drawer-timeline-item:last-child .gti-drawer-timeline-event { font-weight: 600; color: #111827; }
+.gti-drawer-timeline-meta { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.gti-drawer-timeline-item:last-child .gti-drawer-timeline-meta { color: #6B7280; }
+.gti-drawer-value.is-message { text-align: left; background: #f9fafb; padding: 10px 12px; border-radius: 8px; font-weight: 400; color: #374151; line-height: 1.5; width: 100%; margin-top: 4px; }
+.gti-drawer-btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; }
+.gti-drawer-footer .gti-drawer-btn-group { display: flex; gap: 6px; position: relative; }
+.gti-drawer-footer .gti-drawer-btn-group .gti-drawer-dropdown { display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.1); min-width: 180px; z-index: 10; overflow: hidden; }
+.gti-drawer-footer .gti-drawer-btn-group .gti-drawer-dropdown.show { display: block; }
+.gti-drawer-dropdown-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px 14px; border: none; background: none; font-size: 13px; color: #374151; cursor: pointer; font-family: inherit; text-align: left; }
+.gti-drawer-dropdown-item:hover { background: #f9fafb; }
+.gti-drawer-dropdown-item i { width: 16px; color: #6b7280; }
+
+/* ── Components added for the rebuilt inbox drawers (PRD §6.5–§6.7) ───────── */
+
+.gti-drawer-row-stacked { flex-direction: column; align-items: flex-start; gap: 4px; }
+.gti-drawer-row-stacked .gti-drawer-value { text-align: left; }
+
+.gti-drawer-empty {
+    font-size: 13px;
+    color: #9ca3af;
+    margin: 0;
+    padding: 8px 0;
+}
+
+.gti-drawer-item {
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+.gti-drawer-item:last-child { margin-bottom: 0; }
+.gti-drawer-item strong { display: block; font-size: 13px; color: #1a1f36; }
+.gti-drawer-item span { font-size: 12px; color: #9ca3af; }
+.gti-drawer-item p { margin: 6px 0 0; font-size: 12px; color: #6b7280; line-height: 1.5; }
+
+.gti-drawer-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.gti-drawer-gallery a {
+    display: block;
+    aspect-ratio: 4 / 3;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+.gti-drawer-gallery img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Status / more dropdowns in the drawer footer. They open upward: the footer is
+   pinned to the bottom of the drawer, so downward would render off-screen. */
+.gti-drawer-btn-group { position: relative; }
+.gti-drawer-dropdown {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    right: 0;
+    min-width: 210px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    padding: 4px;
+    z-index: 20;
+}
+.gti-drawer-dropdown.show { display: block; }
+.gti-drawer-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 12px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #374151;
+    text-align: left;
+    cursor: pointer;
+}
+.gti-drawer-dropdown-item:hover { background: #f9fafb; }
+.gti-drawer-dropdown-item i { width: 14px; color: #9ca3af; font-size: 12px; }
+.gti-drawer-dropdown-item.danger { color: #dc2626; }
+.gti-drawer-dropdown-item.danger i { color: #dc2626; }
+.gti-drawer-dropdown-item.danger:hover { background: #fee2e2; }
+.gti-drawer-dropdown-empty { padding: 10px 12px; font-size: 12px; color: #9ca3af; }
+
+/* A seller with no usable phone number gets a dead-looking button rather than a
+   wa.me link that goes nowhere (PRD §6.7.1). */
+.gti-drawer-btn.is-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* Timeline — the latest event is gold, the rest grey. */
+.gti-drawer-timeline { position: relative; padding-left: 20px; }
+.gti-drawer-timeline::before {
+    content: '';
+    position: absolute;
+    left: 5px; top: 6px; bottom: 6px;
+    width: 2px;
+    background: #f3f4f6;
+}
+.gti-timeline-item { position: relative; padding-bottom: 16px; }
+.gti-timeline-item:last-child { padding-bottom: 0; }
+.gti-timeline-dot {
+    position: absolute;
+    left: -20px; top: 4px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #d1d5db;
+    border: 2px solid #fff;
+}
+.gti-timeline-item.is-latest .gti-timeline-dot { background: #F5A623; }
+.gti-timeline-content strong { display: block; font-size: 13px; color: #1a1f36; }
+.gti-timeline-content p { margin: 3px 0 0; font-size: 12px; color: #6b7280; line-height: 1.5; }
+.gti-timeline-content span { font-size: 11px; color: #9ca3af; }
+
+@media (max-width: 560px) {
+    .gti-drawer-gallery { grid-template-columns: repeat(2, 1fr); }
+}

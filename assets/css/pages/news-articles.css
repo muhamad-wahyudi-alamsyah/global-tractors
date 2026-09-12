@@ -1,0 +1,47 @@
+/* news-articles — page-specific rules (PRD §13.7 / R2) */
+
+/* Border overrides — match existing style */ {  }
+.gti-ue-table-card { border: 1px solid #e5e7eb; overflow: hidden; }
+/* Table column widths */ {  }
+.gti-ue-table .col-thumb { width: 60px; }
+.gti-ue-table .col-title { width: 260px; }
+.gti-ue-table .col-category { width: 120px; text-align: center; }
+.gti-ue-table .col-author { width: 130px; }
+.gti-ue-table .col-status { width: 100px; text-align: center; white-space: nowrap; }
+.gti-ue-table .col-views { width: 80px; text-align: center; }
+/* ====== Right Drawer — In-Flow (≥1600px) ====== */ {  }
+.gti-drawer { width: 340px; max-width: calc(33vw - 100px); flex-shrink: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; display: flex; flex-direction: column; height: fit-content; }
+/* ====== Drawer Header ====== */ {  }
+.gti-drawer-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; gap: 12px; }
+.gti-drawer-header-left { flex: 1; min-width: 0; }
+.gti-drawer-header-left h2 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #1a1f36; line-height: 1.4; }
+.gti-drawer-status.status-published { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-draft { background: #fef3c7; color: #b45309; }
+.gti-drawer-status.status-archived { background: #f3f4f6; color: #6b7280; }
+/* ====== Drawer Content Preview ====== */ {  }
+.gti-drawer-content-preview { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 8px; padding: 14px; font-size: 13px; color: #374151; line-height: 1.6; max-height: 160px; overflow-y: auto; white-space: pre-wrap; }
+/* ====== Drawer Tags ====== */ {  }
+.gti-drawer-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.gti-drawer-tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; background: #f3f4f6; color: #6b7280; }
+/* ====== Drawer Category Badge ====== */ {  }
+.gti-drawer-cat-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+/* ====== Drawer Featured Image ====== */ {  }
+.gti-drawer-featured-img { width: 100%; height: 140px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 32px; overflow: hidden; margin-bottom: 12px; }
+.gti-drawer-featured-img img { width: 100%; height: 100%; object-fit: cover; }
+/* ====== Drawer Footer ====== */ {  }
+.gti-drawer-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid #e5e7eb; background: #fff; color: #374151; font-family: inherit; text-decoration: none; }
+/* ====== Thumbnail Cell ====== */ {  }
+.gti-article-thumb { width: 44px; height: 44px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; color: #d1d5db; font-size: 16px; overflow: hidden; flex-shrink: 0; }
+.gti-article-thumb img { width: 100%; height: 100%; object-fit: cover; }
+/* ====== Category Pill ====== */ {  }
+.gti-cat-pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+/* ====== Title Cell ====== */ {  }
+.gti-title-cell { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gti-title-cell strong { font-size: 13px; color: #111827; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; }
+.gti-title-cell small { font-size: 11px; color: #9ca3af; }
+/* ====== Add New Button ====== */ {  }
+.gti-btn-add { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; background: #F5A623; color: #1a1f36; font-family: inherit; text-decoration: none; }
+.gti-btn-add:hover { background: #e6991a; }
+/* ====== Views Cell ====== */ {  }
+.gti-views-cell { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; color: #6b7280; }
+.gti-views-cell i { font-size: 11px; color: #d1d5db; }

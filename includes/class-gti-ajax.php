@@ -54,9 +54,26 @@ class GTI_Ajax {
     /**
      * Verify nonce for AJAX
      */
-    private static function verify_nonce() {
-        if (!wp_verify_nonce($_POST['nonce'], 'gti_nonce')) {
-            wp_send_json_error(array('message' => 'Security check failed'));
+private static function verify_nonce() {
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'gti_nonce')) {
+            wp_send_json_error(array('message' => 'Security check failed', 'code' => 'bad_nonce'), 403);
+            exit;
+        }
+    }
+
+    /**
+     * Capability gate — PRD §9.4 layer 3.
+     *
+     * Most handlers here only verified the nonce, which any logged-in user can
+     * obtain from any dashboard page. That let an inventory user delete a
+     * quotation, for example.
+     */
+    private static function require_cap($capability) {
+        if (!current_user_can($capability)) {
+            wp_send_json_error(
+                array('message' => 'You do not have permission to do that.', 'code' => 'forbidden'),
+                403
+            );
             exit;
         }
     }
@@ -70,6 +87,7 @@ class GTI_Ajax {
     public static function save_equipment() {
         while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
+        self::require_cap('gti_manage_equipment');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_equipment';
@@ -364,6 +382,7 @@ class GTI_Ajax {
         while (ob_get_level()) { ob_end_clean(); }
 
         self::verify_nonce();
+        self::require_cap('gti_manage_equipment');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_equipment';
@@ -391,6 +410,7 @@ class GTI_Ajax {
      */
     public static function publish_equipment() {
         self::verify_nonce();
+        self::require_cap('gti_manage_equipment');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_equipment';
@@ -420,6 +440,7 @@ class GTI_Ajax {
      */
     public static function get_equipment() {
         self::verify_nonce();
+        self::require_cap('gti_manage_equipment');
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_equipment';
@@ -446,6 +467,7 @@ class GTI_Ajax {
     public static function get_next_code() {
         while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
+        self::require_cap('gti_manage_equipment');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_equipment';
@@ -493,6 +515,7 @@ class GTI_Ajax {
     public static function save_spare_part() {
         while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
+        self::require_cap('gti_manage_spare_parts');
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
@@ -565,6 +588,7 @@ class GTI_Ajax {
      */
     public static function delete_spare_part() {
         self::verify_nonce();
+        self::require_cap('gti_manage_spare_parts');
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
@@ -588,6 +612,7 @@ class GTI_Ajax {
     public static function publish_spare_part() {
         while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
+        self::require_cap('gti_manage_spare_parts');
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
         $id = intval($_POST['id'] ?? 0);
@@ -614,6 +639,7 @@ class GTI_Ajax {
     public static function get_next_spare_part_code() {
         while (ob_get_level()) { ob_end_clean(); }
         self::verify_nonce();
+        self::require_cap('gti_manage_spare_parts');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_spare_parts';
@@ -653,41 +679,12 @@ class GTI_Ajax {
     /**
      * Update Request Status
      */
-    public static function update_request_status() {
-        self::verify_nonce();
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'gti_requests';
-        
-        $id = intval($_POST['id']);
-        $status = sanitize_text_field($_POST['status']);
-        
-        // Get current record BEFORE updating (for email)
-        $current = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id),
-            ARRAY_A
-        );
-        
-        $result = $wpdb->update(
-            $table,
-            array('status' => $status),
-            array('id' => $id)
-        );
-        
-        if ($result !== false) {
-            self::log_activity('status_change', 'request', $id, array('new_status' => $status));
-            
-            // Send email notification to customer
-            if ($current && ($current['status'] ?? '') !== $status && !empty($current['customer_email'])) {
-                self::send_status_email('request', $status, $current);
-            }
-            
-            wp_send_json_success(array('message' => 'Status updated'));
-        } else {
-            wp_send_json_error(array('message' => 'Failed to update status'));
-        }
-        
-        exit;
+public static function update_request_status() {
+        // Delegated to the shared inbox flow: the transition is validated
+        // against gti_status_map() and the email is sent by GTI_Mailer *after*
+        // a committed write, rather than by a priority-5 hook before one (A-04).
+        $_POST['entity_type'] = 'request';
+        gti_ajax_change_status();
     }
     
     /**
@@ -695,6 +692,7 @@ class GTI_Ajax {
      */
     public static function delete_quotation() {
         self::verify_nonce();
+        self::require_cap('gti_manage_quotations');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_quotations';
@@ -717,6 +715,7 @@ class GTI_Ajax {
      */
     public static function delete_sell_request() {
         self::verify_nonce();
+        self::require_cap('gti_manage_requests');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_sell_requests';
@@ -739,6 +738,7 @@ class GTI_Ajax {
      */
     public static function delete_request() {
         self::verify_nonce();
+        self::require_cap('gti_manage_requests');
 
         global $wpdb;
         $table = $wpdb->prefix . 'gti_requests';
@@ -761,6 +761,7 @@ class GTI_Ajax {
      */
     public static function save_quotation() {
         self::verify_nonce();
+        self::require_cap('gti_manage_quotations');
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_quotations';
@@ -824,41 +825,12 @@ class GTI_Ajax {
     /**
      * Update Quotation Status
      */
-    public static function update_quotation_status() {
-        self::verify_nonce();
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'gti_quotations';
-        
-        $id = intval($_POST['id']);
-        $status = sanitize_text_field($_POST['status']);
-        
-        // Get current record BEFORE updating (for email)
-        $current = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id),
-            ARRAY_A
-        );
-        
-        $result = $wpdb->update(
-            $table,
-            array('status' => $status),
-            array('id' => $id)
-        );
-        
-        if ($result !== false) {
-            self::log_activity('status_change', 'quotation', $id, array('new_status' => $status));
-            
-            // Send email notification to customer
-            if ($current && ($current['status'] ?? '') !== $status && !empty($current['customer_email'])) {
-                self::send_status_email('quotation', $status, $current);
-            }
-            
-            wp_send_json_success(array('message' => 'Status updated'));
-        } else {
-            wp_send_json_error(array('message' => 'Failed to update status'));
-        }
-        
-        exit;
+public static function update_quotation_status() {
+        // Delegated to the shared inbox flow: the transition is validated
+        // against gti_status_map() and the email is sent by GTI_Mailer *after*
+        // a committed write, rather than by a priority-5 hook before one (A-04).
+        $_POST['entity_type'] = 'quotation';
+        gti_ajax_change_status();
     }
     
     /**
@@ -866,6 +838,7 @@ class GTI_Ajax {
      */
     public static function get_sell_request_detail() {
         self::verify_nonce();
+        self::require_cap('gti_manage_requests');
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_sell_requests';
@@ -890,41 +863,12 @@ class GTI_Ajax {
     /**
      * Update Sell Request Status
      */
-    public static function update_sell_request_status() {
-        self::verify_nonce();
-        
-        global $wpdb;
-        $table = $wpdb->prefix . 'gti_sell_requests';
-        
-        $id = intval($_POST['id']);
-        $status = sanitize_text_field($_POST['status']);
-        
-        // Get current record BEFORE updating (for email)
-        $current = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id),
-            ARRAY_A
-        );
-        
-        $result = $wpdb->update(
-            $table,
-            array('status' => $status),
-            array('id' => $id)
-        );
-        
-        if ($result !== false) {
-            self::log_activity('status_change', 'sell_request', $id, array('new_status' => $status));
-            
-            // Send email notification to customer
-            if ($current && ($current['status'] ?? '') !== $status && !empty($current['customer_email'])) {
-                self::send_status_email('sell', $status, $current);
-            }
-            
-            wp_send_json_success(array('message' => 'Status updated'));
-        } else {
-            wp_send_json_error(array('message' => 'Failed to update status'));
-        }
-        
-        exit;
+public static function update_sell_request_status() {
+        // Delegated to the shared inbox flow: the transition is validated
+        // against gti_status_map() and the email is sent by GTI_Mailer *after*
+        // a committed write, rather than by a priority-5 hook before one (A-04).
+        $_POST['entity_type'] = 'sell';
+        gti_ajax_change_status();
     }
     
     /**
@@ -932,6 +876,7 @@ class GTI_Ajax {
      */
     public static function save_customer() {
         self::verify_nonce();
+        self::require_cap('gti_manage_customers');
         
         global $wpdb;
         $table = $wpdb->prefix . 'gti_customers';
@@ -1079,6 +1024,7 @@ class GTI_Ajax {
      */
     public static function get_dashboard_stats() {
         self::verify_nonce();
+        self::require_cap('gti_access');
         
         global $wpdb;
         
@@ -1132,148 +1078,24 @@ class GTI_Ajax {
             )
         );
     }
-    
-    /**
-     * Send status change email notification to customer
-     *
-     * @param string $type    'request', 'quotation', or 'sell'
-     * @param string $status  New status value
-     * @param array  $data    Full row data from DB
-     */
-    private static function send_status_email($type, $status, $data) {
-        global $wpdb;
-        
-        $customer_name  = $data['customer_name'] ?? 'Customer';
-        $customer_email = $data['customer_email'] ?? '';
-        
-        if (empty($customer_email)) return;
-        
-        // Reference ID
-        $ref_id = '';
-        if ($type === 'request')   $ref_id = $data['request_id'] ?? '';
-        if ($type === 'quotation') $ref_id = $data['quotation_id'] ?? '';
-        if ($type === 'sell')      $ref_id = $data['equipment_name'] ?? '';
-        
-        // Subject map
-        $subjects = array(
-            'request_new'            => 'Pesanan Anda Telah Diterima - ' . $ref_id,
-            'request_processing'     => 'Pesanan Anda Sedang Diproses - ' . $ref_id,
-            'request_proposal_sent'  => 'Proposal Telah Dikirim - ' . $ref_id,
-            'request_closed'         => 'Pesanan Selesai - ' . $ref_id,
-            'quotation_new'          => 'Quotation Request Diterima - ' . $ref_id,
-            'quotation_processing'   => 'Quotation Sedang Disusun - ' . $ref_id,
-            'quotation_waiting_customer' => 'Quotation Telah Dikirim - ' . $ref_id,
-            'quotation_approved'     => 'Quotation Disetujui - ' . $ref_id,
-            'quotation_rejected'     => 'Quotation Belum Dapat Diproses - ' . $ref_id,
-            'quotation_completed'    => 'Transaksi Selesai - ' . $ref_id,
-            'sell_new'               => 'Tawaran Equipment Diterima - ' . $ref_id,
-            'sell_processing'        => 'Tawaran Sedang Direview - ' . $ref_id,
-            'sell_approved'          => 'Tawaran Diterima - ' . $ref_id,
-            'sell_rejected'          => 'Tawaran Belum Dapat Diterima - ' . $ref_id,
-            'sell_completed'         => 'Transaksi Selesai - ' . $ref_id,
-        );
-        
-        $key = $type . '_' . $status;
-        $subject = $subjects[$key] ?? 'Status Update - ' . $ref_id;
-        
-        // Message map
-        $messages = array(
-            'request_new'           => array('Pesanan Telah Diterima', 'Pesanan Anda dengan nomor <strong>' . $ref_id . '</strong> telah kami terima dan akan segera kami proses.', 'Tim kami akan menghubungi Anda dalam 1-2 hari kerja.'),
-            'request_processing'    => array('Pesanan Sedang Diproses', 'Pesanan Anda dengan nomor <strong>' . $ref_id . '</strong> sedang kami proses.', 'Kami akan menghubungi Anda segera jika ada update.'),
-            'request_proposal_sent' => array('Proposal Telah Dikirim', 'Proposal untuk pesanan <strong>' . $ref_id . '</strong> telah kami kirim ke email Anda.', 'Silakan cek email Anda untuk detail penawaran.'),
-            'request_closed'        => array('Pesanan Selesai', 'Pesanan <strong>' . $ref_id . '</strong> telah selesai diproses.', 'Terima kasih atas kepercayaan Anda.'),
-            'quotation_new'              => array('Quotation Request Diterima', 'Quotation request Anda dengan nomor <strong>' . $ref_id . '</strong> telah kami terima.', 'Tim kami akan segera menyiapkan quotation.'),
-            'quotation_processing'       => array('Quotation Sedang Disusun', 'Quotation Anda dengan nomor <strong>' . $ref_id . '</strong> sedang kami susun.', 'Tim kami sedang menyiapkan penawaran terbaik untuk Anda.'),
-            'quotation_waiting_customer' => array('Quotation Telah Dikirim', 'Quotation dengan nomor <strong>' . $ref_id . '</strong> telah kami kirim ke email Anda.', 'Silakan cek email Anda untuk detail penawaran.'),
-            'quotation_approved'         => array('Quotation Disetujui', 'Quotation <strong>' . $ref_id . '</strong> telah disetujui.', 'Tim kami akan segera memproses pesanan Anda.'),
-            'quotation_rejected'         => array('Quotation Belum Dapat Diproses', 'Mohon maaf, untuk saat ini kami belum dapat memproses permintaan Anda.', 'Jika ada yang bisa kami bantu di masa mendatang, silakan hubungi kami.'),
-            'quotation_completed'        => array('Transaksi Selesai', 'Transaksi untuk quotation <strong>' . $ref_id . '</strong> telah selesai.', 'Terima kasih atas kepercayaan Anda.'),
-            'sell_new'        => array('Tawaran Diterima', 'Tawaran Anda untuk equipment <strong>' . $ref_id . '</strong> telah kami terima.', 'Tim kami akan segera mereview tawaran Anda.'),
-            'sell_processing' => array('Tawaran Sedang Direview', 'Tawaran Anda untuk equipment <strong>' . $ref_id . '</strong> sedang kami review.', 'Kami akan menghubungi Anda segera.'),
-            'sell_approved'   => array('Tawaran Diterima', 'Tawaran Anda untuk equipment <strong>' . $ref_id . '</strong> telah diterima.', 'Kami akan menghubungi Anda untuk langkah selanjutnya.'),
-            'sell_rejected'   => array('Tawaran Belum Dapat Diterima', 'Mohon maaf, untuk saat ini kami belum dapat menerima tawaran Anda.', 'Terima kasih atas tawaran Anda.'),
-            'sell_completed'  => array('Transaksi Selesai', 'Transaksi pembelian equipment <strong>' . $ref_id . '</strong> telah selesai.', 'Terima kasih atas kepercayaan Anda.'),
-        );
-        
-        $msg = $messages[$key] ?? array('Status Update', 'Status pesanan Anda telah diperbarui.', '');
-        $current_date = date('d M Y, H:i');
-        $site_name = get_bloginfo('name');
-        $site_url  = home_url();
-
-        // Use plain text body to test if HTML is causing delivery issues
-        $body = "==================================================\n";
-        $body .= $site_name . "\n";
-        $body .= "==================================================\n\n";
-        $body .= $msg[0] . "\n\n";
-        $body .= "Halo " . esc_html($customer_name) . ",\n\n";
-        $body .= $msg[1] . "\n\n";
-        $body .= $msg[2] . "\n\n";
-        $body .= "--------------------------------------------------\n";
-        $body .= "Tanggal: " . $current_date . "\n";
-        $body .= "Ref: " . $ref_id . "\n";
-        $body .= "--------------------------------------------------\n\n";
-        $body .= "Email ini dikirim otomatis dari " . $site_name . "\n";
-        $body .= "Kunjungi: " . $site_url . "\n";
-        
-        $admin_email = get_option('admin_email');
-
-        // RFC 2047 encode subject if it contains non-ASCII characters
-        $encoded_subject = $subject;
-        if (preg_match('/[^\x20-\x7E]/', $subject)) {
-            $encoded_subject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
-        }
-
-        $headers = array(
-            'Content-Type: text/plain; charset=UTF-8',
-            'From: ' . $site_name . ' <' . $admin_email . '>',
-            'Reply-To: ' . $admin_email,
-            'Return-Path: ' . $admin_email,
-            'X-Mailer: Global-Tractors/1.0',
-        );
-
-        // Debug: log email details before sending
-        $debug_file = WP_CONTENT_DIR . '/uploads/gti-mail-debug.log';
-        $timestamp = date('[Y-m-d H:i:s]');
-        $debug_details = $timestamp . ' [' . $type . ':' . $status . '] To=' . $customer_email . ' Subject=' . substr($subject, 0, 50) . ' BodyLen=' . strlen($body) . ' HeadersCount=' . count($headers) . "\n";
-        error_log($debug_details, 3, $debug_file);
-
-        $mail_result = wp_mail($customer_email, $encoded_subject, $body, $headers);
-
-        // Log result
-        $timestamp = date('[Y-m-d H:i:s]');
-        $log_msg = $timestamp . ' [' . $type . ':' . $status . '] To=' . $customer_email . ' RefId=' . $ref_id . ' Result=' . ($mail_result ? 'SENT' : 'FAILED') . "\n";
-        error_log($log_msg, 3, $debug_file);
-
-        // Log to email_logs table
-        $wpdb->insert(
-            $wpdb->prefix . 'gti_email_logs',
-            array(
-                'type'            => $type,
-                'related_id'      => $data['id'] ?? 0,
-                'status'          => $status,
-                'recipient_email' => $customer_email,
-                'subject'         => $subject,
-                'sent_status'     => $mail_result ? 'sent' : 'failed',
-            ),
-            array('%s', '%d', '%s', '%s', '%s', '%s')
-        );
-    }
 }
 
-// Capture mail errors for diagnostics
+/**
+ * Surface wp_mail() failures.
+ *
+ * This used to append to wp-content/uploads/gti-mail-debug.log on every failure
+ * — an unbounded file in a publicly served directory, the same problem as A-05
+ * and A-07. Failures are now recorded per message in wp_gti_email_logs by
+ * GTI_Mailer, and this only adds a line to the normal debug log.
+ */
 if (!function_exists('gti_capture_mail_error')) {
     function gti_capture_mail_error($result) {
         if (!$result || ($result instanceof \WP_Error)) {
-            $debug_file = WP_CONTENT_DIR . '/uploads/gti-mail-debug.log';
-            $timestamp = date('[Y-m-d H:i:s]');
-            $error_msg = is_wp_error($result) ? $result->get_error_message() : 'wp_mail() returned false';
-            $log_line = $timestamp . ' [MAIL_ERROR] ' . $error_msg . "\n";
-            error_log($log_line, 3, $debug_file);
+            gti_log('wp_mail failed', is_wp_error($result) ? $result->get_error_message() : 'wp_mail() returned false');
         }
         return $result;
     }
     add_filter('wp_mail_failed', 'gti_capture_mail_error', 10, 1);
 }
 
-// Initialize AJAX handlers
-GTI_Ajax::init();
+// Handlers are registered from inc/bootstrap.php on `init`.

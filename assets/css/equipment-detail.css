@@ -926,3 +926,113 @@
     height: 48px;
   }
 }
+
+/* ═══ INQUIRY FORM — extended field set (PRD §7.2 / §7.4) ═══════════════════ */
+
+/* Honeypot: off-screen rather than display:none, which some bots skip. */
+.gti-ed-hp {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px; height: 1px;
+    overflow: hidden;
+}
+
+.gti-ed-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.gti-ed-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.gti-ed-form-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    background: none;
+    border: none;
+    border-top: 1px solid #e5e7eb;
+    padding: 12px 0;
+    margin: 4px 0 8px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    text-align: left;
+}
+.gti-ed-form-toggle:hover { color: #1a1f36; }
+.gti-ed-form-toggle i { transition: transform 0.2s; font-size: 11px; }
+.gti-ed-form-toggle.is-open i { transform: rotate(180deg); }
+
+.gti-ed-form-more { padding-bottom: 4px; }
+
+.gti-ed-form-error {
+    display: block;
+    font-size: 12px;
+    color: #dc2626;
+    margin-top: 4px;
+    min-height: 0;
+}
+.gti-ed-form-error:empty { display: none; }
+
+.gti-ed-form-group.has-error input,
+.gti-ed-form-group.has-error select,
+.gti-ed-form-group.has-error textarea {
+    border-color: #dc2626;
+}
+
+.gti-ed-form-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #6b7280;
+    cursor: pointer;
+    margin: 8px 0 12px;
+}
+.gti-ed-form-consent input {
+    width: 15px; height: 15px;
+    margin-top: 1px;
+    flex-shrink: 0;
+    accent-color: #F5A623;
+    cursor: pointer;
+}
+.gti-ed-form-consent.has-error span { color: #dc2626; }
+
+.gti-ed-form select,
+.gti-ed-form input[type="date"],
+.gti-ed-form input[type="number"] {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1a1f36;
+    background: #fff;
+}
+.gti-ed-form select:focus,
+.gti-ed-form input:focus,
+.gti-ed-form textarea:focus {
+    outline: none;
+    border-color: #F5A623;
+    box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+}
+
+.gti-ed-form-done { text-align: center; padding: 24px 0; }
+.gti-ed-form-done i { font-size: 48px; color: #10B981; margin-bottom: 12px; display: block; }
+.gti-ed-form-done h3 { margin: 0 0 8px; color: #1a1f36; }
+.gti-ed-form-done p { margin: 0 0 4px; color: #6b7280; line-height: 1.6; }
+
+@media (max-width: 480px) {
+    .gti-ed-form-row { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,15 @@
+/* request-equipment — page-specific rules (PRD §13.7 / R2) */
+
+/* Table column widths */ {  }
+.gti-ue-table .col-reqid { width: 110px; }
+.gti-ue-table .col-customer { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-equipment { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-qty { width: 70px; text-align: center; }
+.gti-ue-table .col-location { width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-budget { width: 100px; text-align: right; white-space: nowrap; }
+.gti-ue-table .col-status { width: 120px; text-align: center; white-space: nowrap; }
+/* ====== Drawer Header ====== */ {  }
+.gti-drawer-status.status-new { background: #dbeafe; color: #1d4ed8; }
+.gti-drawer-status.status-processing { background: #fef3c7; color: #b45309; }
+.gti-drawer-status.status-proposal_sent { background: #e0e7ff; color: #4338ca; }
+.gti-drawer-status.status-closed { background: #d1fae5; color: #047857; }

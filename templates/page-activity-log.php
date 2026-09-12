@@ -4,11 +4,6 @@
  * @package global-tractors
  */
 if (!defined('ABSPATH')) exit;
-gti_require_login();
-
-$current_user = wp_get_current_user();
-$user_name = $current_user->display_name ?: $current_user->user_login;
-$user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
 // The activity log table ships in two historic shapes; this creates or patches it.
 global $wpdb;
@@ -22,6 +17,15 @@ $date_from     = isset($_GET['date_from'])   ? sanitize_text_field($_GET['date_f
 $date_to       = isset($_GET['date_to'])     ? sanitize_text_field($_GET['date_to'])     : '';
 
 // Pagination — 'page_num' is used instead of 'paged' because WordPress reserves 'paged'
+// Filters carried across pagination links.
+$query_params = array_filter( array(
+    'gti_page'    => 'activity-log',
+    'search'      => $search,
+    'action_type' => $action_filter,
+    'date_from'   => $date_from,
+    'date_to'     => $date_to,
+) );
+
 $paged    = isset($_GET['page_num']) ? max(1, intval($_GET['page_num'])) : 1;
 $per_page = 15;
 $offset   = ($paged - 1) * $per_page;
@@ -110,385 +114,16 @@ function gti_get_action_icon($action) {
     );
     return $icons[$action] ?? array('icon' => 'fa-circle', 'color' => '#6b7280', 'bg' => '#f3f4f6');
 }
+
+gti_dashboard_open( array(
+    'page'     => 'activity-log',
+    'title'    => 'Activity Log',
+    'subtitle' => 'Every change, who made it, and when 📜',
+    'cap'      => 'gti_manage_settings',
+    'js'       => array( 'activity-log' ),
+) );
 ?>
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity Log - <?php bloginfo('name'); ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
-    <style>
-        /* Stats */
-        .gti-ue-stats-row {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .gti-ue-stat-card {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 18px 20px;
-            background: #fff;
-            border-radius: 10px;
-            border: 1px solid #e5e7eb;
-        }
-        .gti-ue-stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        .gti-ue-stat-icon.primary { background: #dbeafe; color: #2563eb; }
-        .gti-ue-stat-icon.success { background: #d1fae5; color: #059669; }
-        .gti-ue-stat-icon.info { background: #e0e7ff; color: #4f46e5; }
-        .gti-ue-stat-icon.warning { background: #fef3c7; color: #d97706; }
-        .gti-ue-stat-info p { margin: 0; }
-        .gti-ue-stat-label { font-size: 13px; color: #6b7280; font-weight: 500; }
-        .gti-ue-stat-value { font-size: 22px; font-weight: 700; color: #1a1f36; margin-top: 2px; }
 
-        /* Toolbar */
-        .gti-ue-toolbar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .gti-ue-toolbar-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            flex-wrap: wrap;
-        }
-        .gti-ue-search {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 14px;
-            background: #fff;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            min-width: 220px;
-            flex: 1;
-            max-width: 320px;
-        }
-        .gti-ue-search i { color: #9ca3af; font-size: 14px; }
-        .gti-ue-search input {
-            border: none;
-            outline: none;
-            font-size: 14px;
-            font-family: inherit;
-            color: #1a1f36;
-            width: 100%;
-            background: transparent;
-        }
-        .gti-ue-filter select {
-            padding: 9px 12px;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            font-size: 13px;
-            font-family: inherit;
-            color: #374151;
-            background: #fff;
-            cursor: pointer;
-            appearance: auto;
-        }
-        .gti-ue-btn-reset {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 9px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #6b7280;
-            background: #fff;
-            border: 1px solid #d1d5db;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.15s;
-            font-family: inherit;
-        }
-        .gti-ue-btn-reset:hover { background: #f9fafb; color: #374151; }
-
-        /* Table */
-        .gti-ue-table-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            overflow: hidden;
-        }
-        .gti-ue-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .gti-ue-table thead {
-            background: #f9fafb;
-        }
-        .gti-ue-table thead th {
-            padding: 13px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        .gti-ue-table tbody tr {
-            transition: background 0.15s;
-            cursor: default;
-        }
-        .gti-ue-table tbody tr:hover {
-            background: #f9fafb;
-        }
-        .gti-ue-table tbody td {
-            padding: 14px 16px;
-            font-size: 14px;
-            color: #374151;
-            border-bottom: 1px solid #f3f4f6;
-            vertical-align: middle;
-        }
-        .gti-ue-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Action icon in table */
-        .gti-al-action {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .gti-al-action-icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            flex-shrink: 0;
-        }
-        .gti-al-action-label {
-            font-weight: 500;
-            text-transform: capitalize;
-        }
-
-        /* User cell */
-        .gti-al-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .gti-al-user img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-        .gti-al-user-info strong {
-            display: block;
-            font-size: 14px;
-            color: #1a1f36;
-        }
-        .gti-al-user-info small {
-            color: #9ca3af;
-            font-size: 12px;
-        }
-
-        /* IP badge */
-        .gti-al-ip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 8px;
-            background: #f3f4f6;
-            border-radius: 6px;
-            font-size: 12px;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            color: #6b7280;
-        }
-
-        /* Pagination */
-        .gti-ue-pagination {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-top: 1px solid #f3f4f6;
-        }
-        .gti-ue-pagination-info {
-            font-size: 13px;
-            color: #6b7280;
-        }
-        .gti-ue-pagination-controls {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .gti-ue-page-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            padding: 0 8px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.15s;
-        }
-        .gti-ue-page-btn:hover:not(:disabled):not(.active) { background: #f9fafb; border-color: #d1d5db; }
-        .gti-ue-page-btn.active {
-            background: #F5A623;
-            color: #1a1f36;
-            border-color: #F5A623;
-            font-weight: 600;
-        }
-        .gti-ue-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .gti-ue-page-dots {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 32px;
-            height: 32px;
-            font-size: 13px;
-            color: #9ca3af;
-        }
-
-        /* Empty state */
-        .gti-al-empty {
-            text-align: center;
-            padding: 60px 20px;
-            color: #9ca3af;
-        }
-        .gti-al-empty i { font-size: 48px; margin-bottom: 16px; display: block; }
-        .gti-al-empty p.title { font-size: 16px; font-weight: 500; margin-bottom: 8px; color: #6b7280; }
-        .gti-al-empty p.desc { font-size: 14px; }
-
-        /* Responsive */
-        @media (max-width: 1200px) {
-            .gti-ue-stats-row { flex-wrap: wrap; }
-            .gti-ue-toolbar { flex-direction: column; align-items: flex-start; }
-            .gti-ue-toolbar-left { width: 100%; }
-            .gti-ue-search { max-width: 100%; }
-        }
-        @media (max-width: 768px) {
-            .gti-ue-stats-row .gti-ue-stat-card { flex: 1 1 calc(50% - 12px); }
-            .gti-ue-toolbar-left { flex-direction: column; }
-            .gti-ue-search { width: 100%; min-width: auto; }
-            .gti-ue-filter select { width: 100%; }
-            .gti-ue-table-card { overflow-x: auto; }
-            .gti-ue-pagination { flex-direction: column; gap: 12px; }
-        }
-    </style>
-</head>
-<body class="gti-body">
-    <div class="gti-wrapper">
-        <!-- Sidebar -->
-        <aside class="gti-sidebar" id="gti-sidebar">
-            <div class="gti-sidebar-header">
-                <div class="gti-logo">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/logo-header-footer-pt-global-tractors-indonesia.png" alt="PT Global Tractors Indonesia" class="gti-logo-img">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/cropped-favicon-pt-global-tractors-indonesia.png" alt="GTI" class="gti-logo-favicon">
-                </div>
-            </div>
-
-            <div class="gti-sidebar-divider"></div>
-
-            <nav class="gti-nav">
-                <div class="gti-nav-group">
-                    <a href="<?php echo esc_url(gti_dashboard_url()); ?>" class="gti-nav-item">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-
-                <div class="gti-nav-group gti-has-children">
-                    <div class="gti-nav-section">EQUIPMENT</div>
-                    <a href="#" class="gti-nav-parent" data-toggle="dropdown"><i class="fas fa-truck"></i><span>Equipment</span><i class="fas fa-chevron-down gti-nav-arrow"></i></a>
-                    <div class="gti-nav-children">
-                        <a href="<?php echo esc_url(gti_dashboard_url('used-equipment')); ?>" class="gti-nav-child"><i></i><span>Used Equipment</span></a>
-                        <a href="<?php echo esc_url(gti_dashboard_url('rental-equipment')); ?>" class="gti-nav-child"><i></i><span>Rental Equipment</span></a>
-                    </div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-nav-item"><i class="fas fa-cog"></i><span>Spare Parts</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">REQUEST &amp; INQUIRY</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-equipment')); ?>" class="gti-nav-item"><i class="fas fa-file-alt"></i><span>Request Equipment</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-quotation')); ?>" class="gti-nav-item"><i class="fas fa-clipboard-list"></i><span>Request Quotation</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('sell-equipment')); ?>" class="gti-nav-item"><i class="fas fa-handshake"></i><span>Sell Equipment</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">MANAGEMENT</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-nav-item"><i class="fas fa-users"></i><span>Customers</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" class="gti-nav-item"><i class="fas fa-newspaper"></i><span>News &amp; Articles</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('media-library')); ?>" class="gti-nav-item"><i class="fas fa-photo-video"></i><span>Media Library</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">SYSTEM</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-nav-item"><i class="fas fa-user-shield"></i><span>Users</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-nav-item active"><i class="fas fa-history"></i><span>Activity Log</span></a>
-                </div>
-            </nav>
-
-            <div class="gti-sidebar-footer">
-                <a href="#" class="gti-nav-item" id="gti-collapse-btn">
-                    <i class="fas fa-chevron-left"></i>
-                    <span>Collapse Menu</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="gti-main" id="gti-main">
-            <!-- Header -->
-            <header class="gti-header">
-                <div class="gti-header-left">
-                    <button class="gti-menu-toggle" id="gti-menu-toggle"><i class="fas fa-bars"></i></button>
-                    <div>
-                        <h1 class="gti-page-title">Activity Log</h1>
-                        <p class="gti-welcome">Track all system activities and user actions <span>&#128269;</span></p>
-                    </div>
-                </div>
-                <div class="gti-header-right">
-                    <div class="gti-date-filter">
-                        <i class="fas fa-calendar"></i>
-                        <span><?php echo date('M j, Y'); ?></span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="gti-notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="gti-badge">3</span>
-                    </div>
-                    <div class="gti-user-menu">
-                        <img src="<?php echo esc_url($user_avatar); ?>" alt="Avatar" class="gti-avatar">
-                        <div class="gti-user-info">
-                            <strong><?php echo esc_html($user_name); ?></strong>
-                            <small>Super Admin</small>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                </div>
-            </header>
 
             <!-- Content -->
             <div class="gti-content">
@@ -646,103 +281,21 @@ function gti_get_action_icon($action) {
 
                             <!-- Pagination -->
                             <?php if ($total_pages > 1): ?>
-                                <div class="gti-ue-pagination">
-                                    <div class="gti-ue-pagination-info">
-                                        Showing <?php echo esc_html($offset + 1); ?>-<?php echo esc_html(min($offset + $per_page, $total)); ?> of <?php echo esc_html($total); ?> entries
-                                    </div>
-                                    <div class="gti-ue-pagination-controls">
-                                        <?php
-                                        $query_params = array('gti_page' => 'activity-log');
-                                        if ($search) $query_params['search'] = $search;
-                                        if ($action_filter) $query_params['action_type'] = $action_filter;
-                                        if ($date_from) $query_params['date_from'] = $date_from;
-                                        if ($date_to) $query_params['date_to'] = $date_to;
-                                        $base_url = gti_dashboard_url('activity-log');
-                                        ?>
-
-                                        <?php if ($paged > 1): ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged - 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-left"></i></a>
-                                        <?php else: ?>
-                                            <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-left"></i></button>
-                                        <?php endif; ?>
-
-                                        <?php
-                                        $start = max(1, $paged - 2);
-                                        $end = min($total_pages, $paged + 2);
-                                        if ($start > 1): ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => 1]))); ?>" class="gti-ue-page-btn">1</a>
-                                            <?php if ($start > 2): ?>
-                                                <span class="gti-ue-page-dots">...</span>
-                                            <?php endif; ?>
-                                        <?php endif; ?>
-
-                                        <?php for ($i = $start; $i <= $end; $i++): ?>
-                                            <?php if ($i == $paged): ?>
-                                                <button class="gti-ue-page-btn active"><?php echo $i; ?></button>
-                                            <?php else: ?>
-                                                <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $i]))); ?>" class="gti-ue-page-btn"><?php echo $i; ?></a>
-                                            <?php endif; ?>
-                                        <?php endfor; ?>
-
-                                        <?php if ($end < $total_pages): ?>
-                                            <?php if ($end < $total_pages - 1): ?>
-                                                <span class="gti-ue-page-dots">...</span>
-                                            <?php endif; ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $total_pages]))); ?>" class="gti-ue-page-btn"><?php echo $total_pages; ?></a>
-                                        <?php endif; ?>
-
-                                        <?php if ($paged < $total_pages): ?>
-                                            <a href="<?php echo esc_url($base_url . '?' . http_build_query(array_merge($query_params, ['page_num' => $paged + 1]))); ?>" class="gti-ue-page-btn"><i class="fas fa-chevron-right"></i></a>
-                                        <?php else: ?>
-                                            <button class="gti-ue-page-btn" disabled><i class="fas fa-chevron-right"></i></button>
-                                        <?php endif; ?>
-                                    </div>
+                                <?php
+                                gti_render_pagination( array(
+                                    'total'    => $total,
+                                    'per_page' => $per_page,
+                                    'current'  => $paged,
+                                    'base_url' => gti_dashboard_url( 'activity-log' ),
+                                    'params'   => $query_params,
+                                ) );
+                                ?>
                                 </div>
                             <?php endif; ?>
                     </div>
 
                 </div>
             </div>
-        </main>
-    </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sidebar collapse
-        var collapseBtn = document.getElementById('gti-collapse-btn');
-        var sidebar = document.getElementById('gti-sidebar');
-        var mainEl = document.getElementById('gti-main');
-
-        if (collapseBtn && sidebar) {
-            if (localStorage.getItem('gti-sidebar-collapsed') === 'true') {
-                sidebar.classList.add('collapsed');
-                if (mainEl) mainEl.classList.add('collapsed');
-            }
-            collapseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                sidebar.classList.toggle('collapsed');
-                if (mainEl) mainEl.classList.toggle('collapsed');
-                localStorage.setItem('gti-sidebar-collapsed', sidebar.classList.contains('collapsed'));
-            });
-        }
-
-        // Sidebar dropdown toggle
-        document.querySelectorAll('[data-toggle="dropdown"]').forEach(function(toggle) {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                var group = this.closest('.gti-has-children');
-                if (group) group.classList.toggle('open');
-            });
-        });
-
-        // Mobile menu toggle
-        var menuToggle = document.getElementById('gti-menu-toggle');
-        if (menuToggle) {
-            menuToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('mobile-open');
-            });
-        }
-    });
-    </script>
-</body>
-</html>
+<?php
+gti_dashboard_close(  );

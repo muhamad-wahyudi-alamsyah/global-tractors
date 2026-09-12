@@ -8,8 +8,6 @@ if (!defined('ABSPATH')) exit;
 add_action('init', 'gti_add_rewrite_rules');
 function gti_add_rewrite_rules() {
     add_rewrite_rule('^dashboard/login/?$', 'index.php?gti_page=login', 'top');
-    add_rewrite_rule('^dashboard/profile/?$', 'index.php?gti_page=profile', 'top');
-    add_rewrite_rule('^dashboard/orders/?$', 'index.php?gti_page=orders', 'top');
     add_rewrite_rule('^dashboard/used-equipment/?$', 'index.php?gti_page=used-equipment', 'top');
     add_rewrite_rule('^dashboard/used-equipment/add/?$', 'index.php?gti_page=add-equipment', 'top');
     add_rewrite_rule('^dashboard/rental-equipment/?$', 'index.php?gti_page=rental-equipment', 'top');
@@ -48,8 +46,6 @@ function gti_handle_dashboard_routing() {
 
     $map = [
         'login' => 'page-login',
-        'profile' => 'page-profile',
-        'orders' => 'page-orders',
         'dashboard' => 'page-dashboard',
         'used-equipment' => 'page-used-equipment',
         'add-equipment' => 'page-add-used-equipment',

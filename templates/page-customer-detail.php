@@ -4,11 +4,6 @@
  * @package global-tractors
  */
 if (!defined('ABSPATH')) exit;
-gti_require_login();
-
-$current_user = wp_get_current_user();
-$user_name = $current_user->display_name ?: $current_user->user_login;
-$user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
 // Get customer ID from URL
 $customer_id_param = isset($_GET['id']) ? sanitize_text_field($_GET['id']) : '';
@@ -152,205 +147,15 @@ $last_contact   = $customer ? gti_cd_fmt_date($stats['last_contact'] ?: $custome
 $full_location  = $customer
     ? trim(implode(', ', array_filter(array($customer->city, $customer->province, $customer->country))), ', ')
     : '';
+
+gti_dashboard_open( array(
+    'page'     => 'customer-detail',
+    'title'    => 'Customer Detail',
+    'cap'      => 'gti_manage_customers',
+    'js'       => array( 'customer-detail' ),
+) );
 ?>
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo esc_html($customer ? $customer->name : 'Customer Not Found'); ?> - Customer Detail - <?php bloginfo('name'); ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
-    <style>
-        /* Back Link */
-        .gti-cd-top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
-        .gti-cd-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#6b7280;text-decoration:none}
-        .gti-cd-back:hover{color:#f9b204}
 
-        /* Action Bar */
-        .gti-cd-action-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-        .gti-cd-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;text-decoration:none;border:1px solid transparent;transition:all .15s}
-        .gti-cd-btn-outline{background:#fff;color:#374151;border-color:#d1d5db}
-        .gti-cd-btn-outline:hover{background:#f9fafb;border-color:#9ca3af}
-        .gti-cd-btn-primary{background:#f9b204;color:#000;border-color:#f9b204}
-        .gti-cd-btn-primary:hover{background:#e0a200}
-        .gti-cd-btn i{font-size:13px}
-        .gti-cd-more-wrap{position:relative;display:inline-block}
-        .gti-cd-more-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;background:#f9b204;color:#000;border:1px solid #f9b204}
-        .gti-cd-more-btn:hover{background:#e0a200}
-        .gti-cd-more-dropdown{display:none;position:absolute;right:0;top:100%;margin-top:6px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;z-index:50;padding:6px}
-        .gti-cd-more-dropdown.show{display:block}
-        .gti-cd-more-item{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:13px;color:#374151;border-radius:6px;text-decoration:none;cursor:pointer;border:none;background:none;width:100%;text-align:left;font-family:Inter,sans-serif}
-        .gti-cd-more-item:hover{background:#f3f4f6}
-        .gti-cd-more-item i{width:16px;font-size:13px;color:#9ca3af}
-
-        /* Profile Card */
-        .gti-cd-profile{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:28px 32px;margin-bottom:24px}
-        .gti-cd-profile-top{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
-        .gti-cd-profile-left{display:flex;gap:16px;align-items:center;flex:1;min-width:0}
-        .gti-cd-avatar-lg{width:64px;height:64px;border-radius:14px;background:#f9b204;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#000;flex-shrink:0}
-        .gti-cd-profile-info{display:flex;flex-direction:column;gap:4px}
-        .gti-cd-profile-name{font-size:22px;font-weight:700;color:#111827}
-        .gti-cd-profile-status{display:inline-flex;align-items:center;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;gap:5px;width:fit-content}
-        .gti-cd-profile-status.active{background:#d1fae5;color:#065f46}
-        .gti-cd-profile-status.active::before{content:'';width:6px;height:6px;border-radius:50%;background:#10b981}
-        .gti-cd-profile-status.inactive{background:#fee2e2;color:#991b1b}
-        .gti-cd-profile-status.inactive::before{content:'';width:6px;height:6px;border-radius:50%;background:#ef4444}
-        .gti-cd-profile-company{font-size:14px;color:#6b7280;margin-top:2px}
-        .gti-cd-kpi-box{text-align:center;padding:16px 24px;background:#fafafa;border:1px solid #f3f4f6;border-radius:10px;min-width:140px}
-        .gti-cd-kpi-value{font-size:20px;font-weight:700;color:#111827}
-        .gti-cd-kpi-label{font-size:11px;color:#9ca3af;margin-top:2px;text-transform:uppercase;letter-spacing:.03em}
-        .gti-cd-profile-right{display:flex;gap:12px;align-items:flex-start}
-
-        /* Quick Contact Meta */
-        .gti-cd-meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:20px;padding-top:20px;border-top:1px solid #f3f4f6}
-        .gti-cd-meta-item{display:flex;align-items:center;gap:10px;font-size:13px;color:#374151}
-        .gti-cd-meta-item i{width:20px;text-align:center;color:#9ca3af;font-size:14px}
-        .gti-cd-meta-item a{color:#2563eb;text-decoration:none}
-        .gti-cd-meta-item a:hover{text-decoration:underline}
-        .gti-cd-meta-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:16px;padding-top:16px;border-top:1px solid #f3f4f6}
-        .gti-cd-meta-label{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
-
-        /* Tabs */
-        .gti-cd-tabs{display:flex;gap:0;border-bottom:2px solid #f3f4f6;margin-bottom:24px;overflow-x:auto}
-        .gti-cd-tab{padding:12px 20px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;text-decoration:none;white-space:nowrap;transition:all .15s}
-        .gti-cd-tab:hover{color:#374151}
-        .gti-cd-tab.active{color:#f9b204;border-bottom-color:#f9b204}
-
-        /* Section Cards */
-        .gti-cd-section{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;margin-bottom:20px}
-        .gti-cd-section-title{font-size:15px;font-weight:700;color:#111827;margin-bottom:18px;display:flex;align-items:center;gap:8px}
-        .gti-cd-section-title i{color:#f9b204;font-size:16px}
-        .gti-cd-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-        .gti-cd-info-field{display:flex;flex-direction:column;gap:3px}
-        .gti-cd-info-field label{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.03em}
-        .gti-cd-info-field span{font-size:14px;color:#374151;font-weight:500}
-        .gti-cd-info-field span a{color:#2563eb;text-decoration:none}
-        .gti-cd-info-field span a:hover{text-decoration:underline}
-        .gti-cd-info-field-full{grid-column:1/-1}
-
-        /* Stats Grid */
-        .gti-cd-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
-        .gti-cd-stat-card{background:#fafafa;border:1px solid #f3f4f6;border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:8px}
-        .gti-cd-stat-card-header{display:flex;align-items:center;justify-content:space-between}
-        .gti-cd-stat-card-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
-        .gti-cd-stat-card-icon.q{background:#fef3c7;color:#f59e0b}
-        .gti-cd-stat-card-icon.p{background:#dbeafe;color:#3b82f6}
-        .gti-cd-stat-card-icon.r{background:#ede9fe;color:#8b5cf6}
-        .gti-cd-stat-card-icon.i{background:#d1fae5;color:#10b981}
-        .gti-cd-stat-card-value{font-size:24px;font-weight:700;color:#111827}
-        .gti-cd-stat-card-label{font-size:13px;color:#6b7280}
-        .gti-cd-stat-card-link{font-size:12px;color:#2563eb;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
-        .gti-cd-stat-card-link:hover{text-decoration:underline}
-
-        /* Activity Table */
-        .gti-cd-activity-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-        .gti-cd-activity-header h3{font-size:15px;font-weight:700;color:#111827;display:flex;align-items:center;gap:8px}
-        .gti-cd-activity-header h3 i{color:#f9b204}
-        .gti-cd-activity-link{font-size:13px;color:#2563eb;text-decoration:none;font-weight:600}
-        .gti-cd-activity-link:hover{text-decoration:underline}
-        .gti-cd-activity-table{width:100%;border-collapse:collapse}
-        .gti-cd-activity-table thead th{font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.03em;padding:10px 14px;text-align:left;border-bottom:1px solid #f3f4f6;background:#fafafa}
-        .gti-cd-activity-table tbody td{padding:12px 14px;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6}
-        .gti-cd-activity-table tbody tr:last-child td{border-bottom:none}
-        .gti-cd-activity-type{display:flex;align-items:center;gap:8px;font-weight:600}
-        .gti-cd-activity-type-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-        .gti-cd-activity-detail{color:#6b7280;max-width:350px}
-    </style>
-</head>
-<body class="gti-body">
-    <div class="gti-wrapper">
-        <!-- Sidebar -->
-        <aside class="gti-sidebar" id="gti-sidebar">
-            <div class="gti-sidebar-header">
-                <div class="gti-logo">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/logo-header-footer-pt-global-tractors-indonesia.png" alt="PT Global Tractors Indonesia" class="gti-logo-img">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/cropped-favicon-pt-global-tractors-indonesia.png" alt="GTI" class="gti-logo-favicon">
-                </div>
-            </div>
-
-            <div class="gti-sidebar-divider"></div>
-
-            <nav class="gti-nav">
-                <div class="gti-nav-group">
-                    <a href="<?php echo esc_url(gti_dashboard_url()); ?>" class="gti-nav-item">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-
-                <div class="gti-nav-group gti-has-children">
-                    <div class="gti-nav-section">EQUIPMENT</div>
-                    <a href="#" class="gti-nav-parent" data-toggle="dropdown"><i class="fas fa-truck"></i><span>Equipment</span><i class="fas fa-chevron-down gti-nav-arrow"></i></a>
-                    <div class="gti-nav-children">
-                        <a href="<?php echo esc_url(gti_dashboard_url('used-equipment')); ?>" class="gti-nav-child"><i></i><span>Used Equipment</span></a>
-                        <a href="<?php echo esc_url(gti_dashboard_url('rental-equipment')); ?>" class="gti-nav-child"><i></i><span>Rental Equipment</span></a>
-                    </div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-nav-item"><i class="fas fa-cog"></i><span>Spare Parts</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">REQUEST &amp; INQUIRY</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-equipment')); ?>" class="gti-nav-item"><i class="fas fa-file-alt"></i><span>Request Equipment</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-quotation')); ?>" class="gti-nav-item"><i class="fas fa-clipboard-list"></i><span>Request Quotation</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('sell-equipment')); ?>" class="gti-nav-item"><i class="fas fa-handshake"></i><span>Sell Equipment</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">MANAGEMENT</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-nav-item active"><i class="fas fa-users"></i><span>Customers</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" class="gti-nav-item"><i class="fas fa-newspaper"></i><span>News &amp; Articles</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('media-library')); ?>" class="gti-nav-item"><i class="fas fa-photo-video"></i><span>Media Library</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">SYSTEM</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-nav-item"><i class="fas fa-user-shield"></i><span>Users</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-nav-item"><i class="fas fa-history"></i><span>Activity Log</span></a>
-                </div>
-            </nav>
-
-            <div class="gti-sidebar-footer">
-                <a href="#" class="gti-nav-item" id="gti-collapse-btn">
-                    <i class="fas fa-chevron-left"></i>
-                    <span>Collapse Menu</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="gti-main" id="gti-main">
-            <!-- Header -->
-            <header class="gti-header">
-                <div class="gti-header-left">
-                    <button class="gti-menu-toggle" id="gti-menu-toggle"><i class="fas fa-bars"></i></button>
-                    <div>
-                        <h1 class="gti-page-title">Customer Detail</h1>
-                        <p class="gti-welcome">Welcome back, <?php echo esc_html($user_name); ?>! <span>&#128075;</span></p>
-                    </div>
-                </div>
-                <div class="gti-header-right">
-                    <div class="gti-date-filter">
-                        <i class="fas fa-calendar"></i>
-                        <span><?php echo date('M Y'); ?></span>
-                    </div>
-                    <div class="gti-notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="gti-badge">3</span>
-                    </div>
-                    <div class="gti-user-menu">
-                        <img src="<?php echo esc_url($user_avatar); ?>" alt="Avatar" class="gti-avatar">
-                        <div class="gti-user-info">
-                            <strong><?php echo esc_html($user_name); ?></strong>
-                            <small>Super Admin</small>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                </div>
-            </header>
 
             <!-- Content -->
             <div class="gti-content" style="flex-direction:column">
@@ -835,76 +640,8 @@ $full_location  = $customer
                 <?php endif; ?>
 
             </div>
-        </main>
-    </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Sidebar Collapse
-        var collapseBtn = document.getElementById('gti-collapse-btn');
-        var sidebar     = document.getElementById('gti-sidebar');
-        var mainEl      = document.querySelector('.gti-main');
-
-        if (collapseBtn && sidebar) {
-            if (localStorage.getItem('gti-sidebar-collapsed') === 'true') {
-                sidebar.classList.add('collapsed');
-                if (mainEl) mainEl.classList.add('collapsed');
-            }
-            collapseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                sidebar.classList.toggle('collapsed');
-                if (mainEl) mainEl.classList.toggle('collapsed');
-                localStorage.setItem('gti-sidebar-collapsed', sidebar.classList.contains('collapsed'));
-            });
-        }
-
-        // Sidebar Dropdown
-        document.querySelectorAll('[data-toggle="dropdown"]').forEach(function(toggle) {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                var group = this.closest('.gti-has-children');
-                if (group) group.classList.toggle('open');
-            });
-        });
-
-        // More Actions Dropdown
-        var moreToggle = document.getElementById('cd-more-toggle');
-        var moreDropdown = document.getElementById('cd-more-dropdown');
-        if (moreToggle && moreDropdown) {
-            moreToggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                moreDropdown.classList.toggle('show');
-            });
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.gti-cd-more-wrap')) {
-                    moreDropdown.classList.remove('show');
-                }
-            });
-        }
-
-        // Tab Switching
-        document.querySelectorAll('.gti-cd-tab[data-tab]').forEach(function(tab) {
-            tab.addEventListener('click', function(e) {
-                e.preventDefault();
-                var target = this.getAttribute('data-tab');
-
-                // Update active tab
-                document.querySelectorAll('.gti-cd-tab[data-tab]').forEach(function(t) {
-                    t.classList.remove('active');
-                });
-                document.querySelectorAll('.gti-cd-tab[data-tab="' + target + '"]').forEach(function(t) {
-                    t.classList.add('active');
-                });
-
-                // Show/hide content
-                document.querySelectorAll('.gti-cd-tab-content').forEach(function(c) {
-                    c.style.display = 'none';
-                });
-                var content = document.getElementById('tab-' + target);
-                if (content) content.style.display = 'block';
-            });
-        });
-    });
-    </script>
-</body>
-</html>
+<?php
+gti_dashboard_close( array(
+    'modals' => array( 'delete', 'email' ),
+) );

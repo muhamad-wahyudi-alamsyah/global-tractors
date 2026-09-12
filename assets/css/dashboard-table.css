@@ -1,0 +1,76 @@
+/* dashboard-table
+   Extracted from the <style> blocks that were duplicated across the
+   dashboard templates (PRD §13.7 / R2). Shared rules load before each
+   page's own stylesheet, so page-level overrides still win. */
+
+.gti-ue-table tbody tr:hover { background: #f9fafb; }
+.gti-ue-stat-card { border: 1px solid #e5e7eb; }
+.gti-ue-search { border: 1px solid #d1d5db; }
+.gti-ue-filter select { border: 1px solid #d1d5db; }
+.gti-ue-btn-reset { border: 1px solid #d1d5db; text-decoration: none; }
+.gti-ue-btn-reset:hover { border-color: #d1d5db; }
+.gti-ue-action-toggle { border: 1px solid #e5e7eb; }
+.gti-ue-action-toggle:hover { border-color: #d1d5db; }
+.gti-ue-action-dropdown { border: 1px solid #e5e7eb; }
+.gti-ue-action-item { cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+.gti-ue-page-btn { border: 1px solid #e5e7eb; }
+.gti-ue-page-btn:hover:not(:disabled) { border-color: #d1d5db; }
+.gti-ue-table thead th { font-size: 13px; font-weight: 600; color: #374151; text-transform: none; letter-spacing: normal; padding: 13px 16px; }
+.gti-ue-table td { font-size: 14px; color: #374151; padding: 14px 16px; }
+.gti-ue-table { width: 100%; table-layout: fixed; }
+.gti-ue-table .col-actions { width: 70px; text-align: center; }
+.gti-ue-table tbody tr.active-row { background: #FFF8EC; }
+.gti-ue-table tbody tr { cursor: pointer; transition: background 0.15s; }
+.gti-ue-table .col-date { width: 110px; white-space: nowrap; }
+@media (max-width: 1200px) {
+    .gti-ue-stats-row { flex-wrap: wrap; }
+    .gti-ue-toolbar { flex-direction: column; align-items: flex-start; }
+    .gti-ue-toolbar-left { width: 100%; }
+    .gti-ue-search input { width: 100%; }
+}
+.gti-ue-action-dropdown { z-index: 100; position: fixed; width: max-content; white-space: nowrap; }
+.gti-ue-table-card { border: 1px solid #e5e7eb; overflow: visible; }
+
+/* ── Status badge, driven by gti_status_map() (PRD §13.9) ─────────────────────
+   Replaces two competing conventions: page-request-equipment mapped statuses to
+   catalogue classes (available/reserved/sold) while page-sell-equipment used
+   status-{key}. One class list now serves every entity. */
+.gti-ue-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    background: #f3f4f6;
+    color: #374151;
+}
+.gti-ue-status-badge.status-new        { background: #dbeafe; color: #1d4ed8; }
+.gti-ue-status-badge.status-processing { background: #fef3c7; color: #92400e; }
+.gti-ue-status-badge.status-waiting    { background: #ede9fe; color: #6d28d9; }
+.gti-ue-status-badge.status-proposal-sent,
+.gti-ue-status-badge.status-approved   { background: #d1fae5; color: #047857; }
+.gti-ue-status-badge.status-on-hold    { background: #f3f4f6; color: #6b7280; }
+.gti-ue-status-badge.status-rejected   { background: #fee2e2; color: #b91c1c; }
+.gti-ue-status-badge.status-closed,
+.gti-ue-status-badge.status-completed  { background: #e5e7eb; color: #4b5563; }
+
+.gti-drawer-status.status-new        { background: #dbeafe; color: #1d4ed8; }
+.gti-drawer-status.status-processing { background: #fef3c7; color: #92400e; }
+.gti-drawer-status.status-waiting    { background: #ede9fe; color: #6d28d9; }
+.gti-drawer-status.status-proposal-sent,
+.gti-drawer-status.status-approved   { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-on-hold    { background: #f3f4f6; color: #6b7280; }
+.gti-drawer-status.status-rejected   { background: #fee2e2; color: #b91c1c; }
+.gti-drawer-status.status-closed,
+.gti-drawer-status.status-completed  { background: #e5e7eb; color: #4b5563; }
+
+/* Empty state inside a table body. */
+.gti-ue-empty { text-align: center; padding: 60px 20px; color: #9ca3af; }
+.gti-ue-empty i { font-size: 48px; margin-bottom: 16px; display: block; }
+.gti-ue-empty h3 { font-size: 16px; font-weight: 500; color: #6b7280; margin: 0 0 8px; }
+.gti-ue-empty p { font-size: 14px; margin: 0; }
+
+.gti-ue-action-item.danger { color: #dc2626; }
+.gti-ue-action-item.danger i { color: #dc2626; }

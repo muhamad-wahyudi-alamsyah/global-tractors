@@ -289,9 +289,10 @@ class GTI_Activator {
             $wpdb->query("ALTER TABLE {$table_equipment} MODIFY COLUMN price_type VARCHAR(50)");
         }
 
-        // Seed dummy request equipment data if table is empty
+        // Seed demo request rows. Off by default: a production inbox must never
+        // show orders that no customer placed (same rule as PRD §7.5 for the catalogue).
         $req_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table_requests}");
-        if ($req_count === 0) {
+        if ($req_count === 0 && get_option('gti_show_demo_data', 'no') === 'yes') {
             $dummy_requests = array(
                 array('REQ-2026-001', 'Budi Santoso', 'PT Maju Jaya', 'budi@majujaya.co.id', '081234567890', 'Jakarta', 'Excavator PC200', 'Heavy Equipment', 'Komatsu', 2, 'Jakarta', 1500000000.00, '2026-09-15', 'Need for mining project', 'processing', '2026-08-15'),
                 array('REQ-2026-002', 'Ahmad Hidayat', 'CV Berkah Konstruksi', 'ahmad@berkah.co.id', '082345678901', 'Surabaya', 'Wheel Loader WA320', 'Heavy Equipment', 'Komatsu', 1, 'Surabaya', 850000000.00, '2026-09-20', '', 'new', '2026-08-18'),
@@ -329,8 +330,193 @@ class GTI_Activator {
             }
         }
 
+        // ── v1.3.0 (PRD §4) ──────────────────────────────────────────────
+        // New columns are added with SHOW COLUMNS + ALTER TABLE rather than
+        // dbDelta(), because the CREATE TABLE statements above were never
+        // updated to match and dbDelta() only reconciles against those.
+        if (version_compare($db_version, '1.3.0', '<')) {
+            self::add_columns($table_requests, array(
+                'usage_purpose'    => 'VARCHAR(255) NULL',
+                'message'          => 'TEXT NULL',
+                'customer_address' => 'TEXT NULL',
+                'assigned_to'      => 'BIGINT UNSIGNED NULL',
+                'assigned_at'      => 'DATETIME NULL',
+                'sales_pic'        => 'VARCHAR(255) NULL',
+                'updated_by'       => 'BIGINT UNSIGNED NULL',
+                'source'           => 'VARCHAR(50) NULL',
+            ));
+
+            self::add_columns($table_quotations, array(
+                'equipment_id'      => 'BIGINT UNSIGNED NULL',
+                'equipment_type'    => 'VARCHAR(20) NULL',
+                'quantity'          => 'INT DEFAULT 1',
+                'needed_date'       => 'DATE NULL',
+                'rental_start_date' => 'DATE NULL',
+                'rental_end_date'   => 'DATE NULL',
+                'rental_duration'   => 'VARCHAR(50) NULL',
+                'payment_terms'     => 'VARCHAR(50) NULL',
+                'budget'            => 'DECIMAL(15,2) NULL',
+                'assigned_to'       => 'BIGINT UNSIGNED NULL',
+                'assigned_at'       => 'DATETIME NULL',
+                'updated_by'        => 'BIGINT UNSIGNED NULL',
+                'source_url'        => 'VARCHAR(500) NULL',
+            ));
+
+            self::add_columns($table_sell_requests, array(
+                'customer_whatsapp'    => 'VARCHAR(50) NULL',
+                'equipment_location'   => 'VARCHAR(255) NULL',
+                'message'              => 'TEXT NULL',
+                'invoice_requested_at' => 'DATETIME NULL',
+                'invoice_received_at'  => 'DATETIME NULL',
+                'assigned_to'          => 'BIGINT UNSIGNED NULL',
+                'assigned_at'          => 'DATETIME NULL',
+                'sales_pic'            => 'VARCHAR(255) NULL',
+                'updated_by'           => 'BIGINT UNSIGNED NULL',
+            ));
+
+            self::create_v130_tables($charset_collate);
+            self::add_v130_indexes();
+
+            // Capabilities gained three new entries in §9.2; re-run role setup so
+            // existing installs pick them up rather than only fresh ones.
+            if (class_exists('GTI_Roles')) {
+                GTI_Roles::create_roles();
+            }
+        }
+
         // Store table version
-        update_option('gti_db_version', '1.2.0');
+        update_option('gti_db_version', '1.3.0');
+    }
+
+    /**
+     * Add columns that are missing from a table. Existing columns are left alone,
+     * so this is safe to re-run.
+     *
+     * @param string $table   Fully-qualified table name.
+     * @param array  $columns column name => SQL type definition.
+     */
+    private static function add_columns($table, array $columns) {
+        global $wpdb;
+
+        $existing = $wpdb->get_col("SHOW COLUMNS FROM {$table}");
+        if (!is_array($existing)) {
+            return;
+        }
+
+        foreach ($columns as $column => $definition) {
+            if (!in_array($column, $existing, true)) {
+                $wpdb->query("ALTER TABLE {$table} ADD COLUMN `{$column}` {$definition}");
+            }
+        }
+    }
+
+    /**
+     * Tables introduced in v1.3.0 (PRD §4.5 – §4.7).
+     *
+     * gti_email_logs already existed, but was created lazily inside the mail
+     * routine — every outgoing message ran dbDelta(). It is declared here now.
+     */
+    private static function create_v130_tables($charset_collate) {
+        global $wpdb;
+
+        $attachments    = $wpdb->prefix . 'gti_attachments';
+        $status_history = $wpdb->prefix . 'gti_status_history';
+        $email_logs     = $wpdb->prefix . 'gti_email_logs';
+
+        $sql_attachments = "CREATE TABLE {$attachments} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            entity_type VARCHAR(20) NOT NULL,
+            entity_id BIGINT UNSIGNED NOT NULL,
+            kind VARCHAR(20) NOT NULL,
+            attachment_id BIGINT UNSIGNED NOT NULL,
+            original_name VARCHAR(255) NULL,
+            file_size BIGINT UNSIGNED NULL,
+            mime_type VARCHAR(100) NULL,
+            note TEXT NULL,
+            emailed_at DATETIME NULL,
+            uploaded_by BIGINT UNSIGNED NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_entity (entity_type, entity_id),
+            KEY idx_kind (kind)
+        ) {$charset_collate};";
+
+        $sql_status_history = "CREATE TABLE {$status_history} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            entity_type VARCHAR(20) NOT NULL,
+            entity_id BIGINT UNSIGNED NOT NULL,
+            from_status VARCHAR(50) NULL,
+            to_status VARCHAR(50) NOT NULL,
+            note TEXT NULL,
+            user_id BIGINT UNSIGNED NULL,
+            email_sent TINYINT(1) DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_entity (entity_type, entity_id, created_at)
+        ) {$charset_collate};";
+
+        $sql_email_logs = "CREATE TABLE {$email_logs} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            type VARCHAR(50) NOT NULL,
+            related_id BIGINT UNSIGNED NOT NULL,
+            status VARCHAR(50) NOT NULL,
+            recipient_email VARCHAR(190) NOT NULL,
+            cc VARCHAR(500) NULL,
+            subject VARCHAR(255) NOT NULL,
+            body_html LONGTEXT NULL,
+            attachment_ids VARCHAR(255) NULL,
+            send_result TINYINT(1) DEFAULT 0,
+            error_message TEXT NULL,
+            sent_by BIGINT UNSIGNED NULL,
+            sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_type_id (type, related_id)
+        ) {$charset_collate};";
+
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql_attachments);
+        dbDelta($sql_status_history);
+        dbDelta($sql_email_logs);
+
+        // The lazily-created email log predates body_html/cc/attachment_ids.
+        self::add_columns($email_logs, array(
+            'cc'             => 'VARCHAR(500) NULL',
+            'body_html'      => 'LONGTEXT NULL',
+            'attachment_ids' => 'VARCHAR(255) NULL',
+            'send_result'    => 'TINYINT(1) DEFAULT 0',
+            'error_message'  => 'TEXT NULL',
+            'sent_by'        => 'BIGINT UNSIGNED NULL',
+        ));
+    }
+
+    /**
+     * PRD §4.8 — indexes that keep the list queries cheap past a few thousand rows.
+     */
+    private static function add_v130_indexes() {
+        global $wpdb;
+
+        $indexes = array(
+            array($wpdb->prefix . 'gti_requests',      'idx_status_created', '(status, created_at)'),
+            array($wpdb->prefix . 'gti_requests',      'idx_assigned',       '(assigned_to)'),
+            array($wpdb->prefix . 'gti_quotations',    'idx_status_created', '(status, created_at)'),
+            array($wpdb->prefix . 'gti_quotations',    'idx_assigned',       '(assigned_to)'),
+            array($wpdb->prefix . 'gti_sell_requests', 'idx_status_created', '(status, created_at)'),
+            array($wpdb->prefix . 'gti_sell_requests', 'idx_assigned',       '(assigned_to)'),
+            array($wpdb->prefix . 'gti_equipment',     'idx_type_status',    '(type, status, deleted_at)'),
+            array($wpdb->prefix . 'gti_customers',     'idx_email',          '(email)'),
+            array($wpdb->prefix . 'gti_activity_log',  'idx_created',        '(created_at)'),
+        );
+
+        foreach ($indexes as $index) {
+            list($table, $name, $columns) = $index;
+            $exists = $wpdb->get_var($wpdb->prepare(
+                "SHOW INDEX FROM {$table} WHERE Key_name = %s",
+                $name
+            ));
+            if (!$exists) {
+                $wpdb->query("ALTER TABLE {$table} ADD INDEX {$name} {$columns}");
+            }
+        }
     }
     
     /**

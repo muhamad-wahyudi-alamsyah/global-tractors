@@ -10,86 +10,100 @@ defined('ABSPATH') || exit;
 class GTI_Roles {
     
     /**
-     * Create custom roles
+     * Capability matrix — PRD §9.3. One source of truth; every role and the
+     * WordPress administrator are reconciled against it.
+     *
+     * @return array role slug => [label, capabilities]
+     */
+    public static function capability_matrix() {
+        return array(
+            'gti_super_admin' => array(
+                'label' => 'GTI Super Admin',
+                'caps'  => array(
+                    'gti_access', 'gti_manage_users', 'gti_manage_equipment',
+                    'gti_manage_spare_parts', 'gti_manage_requests', 'gti_manage_quotations',
+                    'gti_manage_customers', 'gti_manage_settings', 'gti_view_all_requests',
+                    'gti_send_email', 'gti_upload_documents',
+                ),
+            ),
+            'gti_admin' => array(
+                'label' => 'GTI Admin',
+                'caps'  => array(
+                    'gti_access', 'gti_manage_equipment', 'gti_manage_spare_parts',
+                    'gti_manage_requests', 'gti_manage_quotations', 'gti_manage_customers',
+                    'gti_view_all_requests', 'gti_send_email', 'gti_upload_documents',
+                ),
+            ),
+            // Sales deliberately lacks gti_view_all_requests: that absence is what
+            // scopes the inbox to rows assigned to them (PRD §5.4).
+            'gti_sales' => array(
+                'label' => 'GTI Sales',
+                'caps'  => array(
+                    'gti_access', 'gti_manage_requests', 'gti_manage_quotations',
+                    'gti_manage_customers', 'gti_send_email', 'gti_upload_documents',
+                ),
+            ),
+            'gti_inventory' => array(
+                'label' => 'GTI Inventory',
+                'caps'  => array(
+                    'gti_access', 'gti_manage_equipment', 'gti_manage_spare_parts',
+                ),
+            ),
+        );
+    }
+
+    /**
+     * Every capability this theme defines.
+     */
+    public static function all_caps() {
+        $all = array();
+        foreach (self::capability_matrix() as $role) {
+            $all = array_merge($all, $role['caps']);
+        }
+        return array_values(array_unique($all));
+    }
+
+    /**
+     * Create or reconcile the GTI roles.
+     *
+     * Safe to re-run: add_role() ignores a role that already exists, so an
+     * existing role is brought up to date capability by capability instead.
      */
     public static function create_roles() {
-        // Super Admin - Full access
-        add_role(
-            'gti_super_admin',
-            'GTI Super Admin',
-            array(
-                'gti_access'            => true,
-                'gti_manage_users'       => true,
-                'gti_manage_equipment'   => true,
-                'gti_manage_spare_parts' => true,
-                'gti_manage_requests'    => true,
-                'gti_manage_quotations'  => true,
-                'gti_manage_customers'   => true,
-                'gti_manage_settings'    => true,
-                'read'                   => true,
-            )
-        );
-        
-        // Admin - General admin access
-        add_role(
-            'gti_admin',
-            'GTI Admin',
-            array(
-                'gti_access'            => true,
-                'gti_manage_equipment'   => true,
-                'gti_manage_spare_parts' => true,
-                'gti_manage_requests'    => true,
-                'gti_manage_quotations'  => true,
-                'gti_manage_customers'   => true,
-                'read'                   => true,
-            )
-        );
-        
-        // Sales - Quotation & customer focus
-        add_role(
-            'gti_sales',
-            'GTI Sales',
-            array(
-                'gti_access'            => true,
-                'gti_manage_requests'    => true,
-                'gti_manage_quotations'  => true,
-                'gti_manage_customers'   => true,
-                'read'                   => true,
-            )
-        );
-        
-        // Inventory - Equipment & spare parts focus
-        add_role(
-            'gti_inventory',
-            'GTI Inventory',
-            array(
-                'gti_access'            => true,
-                'gti_manage_equipment'   => true,
-                'gti_manage_spare_parts' => true,
-                'read'                   => true,
-            )
-        );
-        
-        // Add capabilities to administrator
+        foreach (self::capability_matrix() as $slug => $spec) {
+            $caps = array('read' => true);
+            foreach ($spec['caps'] as $cap) {
+                $caps[$cap] = true;
+            }
+
+            $role = get_role($slug);
+            if (!$role) {
+                add_role($slug, $spec['label'], $caps);
+                continue;
+            }
+
+            // Grant what is missing and revoke what the matrix no longer allows.
+            foreach ($caps as $cap => $granted) {
+                if (!$role->has_cap($cap)) {
+                    $role->add_cap($cap);
+                }
+            }
+            foreach (self::all_caps() as $cap) {
+                if (!isset($caps[$cap]) && $role->has_cap($cap)) {
+                    $role->remove_cap($cap);
+                }
+            }
+        }
+
+        // The WordPress administrator keeps full access.
         $admin = get_role('administrator');
         if ($admin) {
-            $caps = array(
-                'gti_access',
-                'gti_manage_users',
-                'gti_manage_equipment',
-                'gti_manage_spare_parts',
-                'gti_manage_requests',
-                'gti_manage_quotations',
-                'gti_manage_customers',
-                'gti_manage_settings',
-            );
-            
-            foreach ($caps as $cap) {
+            foreach (self::all_caps() as $cap) {
                 $admin->add_cap($cap);
             }
         }
     }
-    
+
     /**
      * Remove custom roles
      */
@@ -104,12 +118,7 @@ class GTI_Roles {
      * Get all GTI roles
      */
     public static function get_roles() {
-        return array(
-            'gti_super_admin' => 'GTI Super Admin',
-            'gti_admin'       => 'GTI Admin',
-            'gti_sales'       => 'GTI Sales',
-            'gti_inventory'   => 'GTI Inventory',
-        );
+        return wp_list_pluck(self::capability_matrix(), 'label');
     }
     
     /**
@@ -125,7 +134,7 @@ class GTI_Roles {
             return false;
         }
         
-        $gti_roles = self::get_roles();
+        $gti_roles = array_keys(self::get_roles());
         return !empty(array_intersect($gti_roles, $user->roles));
     }
     

@@ -1,0 +1,44 @@
+/* sell-equipment — page-specific rules (PRD §13.7 / R2) */
+
+/* ====== Stat Cards — Shrink ====== */ {  }
+.gti-ue-stats-row .gti-ue-stat-card { padding: 14px 16px; }
+.gti-ue-stats-row .gti-ue-stat-icon { width: 36px; height: 36px; font-size: 15px; }
+.gti-ue-stats-row .gti-ue-stat-value { font-size: 20px; }
+.gti-ue-stats-row .gti-ue-stat-label { font-size: 12px; }
+/* Table column widths */ {  }
+.gti-ue-table .col-customer { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-equipment { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-year { width: 70px; color: #374151 !important; text-align: left !important; }
+.gti-ue-table .col-condition { width: 100px; }
+.gti-ue-table .col-price { width: 130px; text-align: right; }
+.gti-ue-table .col-status { width: 110px; text-align: center; white-space: nowrap; }
+/* ====== Drawer Header ====== */ {  }
+.gti-drawer-status.status-new { background: #dbeafe; color: #1d4ed8; }
+.gti-drawer-status.status-processing { background: #fef3c7; color: #b45309; }
+.gti-drawer-status.status-approved { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-rejected { background: #fee2e2; color: #dc2626; }
+.gti-drawer-status.status-completed { background: #f3f4f6; color: #374151; }
+/* ====== Drawer Detail Rows ====== */ {  }
+.gti-drawer-value.is-bold { font-weight: 700; color: #1a1f36; }
+.gti-drawer-value.is-price { font-size: 18px; font-weight: 700; color: #F5A623; }
+/* ====== Images Grid ====== */ {  }
+.gti-drawer-images { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.gti-drawer-images img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; border: 1px solid #e5e7eb; cursor: pointer; transition: transform 0.15s; }
+.gti-drawer-images img:hover { transform: scale(1.05); }
+.gti-drawer-no-images { padding: 20px; text-align: center; background: #f9fafb; border-radius: 8px; border: 1px dashed #d1d5db; color: #9ca3af; font-size: 13px; }
+/* ====== Condition Badge ====== */ {  }
+.gti-condition-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.gti-condition-badge.excellent { background: #d1fae5; color: #047857; }
+.gti-condition-badge.good { background: #dbeafe; color: #1d4ed8; }
+.gti-condition-badge.fair { background: #fef3c7; color: #b45309; }
+.gti-condition-badge.poor { background: #fee2e2; color: #dc2626; }
+/* ====== Drawer Footer ====== */ {  }
+.gti-drawer-btn-primary { background: #10B981; color: #fff; border-color: #10B981; font-weight: 600; }
+.gti-drawer-btn-primary:hover { background: #059669; }
+/* ====== Status Badge ====== */ {  }
+.gti-badge-status { display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;text-transform:capitalize;white-space:nowrap }
+.gti-badge-status.status-new { background:#dbeafe;color:#1d4ed8 }
+.gti-badge-status.status-processing { background:#fef3c7;color:#b45309 }
+.gti-badge-status.status-approved { background:#d1fae5;color:#047857 }
+.gti-badge-status.status-rejected { background:#fee2e2;color:#dc2626 }
+.gti-badge-status.status-completed { background:#ccfbf1;color:#0d9488 }

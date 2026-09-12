@@ -1,0 +1,88 @@
+/* used-equipment — page-specific rules (PRD §13.7 / R2) */
+
+/* Border overrides to match request-equipment style */ {  }
+.gti-ue-btn-reset { border: 1px solid #d1d5db; }
+.gti-ue-table .col-category { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-brand { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-price { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-condition { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-year { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-name { font-size: 13px; font-weight: 600; color: #374151; }
+/* ====== Right Drawer — In-Flow (≥1600px) ====== */ {  }
+.gti-drawer-status.status-available { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-sold { background: #fee2e2; color: #b91c1c; }
+.gti-drawer-status.status-reserved { background: #fef3c7; color: #b45309; }
+.gti-drawer-status.status-rented { background: #fee2e2; color: #b91c1c; }
+.gti-drawer-status.status-draft { background: #e0e7ff; color: #4338ca; }
+.gti-drawer-status.status-price-no-longer-valid { background: #fee2e2; color: #dc2626; }
+/* Action menu overflow fix */ {  }
+.gti-drawer-btn-publish:hover { background: #047857 !important; }
+.gti-drawer-btn-delete:hover { background: #fef2f2 !important; }
+/* ====== Drawer Stepper ====== */ {  }
+.gti-drawer-stepper { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin: -24px -24px 20px -24px; padding: 20px 16px 16px; border-bottom: 1px solid #f3f4f6; flex-shrink: 0; }
+.gti-drawer-step { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
+.gti-drawer-step-circle { width: 30px; height: 30px; border-radius: 50%; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; transition: all 0.25s ease; }
+.gti-drawer-step.active .gti-drawer-step-circle { background: #F5A623; color: #1a1f36; box-shadow: 0 0 0 3px rgba(245,166,35,0.15); }
+.gti-drawer-step.completed .gti-drawer-step-circle { background: #10b981; color: #fff; }
+.gti-drawer-step-label { font-size: 10px; font-weight: 500; color: #9ca3af; white-space: nowrap; transition: color 0.25s ease; text-align: center; max-width: 56px; overflow: hidden; text-overflow: ellipsis; }
+.gti-drawer-step.active .gti-drawer-step-label { color: #1a1f36; font-weight: 600; }
+.gti-drawer-step.completed .gti-drawer-step-label { color: #10b981; }
+.gti-drawer-step-line { flex: 1; height: 2px; background: #e5e7eb; margin: 0 4px; margin-top: 14px; min-width: 12px; max-width: 28px; transition: background 0.25s ease; }
+.gti-drawer-step-line.active { background: #10b981; }
+.gti-drawer-section[data-section] { display: none; }
+.gti-drawer-section[data-section].active { display: block; }
+/* ====== Drawer Feature Tags ====== */ {  }
+.gti-drawer-features { display: flex; flex-wrap: wrap; gap: 6px; }
+.gti-drawer-feature-tag { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; background: #f0fdf4; color: #166534; font-size: 12px; font-weight: 500; border: 1px solid #bbf7d0; }
+.gti-drawer-feature-tag i { font-size: 10px; color: #22c55e; }
+/* ====== Drawer Document Items ====== */ {  }
+.gti-drawer-docs { display: flex; flex-direction: column; gap: 6px; }
+.gti-drawer-doc-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: #f9fafb; border: 1px solid #f3f4f6; font-size: 13px; color: #374151; }
+.gti-drawer-doc-item i { color: #22c55e; font-size: 12px; flex-shrink: 0; }
+.gti-drawer-doc-item.missing { opacity: 0.5; }
+.gti-drawer-doc-item.missing i { color: #9ca3af; }
+.gti-drawer-doc-item.missing span { text-decoration: line-through; }
+/* ====== Drawer Video Thumbnail ====== */ {  }
+.gti-drawer-video-thumb { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: #f9fafb; }
+.gti-drawer-video-thumb i { font-size: 28px; color: #F5A623; }
+.gti-drawer-video-thumb span { font-size: 13px; color: #374151; font-weight: 500; }
+.gti-drawer-video-thumb small { display: block; font-size: 11px; color: #9ca3af; margin-top: 2px; }
+/* ====== View Button — Hide on wide screens where drawer is already in-flow ====== */ {  }
+@media (min-width: 1600px) {
+    .gti-ue-btn-view { display: none !important; }
+}
+/* ====== Fullscreen Edit Modal ====== */ {  }
+.gti-ue-edit-overlay { display: none; position: fixed; inset: 0; z-index: 2000; background: #f3f4f6; overflow-y: auto; }
+.gti-ue-edit-overlay.show { display: block; }
+.gti-ue-edit-overlay .gti-edit-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1; opacity: 0; transition: opacity 0.25s; }
+.gti-ue-edit-overlay.show .gti-edit-backdrop { opacity: 1; }
+.gti-ue-edit-container { position: relative; z-index: 2; margin: 40px; background: #fff; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); min-height: calc(100vh - 80px); display: flex; flex-direction: column; }
+.gti-ue-edit-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid #e5e7eb; background: #fff; border-radius: 16px 16px 0 0; flex-shrink: 0; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.gti-ue-edit-header-left { display: flex; align-items: center; gap: 12px; }
+.gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.gti-ue-edit-header h2 i { color: #F5A623; }
+/* Compact stepper inside header */ {  }
+.gti-ue-edit-header .gti-ae-stepper-card { margin: 0; background: none; border: none; box-shadow: none; border-radius: 0; overflow: visible; flex: 0 1 auto; height: fit-content; width: fit-content; }
+.gti-ue-edit-header .gti-ae-stepper { gap: 0; padding: 0; margin: 0; justify-content: center; }
+.gti-ue-edit-header .gti-ae-step { cursor: pointer; gap: 4px; }
+.gti-ue-edit-header .gti-ae-step-circle { width: 24px; height: 24px; font-size: 11px; font-weight: 600; }
+.gti-ue-edit-header .gti-ae-step-label { font-size: 10px; font-weight: 500; }
+.gti-ue-edit-header .gti-ae-step-line { margin-top: 11px; min-width: 8px; max-width: 20px; height: 2px; }
+.gti-ue-edit-close { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 16px; transition: all 0.15s; }
+.gti-ue-edit-close:hover { background: #f3f4f6; color: #1a1f36; }
+.gti-ue-edit-body { flex: 1; padding: 28px; overflow-y: auto; }
+.gti-ue-edit-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 16px 28px; border-top: 1px solid #e5e7eb; flex-shrink: 0; background: #fff; border-radius: 0 0 16px 16px; }
+.gti-ue-edit-footer .gti-ae-btn-cancel { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid #e5e7eb; background: #fff; color: #374151; cursor: pointer; font-family: inherit; transition: all 0.15s; text-decoration: none; }
+.gti-ue-edit-footer .gti-ae-btn-cancel:hover { background: #f9fafb; }
+.gti-ue-edit-footer .gti-ae-btn-submit { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; background: #F5A623; color: #1a1f36; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.gti-ue-edit-footer .gti-ae-btn-submit:hover { background: #e6991a; }
+.gti-ue-edit-footer .gti-ae-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+/* Reuse existing stepper/form styles inside the edit modal */ {  }
+.gti-ue-edit-body .gti-ae-step-content { display: none; }
+.gti-ue-edit-body .gti-ae-step-content.active { display: block; }
+.gti-ue-edit-body .gti-ae-step-nav { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+.gti-ue-edit-body .gti-ae-step-nav button { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev { border: 1px solid #e5e7eb; background: #fff; color: #374151; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev:hover { background: #f9fafb; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-next { border: 1px solid #F5A623; background: #F5A623; color: #1a1f36; font-weight: 600; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-next:hover { background: #e6991a; }

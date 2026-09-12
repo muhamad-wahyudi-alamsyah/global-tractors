@@ -1,0 +1,44 @@
+/* request-quotation — page-specific rules (PRD §13.7 / R2) */
+
+/* Completed status badge — teal */ {  }
+.gti-badge-status.completed { background: #ccfbf1; color: #0d9488; }
+/* Waiting Customer — orange */ {  }
+.gti-badge-status.waiting_customer { background: #ffedd5; color: #c2410c; }
+/* Shrink stat cards — cleaner look */ {  }
+.gti-ue-stats-row .gti-ue-stat-card { padding: 14px 16px; }
+.gti-ue-stats-row .gti-ue-stat-icon { width: 36px; height: 36px; font-size: 15px; }
+.gti-ue-stats-row .gti-ue-stat-value { font-size: 20px; }
+.gti-ue-stats-row .gti-ue-stat-label { font-size: 12px; }
+/* Table column widths */ {  }
+.gti-ue-table .col-quotid { width: 120px; }
+.gti-ue-table .col-customer { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-company { width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-items { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-pic { width: 130px; }
+.gti-ue-table .col-status { width: 120px; text-align: center; white-space: nowrap; }
+/* ====== Drawer Header ====== */ {  }
+.gti-drawer-status.status-new { background: #dbeafe; color: #1d4ed8; }
+.gti-drawer-status.status-processing { background: #fef3c7; color: #b45309; }
+.gti-drawer-status.status-waiting_customer { background: #ffedd5; color: #c2410c; }
+.gti-drawer-status.status-approved { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-rejected { background: #fee2e2; color: #dc2626; }
+.gti-drawer-status.status-completed { background: #f3f4f6; color: #374151; }
+/* ====== Drawer Detail Rows ====== */ {  }
+.gti-drawer-value.is-bold { font-weight: 700; color: #1a1f36; }
+/* ====== Sales PIC Card ====== */ {  }
+.gti-drawer-pic-card { display: flex; align-items: center; gap: 12px; padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 8px; }
+.gti-drawer-pic-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.gti-drawer-pic-avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #F5A623; color: #1a1f36; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+.gti-drawer-pic-info { display: flex; flex-direction: column; }
+.gti-drawer-pic-name { font-size: 14px; font-weight: 600; color: #1a1f36; }
+.gti-drawer-pic-role { font-size: 12px; color: #6b7280; }
+/* ====== Attachment Card ====== */ {  }
+.gti-drawer-attachment { display: flex; align-items: center; gap: 12px; padding: 12px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; margin-top: 8px; cursor: pointer; transition: all 0.15s; text-decoration: none; }
+.gti-drawer-attachment:hover { background: #fee2e2; border-color: #fca5a5; }
+.gti-drawer-attachment-icon { width: 40px; height: 40px; background: #dc2626; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; flex-shrink: 0; }
+.gti-drawer-attachment-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.gti-drawer-attachment-name { font-size: 13px; font-weight: 500; color: #1a1f36; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gti-drawer-attachment-meta { font-size: 12px; color: #6b7280; }
+/* ====== Active Row Highlight ====== */ {  }
+.gti-drawer-btn-primary { background: #10B981; color: #fff; border-color: #10B981; font-weight: 600; }
+.gti-drawer-btn-primary:hover { background: #059669; }

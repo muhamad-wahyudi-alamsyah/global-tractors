@@ -4,11 +4,6 @@
  * @package global-tractors
  */
 if (!defined('ABSPATH')) exit;
-gti_require_login();
-
-$current_user = wp_get_current_user();
-$user_name = $current_user->display_name ?: $current_user->user_login;
-$user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
 // Auto-generate equipment code
 global $wpdb;
@@ -24,115 +19,20 @@ $gti_next_code = '';
 $gti_next_code = 'GTI-GEN-' . $year . '-001';
 
 // Category abbrev map for JS
-$gti_cat_map_json = wp_json_encode($cat_abbrev_map);
+// Handed to the page script as gtiPageData.categoryMap, rather than
+// interpolated into an inline <script> (PRD §13.8).
+gti_page_data( array( 'categoryMap' => $cat_abbrev_map ) );
 
 // AJAX endpoint to get next code
 $gti_ajax_url = admin_url('admin-ajax.php');
+
+gti_dashboard_open( array(
+    'page'     => 'add-used-equipment',
+    'title'    => 'Add Used Equipment',
+    'cap'      => 'gti_manage_equipment',
+) );
 ?>
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add New Equipment - <?php bloginfo('name'); ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css?v=<?php echo GTI_VERSION; ?>">
-</head>
-<body class="gti-body">
-    <div class="gti-wrapper">
-        <!-- Sidebar -->
-        <aside class="gti-sidebar" id="gti-sidebar">
-            <div class="gti-sidebar-header">
-                <div class="gti-logo">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/logo-header-footer-pt-global-tractors-indonesia.png" alt="PT Global Tractors Indonesia" class="gti-logo-img">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/cropped-favicon-pt-global-tractors-indonesia.png" alt="GTI" class="gti-logo-favicon">
-                </div>
-            </div>
 
-            <div class="gti-sidebar-divider"></div>
-
-            <nav class="gti-nav">
-                <div class="gti-nav-group">
-                    <a href="<?php echo esc_url(gti_dashboard_url()); ?>" class="gti-nav-item">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-
-                <div class="gti-nav-group gti-has-children open">
-                    <div class="gti-nav-section">EQUIPMENT</div>
-                    <a href="#" class="gti-nav-parent active" data-toggle="dropdown"><i class="fas fa-truck"></i><span>Equipment</span><i class="fas fa-chevron-down gti-nav-arrow"></i></a>
-                    <div class="gti-nav-children">
-                        <a href="<?php echo esc_url(gti_dashboard_url('used-equipment')); ?>" class="gti-nav-child active"><i></i><span>Used Equipment</span></a>
-                        <a href="<?php echo esc_url(gti_dashboard_url('rental-equipment')); ?>" class="gti-nav-child"><i></i><span>Rental Equipment</span></a>
-                    </div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-nav-item"><i class="fas fa-cog"></i><span>Spare Parts</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">REQUEST &amp; INQUIRY</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-equipment')); ?>" class="gti-nav-item"><i class="fas fa-file-alt"></i><span>Request Equipment</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-quotation')); ?>" class="gti-nav-item"><i class="fas fa-clipboard-list"></i><span>Request Quotation</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('sell-equipment')); ?>" class="gti-nav-item"><i class="fas fa-handshake"></i><span>Sell Equipment</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">MANAGEMENT</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-nav-item"><i class="fas fa-users"></i><span>Customers</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" class="gti-nav-item"><i class="fas fa-newspaper"></i><span>News &amp; Articles</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('media-library')); ?>" class="gti-nav-item"><i class="fas fa-photo-video"></i><span>Media Library</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">SYSTEM</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-nav-item"><i class="fas fa-user-shield"></i><span>Users</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-nav-item"><i class="fas fa-history"></i><span>Activity Log</span></a>
-                </div>
-            </nav>
-
-            <div class="gti-sidebar-footer">
-                <a href="#" class="gti-nav-item" id="gti-collapse-btn">
-                    <i class="fas fa-chevron-left"></i>
-                    <span>Collapse Menu</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="gti-main" id="gti-main">
-            <!-- Header -->
-            <header class="gti-header">
-                <div class="gti-header-left">
-                    <button class="gti-menu-toggle" id="gti-menu-toggle"><i class="fas fa-bars"></i></button>
-                    <div>
-                        <h1 class="gti-page-title">Add New Equipment</h1>
-                        <p class="gti-welcome">Fill in the details below to add new equipment</p>
-                    </div>
-                </div>
-                <div class="gti-header-right">
-                    <div class="gti-date-filter">
-                        <i class="fas fa-calendar"></i>
-                        <span>May 1, 2024 - May 31, 2024</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="gti-notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="gti-badge">3</span>
-                    </div>
-                    <div class="gti-user-menu">
-                        <img src="<?php echo esc_url($user_avatar); ?>" alt="Avatar" class="gti-avatar">
-                        <div class="gti-user-info">
-                            <strong><?php echo esc_html($user_name); ?></strong>
-                            <small>Super Admin</small>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                </div>
-            </header>
 
             <!-- Content -->
             <div class="gti-content">
@@ -971,51 +871,6 @@ $gti_ajax_url = admin_url('admin-ajax.php');
                     </div>
                 </form>
             </div>
-        </main>
-    </div>
 
-    <script>
-        var gtiAjax = gtiAjax || {
-            ajaxurl: '<?php echo esc_js(admin_url('admin-ajax.php')); ?>',
-            nonce: '<?php echo esc_js(wp_create_nonce('gti_nonce')); ?>',
-            version: '<?php echo esc_js(GTI_VERSION); ?>'
-        };
-        // Auto-generate equipment code on category change
-        document.addEventListener('DOMContentLoaded', function() {
-            var catMap = <?php echo $gti_cat_map_json; ?>;
-            var catSelect = document.querySelector('select[name="category"]');
-            var codeInput = document.querySelector('input[name="equipment_code"]');
-            if (!catSelect || !codeInput) return;
-
-            function generateCode(catVal) {
-                if (!catVal) return;
-                var abbr = catMap[catVal] || 'GEN';
-                var year = new Date().getFullYear();
-                var fd = new FormData();
-                fd.append('action', 'gti_get_next_code');
-                fd.append('nonce', gtiAjax.nonce);
-                fd.append('category', catVal);
-                fetch(gtiAjax.ajaxurl, { method: 'POST', body: fd })
-                    .then(function(r) { return r.json(); })
-                    .then(function(d) {
-                        if (d.success && d.data && d.data.code) {
-                            codeInput.value = d.data.code;
-                        } else {
-                            var ts = Date.now().toString().slice(-4);
-                            codeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
-                        }
-                    })
-                    .catch(function(err) {
-                        var ts = Date.now().toString().slice(-4);
-                        codeInput.value = 'GTI-' + abbr + '-' + year + '-' + ts;
-                    });
-            }
-
-            catSelect.addEventListener('change', function() {
-                generateCode(this.value);
-            });
-        });
-    </script>
-    <script src="<?php echo GTI_CHILD_URL; ?>/assets/js/add-equipment.js?v=<?php echo GTI_VERSION; ?>"></script>
-</body>
-</html>
+<?php
+gti_dashboard_close(  );

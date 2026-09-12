@@ -78,82 +78,151 @@
     }
 
     // ═══ INQUIRY FORM → REQUEST QUOTATION ══════════════════════════════
+    // Sends the full field set from PRD §7.2. The handler reads the ed_* names
+    // straight off the form, so adding a field to the markup is enough — there
+    // is no per-field append() list to keep in sync any more.
     var form = document.getElementById('gti-ed-inquiry-form');
     if (form) {
+      var submitBtn = form.querySelector('.gti-ed-form-submit');
+
+      // Progressive disclosure (§7.4): the advanced half starts collapsed.
+      var moreToggle = document.getElementById('gti-ed-more-toggle');
+      var moreBlock  = document.getElementById('gti-ed-more');
+      if (moreToggle && moreBlock) {
+        moreToggle.addEventListener('click', function () {
+          var open = moreBlock.hidden;
+          moreBlock.hidden = !open;
+          moreToggle.setAttribute('aria-expanded', String(open));
+          moreToggle.classList.toggle('is-open', open);
+        });
+      }
+
+      // Thousands separators while typing a budget.
+      var budget = form.querySelector('[name="ed_budget"]');
+      if (budget) {
+        budget.addEventListener('input', function () {
+          var digits = this.value.replace(/\D/g, '');
+          this.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+        });
+      }
+
+      // Preset rental duration fills in the end date.
+      var rStart = form.querySelector('[name="ed_rental_start"]');
+      var rEnd   = form.querySelector('[name="ed_rental_end"]');
+      var rDur   = form.querySelector('[name="ed_rental_duration"]');
+      function syncRentalEnd() {
+        if (!rStart || !rEnd || !rDur || !rStart.value) return;
+        var months = parseInt(rDur.value, 10);
+        if (!months || rDur.value === 'custom') return;
+        var d = new Date(rStart.value);
+        d.setMonth(d.getMonth() + months);
+        rEnd.value = d.toISOString().slice(0, 10);
+      }
+      if (rDur) rDur.addEventListener('change', syncRentalEnd);
+      if (rStart) rStart.addEventListener('change', syncRentalEnd);
+
+      var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      function setError(name, message) {
+        var slot = form.querySelector('.gti-ed-form-error[data-for="' + name + '"]');
+        var field = form.querySelector('[name="' + name + '"]');
+        if (slot) slot.textContent = message || '';
+        if (field) {
+          var group = field.closest('.gti-ed-form-group, .gti-ed-form-consent');
+          if (group) group.classList.toggle('has-error', !!message);
+        }
+        return !message;
+      }
+
+      function validateField(name) {
+        var field = form.querySelector('[name="' + name + '"]');
+        if (!field) return true;
+        var value = (field.value || '').trim();
+
+        if (name === 'ed_name')  return setError(name, value ? '' : 'Nama wajib diisi.');
+        if (name === 'ed_phone') return setError(name, value ? '' : 'Nomor telepon wajib diisi.');
+        if (name === 'ed_email') {
+          if (!value) return setError(name, 'Email wajib diisi.');
+          return setError(name, EMAIL_RE.test(value) ? '' : 'Format email tidak valid.');
+        }
+        if (name === 'ed_consent') {
+          return setError(name, field.checked ? '' : 'Mohon setujui untuk dihubungi.');
+        }
+        if (name === 'ed_rental_end') {
+          if (!rStart || !rStart.value || !value) return setError(name, '');
+          return setError(name, value > rStart.value ? '' : 'Harus setelah tanggal mulai.');
+        }
+        return true;
+      }
+
+      // Validate on blur rather than only on submit (§7.4).
+      ['ed_name', 'ed_phone', 'ed_email', 'ed_rental_end'].forEach(function (name) {
+        var field = form.querySelector('[name="' + name + '"]');
+        if (field) field.addEventListener('blur', function () { validateField(name); });
+      });
+      var consent = form.querySelector('[name="ed_consent"]');
+      if (consent) consent.addEventListener('change', function () { validateField('ed_consent'); });
+
       form.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        var name    = form.querySelector('[name="ed_name"]');
-        var phone   = form.querySelector('[name="ed_phone"]');
-        var email   = form.querySelector('[name="ed_email"]');
-        var message = form.querySelector('[name="ed_message"]');
-        var submitBtn = form.querySelector('.gti-ed-form-submit');
-
-        // Validate required fields
-        if (!name || !name.value.trim()) { name.focus(); return; }
-        if (!phone || !phone.value.trim()) { phone.focus(); return; }
-        if (!email || !email.value.trim()) { email.focus(); return; }
-
-        // Email format check
-        var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRe.test(email.value.trim())) { email.focus(); return; }
-
-        // Gather data
-        var equipmentName = wrapper.dataset.name || (wrapper.dataset.brand + ' ' + wrapper.dataset.model) || '';
-        var nonceField = form.querySelector('[name="gti_quot_nonce"]');
-        var nonce = (nonceField ? nonceField.value : '') || wrapper.dataset.nonce || '';
-
-        // Build FormData
-        var fd = new FormData();
-        fd.append('action', 'gti_customer_submit_quotation');
-        fd.append('gti_quot_nonce', nonce);
-        fd.append('name', name.value.trim());
-        fd.append('company', (form.querySelector('[name="ed_company"]') || {}).value || '');
-        fd.append('phone', phone.value.trim());
-        fd.append('email', email.value.trim());
-        fd.append('message', message ? message.value.trim() : '');
-        fd.append('equipment_id', wrapper.dataset.id || '');
-        fd.append('equipment_name', equipmentName);
-
-        // Disable button + show loading
-        if (submitBtn) {
-          submitBtn.disabled = true;
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
+        var checks = ['ed_name', 'ed_phone', 'ed_email', 'ed_consent', 'ed_rental_end'];
+        var ok = checks.map(validateField).every(Boolean);
+        if (!ok) {
+          var firstBad = form.querySelector('.has-error input, .has-error select, .has-error textarea');
+          if (firstBad) firstBad.focus();
+          return;
         }
 
-        // AJAX POST
-        fetch('/wp-admin/admin-ajax.php', {
-          method: 'POST',
-          body: fd,
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-          if (res.success) {
-            // Success — show confirmation
-            var custEmail = email ? email.value.trim() : '';
-            form.innerHTML =
-              '<div style="text-align:center;padding:24px 0;">' +
-                '<i class="fas fa-check-circle" style="font-size:48px;color:#10B981;margin-bottom:12px;display:block;"></i>' +
-                '<h3 style="margin:0 0 8px;color:#1a1f36;">Quotation Submitted!</h3>' +
-                '<p style="margin:0 0 4px;color:#6b7280;">ID: <strong>' + (res.data.quotation_id || '') + '</strong></p>' +
-                '<p style="margin:0;color:#6b7280;">Tim kami akan segera menghubungi Anda melalui email <strong>' + custEmail + '</strong>.</p>' +
-              '</div>';
-          } else {
-            alert(res.data ? res.data.message : 'Terjadi kesalahan. Silakan coba lagi.');
-            if (submitBtn) {
-              submitBtn.disabled = false;
-              submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> SEND MESSAGE';
+        var fd = new FormData(form);
+        fd.append('action', 'gti_customer_submit_quotation');
+
+        // Fall back to the wrapper's data attributes when the hidden inputs are absent.
+        if (!fd.get('equipment_id') && wrapper.dataset.id) fd.set('equipment_id', wrapper.dataset.id);
+        if (!fd.get('equipment_name')) {
+          fd.set('equipment_name', wrapper.dataset.name ||
+                 ((wrapper.dataset.brand || '') + ' ' + (wrapper.dataset.model || '')).trim());
+        }
+
+        var original = submitBtn ? submitBtn.innerHTML : '';
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> MENGIRIM...';
+        }
+
+        var email = form.querySelector('[name="ed_email"]');
+
+        fetch(gtiAjaxUrl(), { method: 'POST', body: fd, credentials: 'same-origin' })
+          .then(function (response) {
+            return response.text().then(function (text) {
+              try { return JSON.parse(text); }
+              catch (err) { throw new Error('Server mengirim respons yang tidak dikenali.'); }
+            });
+          })
+          .then(function (res) {
+            if (!res || !res.success) {
+              throw new Error((res && res.data && res.data.message) || 'Terjadi kesalahan. Silakan coba lagi.');
             }
-          }
-        })
-        .catch(function () {
-          alert('Gagal mengirim. Periksa koneksi internet Anda.');
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> SEND MESSAGE';
-          }
-        });
+            form.innerHTML =
+              '<div class="gti-ed-form-done">' +
+                '<i class="fas fa-check-circle"></i>' +
+                '<h3>Permintaan Terkirim</h3>' +
+                '<p>Nomor quotation: <strong>' + (res.data.quotation_id || '-') + '</strong></p>' +
+                '<p>Konfirmasi sudah dikirim ke <strong>' + (email ? email.value.trim() : '') + '</strong>. ' +
+                'Tim kami akan menghubungi Anda dalam 1&times;24 jam kerja.</p>' +
+              '</div>';
+          })
+          .catch(function (err) {
+            var slot = form.querySelector('.gti-ed-form-error[data-for="ed_name"]');
+            if (slot) slot.textContent = err.message;
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = original; }
+          });
       });
+    }
+
+    /** admin-ajax endpoint; localized when available, otherwise the default path. */
+    function gtiAjaxUrl() {
+      return (window.gtiAjax && window.gtiAjax.ajaxurl) || '/wp-admin/admin-ajax.php';
     }
 
     // ═══ RELATED PRODUCTS CAROUSEL ═══════════════════════════════════════

@@ -367,7 +367,9 @@ function gti_get_spare_parts_data() {
     );
 
     if ( empty( $rows ) ) {
-        return gti_get_dummy_spare_parts_data();
+        // Demo rows are off unless explicitly switched on. Showing invented
+        // stock to real visitors is worse than an honest empty state (PRD §7.5).
+        return gti_show_demo_data() ? gti_get_dummy_spare_parts_data() : array();
     }
 
     $items = [];
@@ -568,22 +570,14 @@ function gti_spare_render_part_detail( $part_id ) {
                     </div>
                 </div>
 
-                <div class="gti-ed-inquiry-card">
-                    <h3 class="gti-ed-inquiry-title">INTERESTED IN THIS PART?</h3>
-                    <p class="gti-ed-inquiry-desc">Fill out the form and our team will contact you.</p>
-                    <form id="gti-ed-inquiry-form">
-                        <input type="hidden" name="gti_quot_nonce" value="<?php echo esc_attr( wp_create_nonce( 'gti_customer_quotation' ) ); ?>">
-                        <div class="gti-ed-form-group"><input type="text" name="ed_name" id="ed-name" placeholder="Your Name" required></div>
-                        <div class="gti-ed-form-group"><input type="text" name="ed_company" id="ed-company" placeholder="Your Company"></div>
-                        <div class="gti-ed-form-group"><input type="tel" name="ed_phone" id="ed-phone" placeholder="Phone / WhatsApp" required></div>
-                        <div class="gti-ed-form-group"><input type="email" name="ed_email" id="ed-email" placeholder="Your Email" required></div>
-                        <div class="gti-ed-form-group">
-                            <textarea name="ed_message" id="ed-message" rows="3" placeholder="I'm interested in <?php echo esc_attr( $title ); ?> (<?php echo esc_attr( $part_number ); ?>), qty: ..."></textarea>
-                        </div>
-                        <button type="submit" class="gti-ed-form-submit"><i class="fas fa-paper-plane"></i> SEND MESSAGE</button>
-                        <div class="gti-ed-form-privacy"><i class="fas fa-lock"></i> Your data is safe with us.</div>
-                    </form>
-                </div>
+                <?php
+                gti_render_inquiry_form( array(
+                    'type'           => 'spare_part',
+                    'equipment_id'   => $part_id,
+                    'equipment_name' => $title,
+                    'part_number'    => $part_number,
+                ) );
+                ?>
             </div>
         </section>
 

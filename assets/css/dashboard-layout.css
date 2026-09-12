@@ -1,0 +1,8 @@
+/* dashboard-layout
+   Extracted from the <style> blocks that were duplicated across the
+   dashboard templates (PRD §13.7 / R2). Shared rules load before each
+   page's own stylesheet, so page-level overrides still win. */
+
+.gti-content { display: flex; gap: 24px; align-items: flex-start; }
+.gti-content-left { flex: 1; min-width: 0; }
+.gti-main { min-width: 0; }

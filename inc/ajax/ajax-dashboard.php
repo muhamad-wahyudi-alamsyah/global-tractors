@@ -16,17 +16,6 @@ if (!defined('ABSPATH')) exit;
  *
  * @param string $capability Capability to require.
  */
-function gti_ajax_guard($capability = 'read') {
-    if (!is_user_logged_in()) {
-        wp_send_json_error(array('message' => 'You must be logged in.'), 401);
-    }
-    if (!check_ajax_referer('gti_nonce', 'nonce', false)) {
-        wp_send_json_error(array('message' => 'Security check failed. Please reload the page.'), 403);
-    }
-    if ($capability && !current_user_can($capability)) {
-        wp_send_json_error(array('message' => 'You do not have permission to do that.'), 403);
-    }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Media Library

@@ -14,19 +14,7 @@ gti_redirect_if_logged_in();
     <title>Login - <?php bloginfo('name'); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Inter',sans-serif;background:#f3f4f6;display:flex;align-items:center;justify-content:center;min-height:100vh}
-        .login-card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:40px;width:100%;max-width:400px;margin:20px}
-        .login-card h1{font-size:22px;text-align:center;margin-bottom:8px;color:#1a1f36}
-        .login-card p{text-align:center;color:#6b7280;font-size:13px;margin-bottom:24px}
-        .login-card label{display:block;font-size:13px;font-weight:500;color:#374151;margin-bottom:6px}
-        .login-card input[type="text"],.login-card input[type="password"]{width:100%;padding:10px 14px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;margin-bottom:16px;transition:border-color .2s}
-        .login-card input:focus{outline:none;border-color:#F5A623}
-        .login-card button{width:100%;padding:12px;background:#F5A623;color:#1a1f36;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
-        .login-card button:hover{background:#e6951a}
-        .login-error{background:#fef2f2;color:#dc2626;padding:10px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none}
-    </style>
+    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/pages/login.css?v=<?php echo gti_asset_version('assets/css/pages/login.css'); ?>">
 </head>
 <body>
     <div class="login-card">

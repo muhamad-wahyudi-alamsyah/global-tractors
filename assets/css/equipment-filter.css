@@ -847,3 +847,19 @@
     height: 200px;
   }
 }
+
+/* Expired price badge (PRD §7.5). The unit stays listed; the stale price is
+   what is called out, so a visitor knows to ask for a fresh quotation. */
+.gti-ef-price-expired {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    background: rgba(26, 31, 54, 0.88);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    z-index: 2;
+}

@@ -4,11 +4,6 @@
  * @package global-tractors
  */
 if (!defined('ABSPATH')) exit;
-gti_require_login();
-
-$current_user = wp_get_current_user();
-$user_name = $current_user->display_name ?: $current_user->user_login;
-$user_avatar = get_avatar_url($current_user->ID, ['size' => 80]);
 
 // Articles are native WordPress posts — see inc/modules/news-articles.php
 $editing_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
@@ -27,7 +22,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['gti_na_nonce']) && wp
     } else {
         $title    = sanitize_text_field($_POST['title'] ?? '');
         $category = sanitize_text_field($_POST['category'] ?? '');
-        $status   = sanitize_text_field($_POST['status'] ?? 'draft');
+        // "Save as Draft" / "Publish" are explicit overrides; otherwise the
+        // Status dropdown decides. Both used to be name="status", so whichever
+        // button was clicked silently overwrote the dropdown selection.
+        $status = sanitize_text_field($_POST['status'] ?? 'draft');
+        $action = sanitize_text_field($_POST['submit_action'] ?? '');
+        if ($action !== '') {
+            $status = $action;
+        }
 
         if (empty($title) || empty($category)) {
             $error = 'Please fill in all required fields.';
@@ -89,226 +91,14 @@ function gti_na_value($field, $article, $default = '') {
 $page_title  = $editing_id ? 'Edit Article' : 'Add New Article';
 $page_intro  = $editing_id ? 'Update an existing news or article post' : 'Create a new news or article post';
 $existing_thumb = $article ? $article->featured_image : '';
+
+gti_dashboard_open( array(
+    'page'     => 'add-news-article',
+    'title'    => 'Add Article',
+    'cap'      => 'edit_posts',
+) );
 ?>
-<!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-<head>
-    <meta charset="<?php bloginfo('charset'); ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo esc_html($page_title); ?> - <?php bloginfo('name'); ?></title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/dashboard.css">
-    <link rel="stylesheet" href="<?php echo GTI_CHILD_URL; ?>/assets/css/add-equipment.css">
-    <style>
-        /* ====== Article-specific overrides ====== */
-        .gti-na-form .gti-ae-form-grid { grid-template-columns: 1fr 1fr; }
-        .gti-na-form .gti-ae-field-full { grid-column: 1 / -1; }
 
-        /* Tags input */
-        .gti-na-tags-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 6px;
-        }
-        .gti-na-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 10px;
-            background: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 12px;
-            color: #374151;
-        }
-        .gti-na-tag-remove {
-            cursor: pointer;
-            color: #9ca3af;
-            font-size: 10px;
-            background: none;
-            border: none;
-            padding: 0;
-            line-height: 1;
-        }
-        .gti-na-tag-remove:hover { color: #ef4444; }
-
-        /* Content editor */
-        .gti-na-content-editor {
-            width: 100%;
-            min-height: 320px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 16px;
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            color: #1a1f36;
-            line-height: 1.6;
-            resize: vertical;
-            background: #fff;
-            transition: border-color 0.15s;
-        }
-        .gti-na-content-editor:focus {
-            outline: none;
-            border-color: #F5A623;
-            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.1);
-        }
-
-        /* Featured image upload */
-        .gti-na-featured-upload {
-            border: 2px dashed #d1d5db;
-            border-radius: 10px;
-            padding: 32px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: #fafafa;
-        }
-        .gti-na-featured-upload:hover {
-            border-color: #F5A623;
-            background: #fffbeb;
-        }
-        .gti-na-featured-upload.has-image {
-            padding: 0;
-            border-style: solid;
-            border-color: #e5e7eb;
-            background: #fff;
-        }
-        .gti-na-featured-preview {
-            display: none;
-            position: relative;
-        }
-        .gti-na-featured-preview img {
-            width: 100%;
-            max-height: 240px;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-        .gti-na-featured-remove {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            background: rgba(0,0,0,0.6);
-            color: #fff;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        .gti-na-featured-remove:hover { background: rgba(239,68,68,0.9); }
-
-        /* Character counter */
-        .gti-na-char-count {
-            font-size: 12px;
-            color: #9ca3af;
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        @media (max-width: 768px) {
-            .gti-na-form .gti-ae-form-grid { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body class="gti-body">
-    <div class="gti-wrapper">
-        <!-- Sidebar -->
-        <aside class="gti-sidebar" id="gti-sidebar">
-            <div class="gti-sidebar-header">
-                <div class="gti-logo">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/logo-header-footer-pt-global-tractors-indonesia.png" alt="PT Global Tractors Indonesia" class="gti-logo-img">
-                    <img src="http://global-tractors.test/wp-content/uploads/2026/07/cropped-favicon-pt-global-tractors-indonesia.png" alt="GTI" class="gti-logo-favicon">
-                </div>
-            </div>
-
-            <div class="gti-sidebar-divider"></div>
-
-            <nav class="gti-nav">
-                <div class="gti-nav-group">
-                    <a href="<?php echo esc_url(gti_dashboard_url()); ?>" class="gti-nav-item">
-                        <i class="fas fa-th-large"></i>
-                        <span>Dashboard</span>
-                    </a>
-                </div>
-
-                <div class="gti-nav-group gti-has-children">
-                    <div class="gti-nav-section">EQUIPMENT</div>
-                    <a href="#" class="gti-nav-parent" data-toggle="dropdown"><i class="fas fa-truck"></i><span>Equipment</span><i class="fas fa-chevron-down gti-nav-arrow"></i></a>
-                    <div class="gti-nav-children">
-                        <a href="<?php echo esc_url(gti_dashboard_url('used-equipment')); ?>" class="gti-nav-child"><i></i><span>Used Equipment</span></a>
-                        <a href="<?php echo esc_url(gti_dashboard_url('rental-equipment')); ?>" class="gti-nav-child"><i></i><span>Rental Equipment</span></a>
-                    </div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-nav-item"><i class="fas fa-cog"></i><span>Spare Parts</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">REQUEST &amp; INQUIRY</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-equipment')); ?>" class="gti-nav-item"><i class="fas fa-file-alt"></i><span>Request Equipment</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('request-quotation')); ?>" class="gti-nav-item"><i class="fas fa-clipboard-list"></i><span>Request Quotation</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('sell-equipment')); ?>" class="gti-nav-item"><i class="fas fa-handshake"></i><span>Sell Equipment</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">MANAGEMENT</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('customers')); ?>" class="gti-nav-item"><i class="fas fa-users"></i><span>Customers</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" class="gti-nav-item active"><i class="fas fa-newspaper"></i><span>News &amp; Articles</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('media-library')); ?>" class="gti-nav-item"><i class="fas fa-photo-video"></i><span>Media Library</span></a>
-                </div>
-
-                <div class="gti-nav-group">
-                    <div class="gti-nav-section">SYSTEM</div>
-                    <a href="<?php echo esc_url(gti_dashboard_url('users')); ?>" class="gti-nav-item"><i class="fas fa-user-shield"></i><span>Users</span></a>
-                    <a href="<?php echo esc_url(gti_dashboard_url('activity-log')); ?>" class="gti-nav-item"><i class="fas fa-history"></i><span>Activity Log</span></a>
-                </div>
-            </nav>
-
-            <div class="gti-sidebar-footer">
-                <a href="#" class="gti-nav-item" id="gti-collapse-btn">
-                    <i class="fas fa-chevron-left"></i>
-                    <span>Collapse Menu</span>
-                </a>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="gti-main" id="gti-main">
-            <!-- Header -->
-            <header class="gti-header">
-                <div class="gti-header-left">
-                    <button class="gti-menu-toggle" id="gti-menu-toggle"><i class="fas fa-bars"></i></button>
-                    <div>
-                        <h1 class="gti-page-title"><?php echo esc_html($page_title); ?></h1>
-                        <p class="gti-welcome"><?php echo esc_html($page_intro); ?></p>
-                    </div>
-                </div>
-                <div class="gti-header-right">
-                    <div class="gti-date-filter">
-                        <i class="fas fa-calendar"></i>
-                        <span><?php echo date('M j, Y'); ?></span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="gti-notifications">
-                        <i class="fas fa-bell"></i>
-                        <span class="gti-badge">3</span>
-                    </div>
-                    <div class="gti-user-menu">
-                        <img src="<?php echo esc_url($user_avatar); ?>" alt="Avatar" class="gti-avatar">
-                        <div class="gti-user-info">
-                            <strong><?php echo esc_html($user_name); ?></strong>
-                            <small>Super Admin</small>
-                        </div>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                </div>
-            </header>
 
             <!-- Content -->
             <div class="gti-content">
@@ -515,181 +305,16 @@ $existing_thumb = $article ? $article->featured_image : '';
                         <div></div>
                         <div class="gti-ae-form-nav-right">
                             <a href="<?php echo esc_url(gti_dashboard_url('news-articles')); ?>" class="gti-ae-btn gti-ae-btn-cancel">Cancel</a>
-                            <button type="submit" name="status" value="draft" class="gti-ae-btn gti-ae-btn-draft">
+                            <button type="submit" name="submit_action" value="draft" class="gti-ae-btn gti-ae-btn-draft">
                                 <i class="fas fa-save"></i> Save as Draft
                             </button>
-                            <button type="submit" name="status" value="published" class="gti-ae-btn gti-ae-btn-submit">
+                            <button type="submit" name="submit_action" value="published" class="gti-ae-btn gti-ae-btn-submit">
                                 <i class="fas fa-check"></i> <?php echo $editing_id ? 'Update &amp; Publish' : 'Publish Article'; ?>
                             </button>
                         </div>
                     </div>
                 </form>
             </div>
-        </main>
-    </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // ── Sidebar collapse ──
-        var collapseBtn = document.getElementById('gti-collapse-btn');
-        var sidebar = document.getElementById('gti-sidebar');
-        var mainEl = document.querySelector('.gti-main');
-
-        if (collapseBtn && sidebar) {
-            if (localStorage.getItem('gti-sidebar-collapsed') === 'true') {
-                sidebar.classList.add('collapsed');
-                if (mainEl) mainEl.classList.add('collapsed');
-            }
-            collapseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                sidebar.classList.toggle('collapsed');
-                if (mainEl) mainEl.classList.toggle('collapsed');
-                localStorage.setItem('gti-sidebar-collapsed', sidebar.classList.contains('collapsed'));
-            });
-        }
-
-        // ── Sidebar dropdown toggle ──
-        document.querySelectorAll('[data-toggle="dropdown"]').forEach(function(toggle) {
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                var group = this.closest('.gti-has-children');
-                if (group) group.classList.toggle('open');
-            });
-        });
-
-        // ── Excerpt character counter ──
-        var excerptField = document.querySelector('textarea[name="excerpt"]');
-        var excerptCount = document.getElementById('excerpt-count');
-        if (excerptField && excerptCount) {
-            function updateExcerptCount() {
-                excerptCount.textContent = excerptField.value.length;
-                excerptCount.style.color = excerptField.value.length > 300 ? '#ef4444' : '';
-            }
-            excerptField.addEventListener('input', updateExcerptCount);
-            updateExcerptCount();
-        }
-
-        // ── Tags Manager ──
-        var tagInput = document.getElementById('tag-input');
-        var tagAddBtn = document.getElementById('tag-add-btn');
-        var tagsHidden = document.getElementById('tags-hidden');
-        var tagsContainer = document.getElementById('tags-container');
-        var tags = [];
-
-        // Load existing tags from hidden field
-        var existingTags = (tagsHidden.value || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
-        existingTags.forEach(function(tag) { addTag(tag); });
-
-        function addTag(text) {
-            text = text.trim();
-            if (!text || tags.indexOf(text) !== -1) return;
-            tags.push(text);
-            renderTags();
-            tagsHidden.value = tags.join(',');
-        }
-
-        function removeTag(index) {
-            tags.splice(index, 1);
-            renderTags();
-            tagsHidden.value = tags.join(',');
-        }
-
-        function renderTags() {
-            tagsContainer.innerHTML = tags.map(function(tag, i) {
-                return '<span class="gti-na-tag">' + tag + '<button type="button" class="gti-na-tag-remove" data-index="' + i + '">&times;</button></span>';
-            }).join('');
-        }
-
-        tagInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ',') {
-                e.preventDefault();
-                var val = this.value.replace(/,/g, '').trim();
-                if (val) { addTag(val); this.value = ''; }
-            }
-        });
-
-        tagAddBtn.addEventListener('click', function() {
-            var val = tagInput.value.replace(/,/g, '').trim();
-            if (val) { addTag(val); tagInput.value = ''; }
-        });
-
-        tagsContainer.addEventListener('click', function(e) {
-            var btn = e.target.closest('.gti-na-tag-remove');
-            if (btn) removeTag(parseInt(btn.getAttribute('data-index'), 10));
-        });
-
-        // ── Featured Image Upload ──
-        var uploadArea = document.getElementById('na-upload-area');
-        var fileInput = document.getElementById('na-file-input');
-        var preview = document.getElementById('na-preview');
-        var previewImg = document.getElementById('na-preview-img');
-        var removeBtn = document.getElementById('na-remove-img');
-
-        if (uploadArea && fileInput) {
-            uploadArea.addEventListener('click', function() { fileInput.click(); });
-
-            uploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#F5A623';
-                uploadArea.style.background = '#fffbeb';
-            });
-
-            uploadArea.addEventListener('dragleave', function() {
-                uploadArea.style.borderColor = '#d1d5db';
-                uploadArea.style.background = '#fafafa';
-            });
-
-            uploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = '#d1d5db';
-                uploadArea.style.background = '#fafafa';
-                if (e.dataTransfer.files.length) {
-                    fileInput.files = e.dataTransfer.files;
-                    showPreview(e.dataTransfer.files[0]);
-                }
-            });
-
-            fileInput.addEventListener('change', function() {
-                if (this.files.length) showPreview(this.files[0]);
-            });
-        }
-
-        function showPreview(file) {
-            if (file && file.type.startsWith('image/')) {
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('File too large. Maximum size is 5MB.');
-                    return;
-                }
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    preview.style.display = 'block';
-                    uploadArea.style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        if (removeBtn) {
-            removeBtn.addEventListener('click', function() {
-                fileInput.value = '';
-                previewImg.src = '';
-                preview.style.display = 'none';
-                uploadArea.style.display = '';
-                // Tells the server to detach the stored featured image.
-                var removeFlag = document.getElementById('na-remove-flag');
-                if (removeFlag) removeFlag.value = '1';
-            });
-        }
-
-        // Choosing a new file cancels a pending removal.
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                var removeFlag = document.getElementById('na-remove-flag');
-                if (removeFlag) removeFlag.value = '';
-            });
-        }
-    });
-    </script>
-</body>
-</html>
+<?php
+gti_dashboard_close(  );

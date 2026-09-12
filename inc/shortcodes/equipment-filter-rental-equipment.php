@@ -308,6 +308,9 @@ function gti_rental_render_equipment_card( $item ) {
                 <div class="placeholder-icon"><i class="fas fa-truck-monster"></i></div>
             <?php endif; ?>
             <span class="gti-ef-status-badge <?php echo esc_attr( $status_class ); ?>"><?php echo esc_html( $status_label ); ?></span>
+            <?php if ( ! empty( $item['price_expired'] ) ) : ?>
+                <span class="gti-ef-price-expired" title="Harga terakhir sudah lewat masa berlaku">Price no longer valid</span>
+            <?php endif; ?>
         </div>
         <div class="gti-ef-card-body">
             <h3 class="gti-ef-card-title"><?php echo esc_html( $title ); ?></h3>
@@ -379,14 +382,16 @@ function gti_get_rental_equipment_data() {
     );
 
     if ( empty( $rows ) ) {
-        return gti_get_dummy_rental_equipment_data();
+        // Demo rows are off unless explicitly switched on. Showing invented
+        // stock to real visitors is worse than an honest empty state (PRD §7.5).
+        return gti_show_demo_data() ? gti_get_dummy_rental_equipment_data() : array();
     }
 
     $items = [];
     foreach ( $rows as $row ) {
-        if ( ! gti_is_price_valid( $row->price_valid_until ) ) {
-            continue;
-        }
+        // An expired price does not remove the unit from the catalogue; it is
+        // shown with a "Price no longer valid" badge instead (PRD §7.5).
+        $price_expired = ! gti_is_price_valid( $row->price_valid_until );
 
         $image = '';
         if ( ! empty( $row->main_image ) ) {
@@ -419,6 +424,7 @@ function gti_get_rental_equipment_data() {
             'condition'     => $row->condition_status ?: '',
             'status'        => $display_status,
             'image'         => $image,
+            'price_expired' => $price_expired,
             'is_wishlisted' => false,
         ];
     }
@@ -623,20 +629,13 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                     </div>
                 </div>
 
-                <div class="gti-ed-inquiry-card">
-                    <h3 class="gti-ed-inquiry-title">INTERESTED IN THIS UNIT?</h3>
-                    <p class="gti-ed-inquiry-desc">Fill out the form and our team will contact you.</p>
-                    <form id="gti-ed-inquiry-form">
-                        <input type="hidden" name="gti_quot_nonce" value="<?php echo esc_attr( wp_create_nonce( 'gti_customer_quotation' ) ); ?>">
-                        <div class="gti-ed-form-group"><input type="text" name="ed_name" id="ed-name" placeholder="Your Name" required></div>
-                        <div class="gti-ed-form-group"><input type="text" name="ed_company" id="ed-company" placeholder="Your Company"></div>
-                        <div class="gti-ed-form-group"><input type="tel" name="ed_phone" id="ed-phone" placeholder="Phone / WhatsApp" required></div>
-                        <div class="gti-ed-form-group"><input type="email" name="ed_email" id="ed-email" placeholder="Your Email" required></div>
-                        <div class="gti-ed-form-group"><textarea name="ed_message" id="ed-message" rows="3" placeholder="Your Message"></textarea></div>
-                        <button type="submit" class="gti-ed-form-submit"><i class="fas fa-paper-plane"></i> SEND MESSAGE</button>
-                        <div class="gti-ed-form-privacy"><i class="fas fa-lock"></i> Your data is safe with us.</div>
-                    </form>
-                </div>
+                <?php
+                gti_render_inquiry_form( array(
+                    'type'           => 'rental',
+                    'equipment_id'   => $equipment_id,
+                    'equipment_name' => $title,
+                ) );
+                ?>
             </div>
         </section>
 

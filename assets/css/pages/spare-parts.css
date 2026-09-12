@@ -1,0 +1,75 @@
+/* spare-parts — page-specific rules (PRD §13.7 / R2) */
+
+/* Stats: Inventory Value card wider */ {  }
+.gti-ue-stats-row { flex-wrap: wrap; }
+.gti-ue-stats-row .gti-ue-stat-card:last-child { flex: 1.4; }
+.gti-ue-stat-value { font-size: 22px; word-break: break-all; }
+.gti-ue-stat-icon.draft { background: #eef2ff; color: #4f46e5; }
+/* Border overrides to match request-equipment style */ {  }
+.gti-ue-table .col-category { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-brand { font-size: 13px; font-weight: 600; color: #374151; }
+.gti-ue-table .col-price { font-size: 13px; font-weight: 600; color: #374151; }
+/* Table column widths */ {  }
+.gti-ue-table .col-image { width: 44px; }
+.gti-ue-table .col-partnum { width: 140px; text-align: center; padding-left: 20px; padding-right: 12px; }
+.gti-ue-table .col-partname { width: 160px; }
+.gti-ue-table .col-category { width: 80px; }
+.gti-ue-table .col-brand { width: 90px; }
+.gti-ue-table .col-stock { width: 72px; text-align: center; }
+.gti-ue-table td small { display: block; font-size: 11px; color: #9ca3af; margin-top: 2px; font-weight: 500; }
+.gti-ue-table .col-price { width: 95px; text-align: right; white-space: nowrap; }
+.gti-ue-table .col-totalval { width: 105px; text-align: right; white-space: nowrap; }
+.gti-ue-table .col-status { width: 120px; text-align: center; white-space: nowrap; }
+.gti-ue-table .col-actions { width: 80px; text-align: center; }
+/* ====== Right Drawer — In-Flow (≥1600px) ====== */ {  }
+.gti-drawer-status.status-in_stock { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-low_stock { background: #fef3c7; color: #b45309; }
+.gti-drawer-status.status-out_of_stock { background: #fee2e2; color: #b91c1c; }
+.gti-drawer-status.status-draft { background: #e0e7ff; color: #4338ca; }
+.gti-drawer-label { font-size: 13px; color: #9ca3af; flex-shrink: 0; min-width: 120px; }
+.gti-drawer-stock-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.gti-drawer-stock-tag.level-ok { background: #d1fae5; color: #047857; }
+.gti-drawer-stock-tag.level-low { background: #fef3c7; color: #b45309; }
+.gti-drawer-stock-tag.level-out { background: #fee2e2; color: #b91c1c; }
+.gti-drawer-btn-publish:hover { background: #047857 !important; }
+/* Action menu overflow fix */ {  }
+.gti-drawer-btn-delete:hover { background: #fef2f2 !important; }
+/* ====== View Button — Hide on wide screens ====== */ {  }
+@media (min-width: 1600px) {
+    .gti-ue-btn-view { display: none !important; }
+}
+/* ====== Fullscreen Edit Modal ====== */ {  }
+.gti-ue-edit-overlay { display: none; position: fixed; inset: 0; z-index: 2000; background: #f3f4f6; overflow-y: auto; }
+.gti-ue-edit-overlay.show { display: block; }
+.gti-ue-edit-overlay .gti-edit-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1; opacity: 0; transition: opacity 0.25s; }
+.gti-ue-edit-overlay.show .gti-edit-backdrop { opacity: 1; }
+.gti-ue-edit-container { position: relative; z-index: 2; margin: 40px; background: #fff; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.12); min-height: calc(100vh - 80px); display: flex; flex-direction: column; }
+.gti-ue-edit-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid #e5e7eb; background: #fff; border-radius: 16px 16px 0 0; flex-shrink: 0; position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.gti-ue-edit-header-left { display: flex; align-items: center; gap: 12px; }
+.gti-ue-edit-header h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.gti-ue-edit-header h2 i { color: #F5A623; }
+/* Compact stepper inside header */ {  }
+.gti-ue-edit-header .gti-ae-stepper-card { margin: 0; background: none; border: none; box-shadow: none; border-radius: 0; overflow: visible; flex: 0 1 auto; height: fit-content; width: fit-content; }
+.gti-ue-edit-header .gti-ae-stepper { gap: 0; padding: 0; margin: 0; justify-content: center; }
+.gti-ue-edit-header .gti-ae-step { cursor: pointer; gap: 4px; }
+.gti-ue-edit-header .gti-ae-step-circle { width: 24px; height: 24px; font-size: 11px; font-weight: 600; }
+.gti-ue-edit-header .gti-ae-step-label { font-size: 10px; font-weight: 500; }
+.gti-ue-edit-header .gti-ae-step-line { margin-top: 11px; min-width: 8px; max-width: 20px; height: 2px; }
+.gti-ue-edit-close { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 16px; transition: all 0.15s; }
+.gti-ue-edit-close:hover { background: #f3f4f6; color: #1a1f36; }
+.gti-ue-edit-body { flex: 1; padding: 28px; overflow-y: auto; }
+.gti-ue-edit-footer { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 16px 28px; border-top: 1px solid #e5e7eb; flex-shrink: 0; background: #fff; border-radius: 0 0 16px 16px; }
+.gti-ue-edit-footer .gti-ae-btn-cancel { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; border: 1px solid #e5e7eb; background: #fff; color: #374151; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.gti-ue-edit-footer .gti-ae-btn-cancel:hover { background: #f9fafb; }
+.gti-ue-edit-footer .gti-ae-btn-submit { display: inline-flex; align-items: center; gap: 6px; padding: 10px 24px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; background: #F5A623; color: #1a1f36; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.gti-ue-edit-footer .gti-ae-btn-submit:hover { background: #e6991a; }
+.gti-ue-edit-footer .gti-ae-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+/* Reuse existing stepper/form styles inside the edit modal */ {  }
+.gti-ue-edit-body .gti-ae-step-content { display: none; }
+.gti-ue-edit-body .gti-ae-step-content.active { display: block; }
+.gti-ue-edit-body .gti-ae-step-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+.gti-ue-edit-body .gti-ae-step-nav button { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev { border: 1px solid #e5e7eb; background: #fff; color: #374151; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-prev:hover { background: #f9fafb; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-next { border: 1px solid #F5A623; background: #F5A623; color: #1a1f36; font-weight: 600; }
+.gti-ue-edit-body .gti-ae-step-nav .gti-ae-next:hover { background: #e6991a; }

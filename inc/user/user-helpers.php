@@ -109,3 +109,39 @@ function gti_get_user_orders( $user_id, $limit = 10 ) {
     
     return wc_get_orders( $args );
 }
+
+/**
+ * Display label for a user's role.
+ *
+ * Replaces the hardcoded `<small>Super Admin</small>` that was copied into
+ * every dashboard header, where it showed the same title to every user
+ * regardless of their actual role (PRD §3.2 B-07).
+ *
+ * @param int $user_id Defaults to the current user.
+ */
+function gti_role_label_for_user( $user_id = 0 ) {
+    $user = $user_id ? get_userdata( $user_id ) : wp_get_current_user();
+
+    if ( ! $user || ! $user->exists() ) {
+        return '';
+    }
+
+    // A GTI role wins over the underlying WordPress role.
+    if ( class_exists( 'GTI_Roles' ) ) {
+        $gti_roles = GTI_Roles::get_roles();
+        foreach ( (array) $user->roles as $role ) {
+            if ( isset( $gti_roles[ $role ] ) ) {
+                return $gti_roles[ $role ];
+            }
+        }
+    }
+
+    $wp_roles = wp_roles();
+    foreach ( (array) $user->roles as $role ) {
+        if ( isset( $wp_roles->role_names[ $role ] ) ) {
+            return translate_user_role( $wp_roles->role_names[ $role ] );
+        }
+    }
+
+    return '';
+}

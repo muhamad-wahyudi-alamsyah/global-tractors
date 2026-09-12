@@ -1,0 +1,31 @@
+/* customers — page-specific rules (PRD §13.7 / R2) */
+
+/* Border overrides — match request-equipment style */ {  }
+.gti-ue-table-card { border: 1px solid #e5e7eb; overflow: hidden; }
+/* Table column widths */ {  }
+.gti-ue-table .col-customer { width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-company { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-email { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-phone { width: 130px; }
+.gti-ue-table .col-status { width: 110px; text-align: center; white-space: nowrap; }
+.gti-ue-table .col-transactions { width: 100px; text-align: center; }
+/* ====== Drawer Header ====== */ {  }
+.gti-drawer-status.status-active { background: #d1fae5; color: #047857; }
+.gti-drawer-status.status-inactive { background: #fee2e2; color: #dc2626; }
+/* ====== Drawer Detail Rows ====== */ {  }
+.gti-drawer-label { font-size: 13px; color: #9ca3af; flex-shrink: 0; min-width: 110px; }
+/* ====== Drawer Footer ====== */ {  }
+.gti-drawer-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid #e5e7eb; background: #fff; color: #374151; font-family: inherit; text-decoration: none; }
+/* ====== Customer Cell ====== */ {  }
+.gti-cust-cell { display: flex; align-items: center; gap: 12px; }
+.gti-cust-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; color: #fff; }
+.gti-cust-avatar.bg-1 { background: #f59e0b; }
+.gti-cust-avatar.bg-2 { background: #3b82f6; }
+.gti-cust-avatar.bg-3 { background: #10b981; }
+.gti-cust-avatar.bg-4 { background: #8b5cf6; }
+.gti-cust-avatar.bg-5 { background: #ef4444; }
+.gti-cust-avatar.bg-6 { background: #06b6d4; }
+.gti-cust-avatar.bg-7 { background: #ec4899; }
+.gti-cust-name-group { display: flex; flex-direction: column; min-width: 0; }
+.gti-cust-name-group strong { font-size: 13px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gti-cust-name-group small { font-size: 11px; color: #9ca3af; }

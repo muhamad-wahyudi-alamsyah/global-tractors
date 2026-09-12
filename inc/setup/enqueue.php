@@ -5,17 +5,20 @@
  */
 if (!defined('ABSPATH')) exit;
 
-add_action('wp_enqueue_scripts', 'gti_enqueue_dashboard_styles');
-function gti_enqueue_dashboard_styles() {
+add_action('wp_enqueue_scripts', 'gti_enqueue_dashboard_assets');
+/**
+ * Dashboard assets.
+ *
+ * Font Awesome and Google Fonts used to be raw <link> tags repeated in 18
+ * templates, and the 4,100 lines of CSS those templates carried inline are now
+ * the dashboard-*.css files loaded here (PRD §13.7). Shared sheets load before
+ * the per-page sheet so page-level overrides still win.
+ */
+function gti_enqueue_dashboard_assets() {
     $page = get_query_var('gti_page');
-    if (!$page) return;
-
-    wp_enqueue_style(
-        'gti-dashboard',
-        GTI_CHILD_URL . '/assets/css/dashboard.css',
-        [],
-        GTI_VERSION
-    );
+    if (!$page) {
+        return;
+    }
 
     wp_enqueue_style(
         'gti-google-fonts',
@@ -24,38 +27,69 @@ function gti_enqueue_dashboard_styles() {
         null
     );
 
-    wp_enqueue_script(
-        'gti-chartjs',
-        'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+    wp_enqueue_style(
+        'gti-font-awesome',
+        'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
         [],
-        '4.4.0',
-        true
+        '6.5.1'
     );
 
-    wp_enqueue_script(
-        'gti-dashboard',
-        GTI_CHILD_URL . '/assets/js/dashboard.js',
-        ['jquery', 'gti-chartjs'],
-        GTI_VERSION,
-        true
-    );
+    gti_enqueue_style('gti-dashboard', 'assets/css/dashboard.css', ['gti-google-fonts']);
 
-    wp_localize_script('gti-dashboard', 'gtiAjax', [
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('gti_nonce'),
-        'version' => GTI_VERSION,
+    // Shared component stylesheets, in cascade order.
+    foreach (['layout', 'table', 'drawer', 'modal', 'toast', 'forms'] as $component) {
+        gti_enqueue_style(
+            'gti-dashboard-' . $component,
+            'assets/css/dashboard-' . $component . '.css',
+            ['gti-dashboard']
+        );
+    }
+
+    $assets = gti_page_assets();
+
+    foreach ((array) $assets['css'] as $handle) {
+        gti_enqueue_style('gti-css-' . $handle, 'assets/css/' . $handle . '.css', ['gti-dashboard']);
+    }
+
+    // The page's own sheet loads last so it can override anything above.
+    gti_enqueue_style('gti-page-' . $page, 'assets/css/pages/' . $page . '.css', ['gti-dashboard']);
+
+    // Shared UI behaviour: toast, drawer, modal, dropdown, sidebar, fetch wrapper.
+    gti_enqueue_script('gti-dashboard-ui', 'assets/js/dashboard-ui.js', []);
+
+    wp_localize_script('gti-dashboard-ui', 'gtiAjax', [
+        'ajaxurl'   => admin_url('admin-ajax.php'),
+        'nonce'     => wp_create_nonce('gti_nonce'),
+        'version'   => GTI_VERSION,
+        'maxUpload' => (int) wp_max_upload_size(),
+        'docMax'    => GTI_ATTACHMENT_MAX_BYTES,
+        'dashboard' => untrailingslashit(gti_dashboard_url()),
     ]);
 
-    // ── Add Equipment page assets ──────────────────────────────────────────
-    $current_page = get_query_var('gti_page');
-    if ( $current_page === 'add-equipment' ) {
-        wp_enqueue_script(
-            'gti-add-equipment',
-            GTI_CHILD_URL . '/assets/js/add-equipment.js',
-            [ 'gti-dashboard' ],
-            GTI_VERSION,
-            true
-        );
+    // Inbox pages share one behaviour layer on top of dashboard-ui.
+    $deps = ['gti-dashboard-ui'];
+    if (in_array($page, ['request-equipment', 'request-quotation', 'sell-equipment'], true)) {
+        gti_enqueue_script('gti-inbox-ui', 'assets/js/inbox-ui.js', ['gti-dashboard-ui']);
+        $deps[] = 'gti-inbox-ui';
+    }
+
+    foreach ((array) $assets['js'] as $handle) {
+        $script = 'gti-page-' . $handle;
+        if (gti_enqueue_script($script, 'assets/js/pages/' . $handle . '.js', $deps)) {
+            $data = gti_page_data();
+            if ($data) {
+                wp_localize_script($script, 'gtiPageData', $data);
+            }
+        }
+    }
+
+    if ($page === 'dashboard' || $page === '') {
+        wp_enqueue_script('gti-chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js', [], '4.4.0', true);
+    }
+
+    if (in_array($page, ['add-equipment', 'add-used-equipment', 'add-rental-equipment', 'add-spare-part'], true)) {
+        gti_enqueue_style('gti-add-equipment', 'assets/css/add-equipment.css', ['gti-dashboard']);
+        gti_enqueue_script('gti-add-equipment', 'assets/js/add-equipment.js', ['gti-dashboard-ui']);
     }
 }
 
@@ -173,5 +207,11 @@ function gti_enqueue_equipment_filter_assets() {
             GTI_VERSION,
             true
         );
+
+        // The inquiry form posts to admin-ajax; give it the real URL instead of
+        // assuming /wp-admin/ is reachable at that path.
+        wp_localize_script('gti-equipment-detail', 'gtiAjax', [
+            'ajaxurl' => admin_url('admin-ajax.php'),
+        ]);
     }
 }

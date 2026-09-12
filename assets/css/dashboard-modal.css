@@ -1,0 +1,33 @@
+/* dashboard-modal
+   Extracted from the <style> blocks that were duplicated across the
+   dashboard templates (PRD §13.7 / R2). Shared rules load before each
+   page's own stylesheet, so page-level overrides still win. */
+
+.gti-ue-delete-overlay { display: none; position: fixed; inset: 0; z-index: 3000; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+.gti-ue-delete-overlay.show { display: flex; }
+.gti-ue-delete-modal { background: #fff; border-radius: 16px; width: 440px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.2); overflow: hidden; animation: gti-modal-in 0.25s ease; }
+.gti-ue-delete-header { display: flex; align-items: center; gap: 12px; padding: 20px 24px 0; }
+.gti-ue-delete-icon { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; background: #fef2f2; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 18px; }
+.gti-ue-delete-header-text h3 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; }
+.gti-ue-delete-header-text p { margin: 4px 0 0; font-size: 13px; color: #6b7280; }
+.gti-ue-delete-body { padding: 16px 24px; }
+.gti-ue-delete-eq-info { background: #f9fafb; border: 1px solid #f3f4f6; border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+.gti-ue-delete-eq-thumb { width: 48px; height: 48px; border-radius: 8px; background: #e5e7eb; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.gti-ue-delete-eq-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.gti-ue-delete-eq-thumb i { color: #9ca3af; font-size: 18px; }
+.gti-ue-delete-eq-name { font-size: 14px; font-weight: 600; color: #1a1f36; }
+.gti-ue-delete-eq-code { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+.gti-ue-delete-warning { margin-top: 14px; padding: 10px 14px; border-radius: 8px; background: #fffbeb; border: 1px solid #fde68a; font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 8px; }
+.gti-ue-delete-warning i { margin-top: 2px; color: #f59e0b; flex-shrink: 0; }
+.gti-ue-delete-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 24px; border-top: 1px solid #f3f4f6; }
+.gti-ue-delete-footer button { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.gti-ue-delete-cancel { border: 1px solid #e5e7eb; background: #fff; color: #374151; }
+.gti-ue-delete-cancel:hover { background: #f9fafb; }
+.gti-ue-delete-confirm { border: none; background: #dc2626; color: #fff; font-weight: 600; }
+.gti-ue-delete-confirm:hover { background: #b91c1c; }
+.gti-ue-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
+
+@keyframes gti-modal-in {
+    from { opacity:0; transform: scale(0.95); }
+    to { opacity:1; transform: scale(1); }
+}
