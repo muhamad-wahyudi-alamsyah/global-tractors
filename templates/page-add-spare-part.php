@@ -66,8 +66,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
 
 gti_dashboard_open( array(
     'page'     => 'add-spare-part',
-    'title'    => 'Add Spare Part',
+    'title'    => 'Add New Spare Part',
+    'subtitle' => 'Fill in the details below to add a new spare part',
     'cap'      => 'gti_manage_spare_parts',
+    'css'      => array( 'add-equipment' ),
+    'js'       => array( 'add-spare-part' ),
 ) );
 ?>
 

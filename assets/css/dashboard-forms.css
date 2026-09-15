@@ -1,14 +1,21 @@
 /* dashboard-forms
    Field, modal-shell and dropzone styles for the components introduced in
    PRD §6 (compose email, document upload, request invoice, assign PIC).
-   Visual language matches the existing delete modal so nothing looks grafted on. */
+   Visual language matches the existing delete modal so nothing looks grafted on.
 
+   Loaded on every dashboard page, so it may only style classes the pre-v2
+   templates never used; anything else would restyle pages that were already
+   finished (PRD §13.4). */
+
+/* Tokens for these components. They are deliberately not --gti-primary or
+   --gti-muted: dashboard.css defines those (#F9B204, #9ca3af) for the sidebar,
+   buttons and table text, and redefining them here recoloured every page. */
 :root {
-    --gti-primary: #F5A623;
-    --gti-primary-dark: #e6991a;
+    --gti-accent: #F5A623;
+    --gti-accent-dark: #e6991a;
     --gti-ink: #1a1f36;
     --gti-text: #374151;
-    --gti-muted: #6b7280;
+    --gti-text-muted: #6b7280;
     --gti-faint: #9ca3af;
     --gti-line: #e5e7eb;
     --gti-line-soft: #f3f4f6;
@@ -39,11 +46,11 @@ body.gti-modal-open { overflow: hidden; }
     padding: 20px 24px; border-bottom: 1px solid var(--gti-line); flex-shrink: 0;
 }
 .gti-modal-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--gti-ink); }
-.gti-modal-header p { margin: 4px 0 0; font-size: 13px; color: var(--gti-muted); }
+.gti-modal-header p { margin: 4px 0 0; font-size: 13px; color: var(--gti-text-muted); }
 .gti-modal-close {
     width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--gti-line);
     background: var(--gti-surface); cursor: pointer; font-size: 20px; line-height: 1;
-    color: var(--gti-muted); flex-shrink: 0; transition: background 0.15s;
+    color: var(--gti-text-muted); flex-shrink: 0; transition: background 0.15s;
 }
 .gti-modal-close:hover { background: var(--gti-line-soft); }
 
@@ -61,10 +68,10 @@ body.gti-modal-open { overflow: hidden; }
 .gti-btn-secondary { background: var(--gti-surface); color: var(--gti-text); }
 .gti-btn-secondary:hover { background: var(--gti-surface-alt); }
 .gti-btn-primary {
-    background: var(--gti-primary); border-color: var(--gti-primary);
+    background: var(--gti-accent); border-color: var(--gti-accent);
     color: var(--gti-ink); font-weight: 600;
 }
-.gti-btn-primary:hover:not(:disabled) { background: var(--gti-primary-dark); }
+.gti-btn-primary:hover:not(:disabled) { background: var(--gti-accent-dark); }
 .gti-btn-primary:disabled, .gti-btn-secondary:disabled { opacity: 0.55; cursor: not-allowed; }
 
 /* ── Fields ──────────────────────────────────────────────────────────────── */
@@ -83,10 +90,10 @@ body.gti-modal-open { overflow: hidden; }
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 .gti-field input:focus, .gti-field select:focus, .gti-field textarea:focus {
-    outline: none; border-color: var(--gti-primary);
+    outline: none; border-color: var(--gti-accent);
     box-shadow: 0 0 0 3px rgba(245,166,35,0.15);
 }
-.gti-field input[readonly] { background: var(--gti-surface-alt); color: var(--gti-muted); }
+.gti-field input[readonly] { background: var(--gti-surface-alt); color: var(--gti-text-muted); }
 .gti-field textarea { resize: vertical; min-height: 80px; }
 .gti-field-error { color: var(--gti-danger); font-size: 12px; margin: -8px 0 12px; }
 .gti-field.has-error input, .gti-field.has-error select, .gti-field.has-error textarea {
@@ -99,7 +106,7 @@ body.gti-modal-open { overflow: hidden; }
     display: flex; align-items: center; gap: 8px; font-size: 13px;
     color: var(--gti-text); cursor: pointer; margin-bottom: 8px;
 }
-.gti-checkbox input { width: 16px; height: 16px; accent-color: var(--gti-primary); cursor: pointer; }
+.gti-checkbox input { width: 16px; height: 16px; accent-color: var(--gti-accent); cursor: pointer; }
 .gti-checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
 
 /* ── Banner ──────────────────────────────────────────────────────────────── */
@@ -118,13 +125,13 @@ body.gti-modal-open { overflow: hidden; }
     background: var(--gti-surface-alt); margin-bottom: 16px;
 }
 .gti-dropzone:hover, .gti-dropzone.dragover {
-    border-color: var(--gti-primary); background: #fffbf3;
+    border-color: var(--gti-accent); background: #fffbf3;
 }
 .gti-dropzone input[type="file"] {
     position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
 }
 .gti-dropzone-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.gti-dropzone-empty i { font-size: 28px; color: var(--gti-primary); }
+.gti-dropzone-empty i { font-size: 28px; color: var(--gti-accent); }
 .gti-dropzone-empty strong { font-size: 14px; color: var(--gti-ink); }
 .gti-dropzone-empty span { font-size: 12px; color: var(--gti-faint); }
 .gti-dropzone-file {
@@ -132,20 +139,20 @@ body.gti-modal-open { overflow: hidden; }
     background: var(--gti-surface); border: 1px solid var(--gti-line);
     border-radius: 8px; padding: 12px 14px;
 }
-.gti-dropzone-file i { font-size: 20px; color: var(--gti-primary); flex-shrink: 0; }
+.gti-dropzone-file i { font-size: 20px; color: var(--gti-accent); flex-shrink: 0; }
 .gti-dropzone-file strong { display: block; font-size: 13px; color: var(--gti-ink); word-break: break-all; }
 .gti-dropzone-file span { font-size: 12px; color: var(--gti-faint); }
 .gti-dropzone-remove {
     margin-left: auto; position: relative; z-index: 2; width: 26px; height: 26px;
     border-radius: 6px; border: 1px solid var(--gti-line); background: var(--gti-surface);
-    color: var(--gti-muted); font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0;
+    color: var(--gti-text-muted); font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0;
 }
 .gti-dropzone-remove:hover { background: #fee2e2; color: var(--gti-danger); }
 
 .gti-file-list { list-style: none; margin: 8px 0 0; padding: 0; }
 .gti-file-list li {
     display: flex; align-items: center; gap: 8px; font-size: 12px;
-    color: var(--gti-muted); padding: 4px 0;
+    color: var(--gti-text-muted); padding: 4px 0;
 }
 
 /* ── Summary rows ────────────────────────────────────────────────────────── */
@@ -158,7 +165,7 @@ body.gti-modal-open { overflow: hidden; }
     padding: 6px 0; font-size: 13px;
 }
 .gti-summary-row + .gti-summary-row { border-top: 1px solid var(--gti-line); }
-.gti-summary-row span { color: var(--gti-muted); }
+.gti-summary-row span { color: var(--gti-text-muted); }
 .gti-summary-row strong { color: var(--gti-ink); text-align: right; word-break: break-word; }
 
 /* ── Documents list (drawer) ─────────────────────────────────────────────── */
@@ -167,7 +174,7 @@ body.gti-modal-open { overflow: hidden; }
     display: flex; align-items: center; gap: 10px; padding: 10px 12px;
     border: 1px solid var(--gti-line); border-radius: 8px; background: var(--gti-surface);
 }
-.gti-doc-item i { color: var(--gti-primary); flex-shrink: 0; }
+.gti-doc-item i { color: var(--gti-accent); flex-shrink: 0; }
 .gti-doc-meta { min-width: 0; flex: 1; }
 .gti-doc-meta strong {
     display: block; font-size: 13px; color: var(--gti-ink);
@@ -175,14 +182,14 @@ body.gti-modal-open { overflow: hidden; }
 }
 .gti-doc-meta span { font-size: 11px; color: var(--gti-faint); }
 .gti-doc-dl {
-    color: var(--gti-muted); text-decoration: none; padding: 6px;
+    color: var(--gti-text-muted); text-decoration: none; padding: 6px;
     border-radius: 6px; flex-shrink: 0;
 }
 .gti-doc-dl:hover { background: var(--gti-line-soft); color: var(--gti-ink); }
 
 /* ── Sidebar badge (B-06) ────────────────────────────────────────────────── */
 .gti-nav-badge {
-    margin-left: auto; background: var(--gti-primary); color: var(--gti-ink);
+    margin-left: auto; background: var(--gti-accent); color: var(--gti-ink);
     font-size: 11px; font-weight: 700; min-width: 20px; height: 20px;
     border-radius: 10px; display: inline-flex; align-items: center;
     justify-content: center; padding: 0 6px;
@@ -201,55 +208,23 @@ body.gti-modal-open { overflow: hidden; }
     .gti-toast-container { left: 16px; right: 16px; align-items: stretch; }
 }
 
-/* ── Media library bulk selection (PRD §6.11 gap 4) ──────────────────────── */
-.gti-ml-bulkbar {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    flex-wrap: wrap;
-    padding: 12px 16px;
-    margin-bottom: 16px;
-    background: #fffbf3;
-    border: 1px solid var(--gti-primary);
-    border-radius: 10px;
-}
-.gti-ml-bulkbar .gti-checkbox { margin-bottom: 0; }
-.gti-ml-bulkinfo { font-size: 13px; color: var(--gti-muted); margin-right: auto; }
-.gti-ml-bulkbar button { border-color: var(--gti-danger); color: var(--gti-danger); }
-.gti-ml-bulkbar button:hover { background: #fee2e2; }
-
-/* The checkbox sits over the thumbnail; it appears on hover or once checked. */
-.gti-ml-card-check-wrap {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    z-index: 2;
-    opacity: 0;
-    transition: opacity 0.15s;
-}
-.gti-ml-card:hover .gti-ml-card-check-wrap,
-.gti-ml-card-check-wrap:has(input:checked) { opacity: 1; }
-.gti-ml-card-check {
-    width: 18px;
-    height: 18px;
-    accent-color: var(--gti-primary);
-    cursor: pointer;
-}
-
 /* ── Header user menu (holds the only Log Out control) ───────────────────── */
 .gti-user-menu-wrap { position: relative; }
+
+/* The trigger became a <button> so it can open the menu, but it has to look
+   like the plain avatar-and-name row it replaced (dashboard.css lays that out),
+   so the browser's own button styling is cleared. */
 .gti-user-menu {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    -webkit-appearance: none;
+    appearance: none;
     background: none;
-    border: none;
-    font-family: inherit;
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 8px;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
 }
-.gti-user-menu:hover { background: var(--gti-line-soft); }
 
 .gti-user-dropdown {
     display: none;

@@ -39,8 +39,9 @@ $query_params = array_filter( array(
 gti_dashboard_open( array(
     'page'     => 'sell-equipment',
     'title'    => 'Sell Equipment',
-    'subtitle' => 'Review equipment offered to GTI 🤝',
+    'subtitle' => 'Manage equipment sell submissions from customers <span>&#128203;</span>',
     'cap'      => 'gti_manage_requests',
+    'css'      => array( 'dashboard-table', 'dashboard-drawer' ),
     'js'       => array( 'sell-equipment' ),
 ) );
 ?>
@@ -50,12 +51,12 @@ gti_dashboard_open( array(
 
         <?php
         gti_render_stat_cards( array(
-            array( 'label' => 'Total',             'value' => $counts['all'] ?? 0,               'icon' => 'fa-handshake',    'tone' => '' ),
-            array( 'label' => 'New',               'value' => $counts['new'] ?? 0,               'icon' => 'fa-plus-circle',  'tone' => 'available' ),
-            array( 'label' => 'Processing',        'value' => $counts['processing'] ?? 0,        'icon' => 'fa-spinner',      'tone' => 'reserved' ),
-            array( 'label' => 'Approved',          'value' => $counts['approved'] ?? 0,          'icon' => 'fa-check-circle', 'tone' => 'available' ),
-            array( 'label' => 'Invoice Requested', 'value' => $counts['invoice_requested'] ?? 0, 'icon' => 'fa-file-invoice', 'tone' => 'reserved' ),
-            array( 'label' => 'Completed',         'value' => $counts['completed'] ?? 0,         'icon' => 'fa-flag-checkered', 'tone' => 'sold' ),
+            array( 'label' => 'Total',      'value' => $counts['all'] ?? 0,        'icon' => 'fa-shopping-cart',   'tone' => '' ),
+            array( 'label' => 'New',        'value' => $counts['new'] ?? 0,        'icon' => 'fa-plus-circle',     'tone' => '' ),
+            array( 'label' => 'Processing', 'value' => $counts['processing'] ?? 0, 'icon' => 'fa-spinner',         'tone' => 'reserved' ),
+            array( 'label' => 'Approved',   'value' => $counts['approved'] ?? 0,   'icon' => 'fa-check-circle',    'tone' => 'available' ),
+            array( 'label' => 'Rejected',   'value' => $counts['rejected'] ?? 0,   'icon' => 'fa-times-circle',    'tone' => 'sold' ),
+            array( 'label' => 'Completed',  'value' => $counts['completed'] ?? 0,  'icon' => 'fa-flag-checkered', 'tone' => '' ),
         ) );
         ?>
 
@@ -64,7 +65,7 @@ gti_dashboard_open( array(
             <div class="gti-ue-toolbar-left">
                 <div class="gti-ue-search">
                     <i class="fas fa-search"></i>
-                    <input type="text" name="search" placeholder="Search offers…" value="<?php echo esc_attr( $search ); ?>">
+                    <input type="text" name="search" placeholder="Search by name, company, equipment..." value="<?php echo esc_attr( $search ); ?>">
                 </div>
                 <div class="gti-ue-filter">
                     <select name="status">
@@ -95,50 +96,56 @@ gti_dashboard_open( array(
             <table class="gti-ue-table">
                 <thead>
                     <tr>
-                        <th class="col-customer">Seller</th>
+                        <th class="col-customer">Customer</th>
                         <th class="col-equipment">Equipment</th>
-                        <th class="col-brand">Brand</th>
                         <th class="col-year">Year</th>
-                        <th class="col-budget">Offered Price</th>
+                        <th class="col-condition">Condition</th>
+                        <th class="col-price">Offered Price</th>
                         <th class="col-status">Status</th>
-                        <th class="col-date">Submitted</th>
-                        <th class="col-actions"></th>
+                        <th class="col-date">Date</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if ( ! $result['items'] ) : ?>
                     <tr>
-                        <td colspan="8">
-                            <?php gti_render_empty_state( 'fa-handshake', 'No offers found',
+                        <td colspan="8" class="gti-ue-empty-cell">
+                            <?php gti_render_empty_state( 'fa-inbox', 'No sell requests found',
                                 ( $search || array_filter( $filters ) )
-                                    ? 'Try adjusting your filters.'
-                                    : 'No one has offered equipment yet.' ); ?>
+                                    ? 'Try adjusting your filters'
+                                    : 'No equipment sell submissions yet' ); ?>
                         </td>
                     </tr>
                 <?php else : ?>
                     <?php foreach ( $result['items'] as $sell ) :
-                        $payload = gti_sell_row_payload( $sell );
+                        $payload   = gti_sell_row_payload( $sell );
+                        $condition = strtolower( (string) $sell['equipment_condition'] );
                         ?>
                         <tr data-id="<?php echo (int) $sell['id']; ?>"
                             data-row="<?php echo esc_attr( wp_json_encode( $payload ) ); ?>">
                             <td class="col-customer">
-                                <strong><?php echo esc_html( $sell['customer_name'] ); ?></strong>
-                                <?php if ( ! empty( $sell['customer_company'] ) ) : ?>
-                                    <br><small><?php echo esc_html( $sell['customer_company'] ); ?></small>
-                                <?php endif; ?>
+                                <strong style="color: #1a1f36;"><?php echo esc_html( $sell['customer_name'] ); ?></strong>
+                                <br><small style="color: #6b7280;"><?php echo esc_html( $sell['customer_company'] ); ?></small>
                             </td>
-                            <td class="col-equipment"><?php echo esc_html( $sell['equipment_name'] ?: '—' ); ?></td>
-                            <td class="col-brand"><?php echo esc_html( $sell['equipment_brand'] ?: '—' ); ?></td>
-                            <td class="col-year"><?php echo esc_html( $sell['equipment_year'] ?: '—' ); ?></td>
-                            <td class="col-budget"><?php echo esc_html( $payload['price_text'] ); ?></td>
+                            <td class="col-equipment">
+                                <strong style="color: #1a1f36;"><?php echo esc_html( $sell['equipment_name'] ); ?></strong>
+                                <br><small style="color: #6b7280;"><?php echo esc_html( $sell['equipment_brand'] . ' ' . $sell['equipment_model'] ); ?></small>
+                            </td>
+                            <td class="col-year"><?php echo esc_html( $sell['equipment_year'] ?: '-' ); ?></td>
+                            <td class="col-condition">
+                                <span class="gti-condition-badge <?php echo esc_attr( $condition ); ?>"><?php echo esc_html( ucfirst( $condition ) ); ?></span>
+                            </td>
+                            <td class="col-price" style="text-align: right;">
+                                <strong style="color: #1a1f36;">IDR <?php echo esc_html( number_format( (float) $sell['offered_price'], 0, ',', '.' ) ); ?></strong>
+                            </td>
                             <td class="col-status"><?php gti_render_status_badge( 'sell', $sell['status'] ); ?></td>
-                            <td class="col-date"><?php echo esc_html( $payload['submitted_text'] ); ?></td>
+                            <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $sell['created_at'] ) ) ); ?></td>
                             <td class="col-actions">
                                 <?php gti_render_action_menu( array(
                                     array( 'label' => 'View Details',    'icon' => 'fa-eye',          'class' => 'js-view' ),
                                     array( 'label' => 'Contact on WhatsApp', 'icon' => 'fa-whatsapp', 'class' => 'js-whatsapp' ),
                                     array( 'label' => 'Reply by Email',  'icon' => 'fa-envelope',     'class' => 'js-reply' ),
-                                    array( 'label' => 'Delete',          'icon' => 'fa-trash',        'class' => 'js-delete danger' ),
+                                    array( 'label' => 'Delete',          'icon' => 'fa-trash',        'class' => 'js-delete delete' ),
                                 ) ); ?>
                             </td>
                         </tr>
@@ -167,5 +174,14 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'email', 'invoice', 'assign' ),
+    'modals' => array(
+        'delete' => array(
+            'title'   => 'Delete Sell Request',
+            'icon'    => 'fa-handshake',
+            'warning' => 'Sell request will be permanently removed from the system. This data cannot be recovered.',
+        ),
+        'email',
+        'invoice',
+        'assign',
+    ),
 ) );

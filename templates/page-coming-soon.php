@@ -27,7 +27,8 @@ $is_equipment_child = in_array($page_slug, ['rental-equipment']);
 
 gti_dashboard_open( array(
     'page'     => 'coming-soon',
-    'title'    => 'Coming Soon',
+    'title'    => $page_title,
+    'subtitle' => gti_welcome_back(),
     'cap'      => 'gti_access',
 ) );
 ?>

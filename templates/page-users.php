@@ -114,8 +114,8 @@ if ($can_list_users) {
 
 gti_dashboard_open( array(
     'page'     => 'users',
-    'title'    => 'Users',
-    'subtitle' => 'Profile and team directory 👤',
+    'title'    => 'My Profile',
+    'subtitle' => 'Manage your account information <span>&#128100;</span>',
     'cap'      => 'gti_access',
     'js'       => array( 'users' ),
 ) );
@@ -417,6 +417,15 @@ gti_dashboard_open( array(
             </div>
 
 <?php
+$gti_modals = array( 'delete', 'user-delete' );
+// The add / edit form is only for people who may use it, as before.
+if ( $can_create_users || $can_edit_users ) {
+    $gti_modals['user'] = array(
+        'editable_roles' => $editable_roles,
+        'role_labels'    => $role_labels,
+    );
+}
+
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'user-delete', 'user' ),
+    'modals' => $gti_modals,
 ) );

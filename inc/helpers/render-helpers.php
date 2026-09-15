@@ -80,7 +80,7 @@ function gti_render_pagination( array $args ) {
 
             if ( $start > 1 ) : ?>
                 <a href="<?php echo $link( 1 ); ?>" class="gti-ue-page-btn">1</a>
-                <?php if ( $start > 2 ) : ?><span class="gti-ue-page-dots">&hellip;</span><?php endif; ?>
+                <?php if ( $start > 2 ) : ?><span class="gti-ue-page-dots">...</span><?php endif; ?>
             <?php endif; ?>
 
             <?php for ( $i = $start; $i <= $end; $i++ ) : ?>
@@ -92,7 +92,7 @@ function gti_render_pagination( array $args ) {
             <?php endfor; ?>
 
             <?php if ( $end < $pages ) : ?>
-                <?php if ( $end < $pages - 1 ) : ?><span class="gti-ue-page-dots">&hellip;</span><?php endif; ?>
+                <?php if ( $end < $pages - 1 ) : ?><span class="gti-ue-page-dots">...</span><?php endif; ?>
                 <a href="<?php echo $link( $pages ); ?>" class="gti-ue-page-btn"><?php echo (int) $pages; ?></a>
             <?php endif; ?>
 
@@ -123,6 +123,10 @@ function gti_render_status_badge( $entity_type, $status ) {
 /**
  * Stat card row.
  *
+ * Same markup as the cards the list pages write by hand: label above value, and
+ * the tone (available / reserved / sold) on the icon, which is where
+ * dashboard.css colours it.
+ *
  * @param array $cards [['label','value','icon','tone'], …]
  */
 function gti_render_stat_cards( array $cards ) {
@@ -131,11 +135,11 @@ function gti_render_stat_cards( array $cards ) {
     foreach ( $cards as $card ) {
         $card = array_merge( array( 'label' => '', 'value' => 0, 'icon' => 'fa-chart-bar', 'tone' => '' ), $card );
         ?>
-        <div class="gti-ue-stat-card <?php echo esc_attr( $card['tone'] ); ?>">
-            <div class="gti-ue-stat-icon"><i class="fas <?php echo esc_attr( $card['icon'] ); ?>"></i></div>
+        <div class="gti-ue-stat-card">
+            <div class="<?php echo esc_attr( trim( 'gti-ue-stat-icon ' . $card['tone'] ) ); ?>"><i class="fas <?php echo esc_attr( $card['icon'] ); ?>"></i></div>
             <div class="gti-ue-stat-info">
-                <span class="gti-ue-stat-value"><?php echo esc_html( $card['value'] ); ?></span>
-                <span class="gti-ue-stat-label"><?php echo esc_html( $card['label'] ); ?></span>
+                <p class="gti-ue-stat-label"><?php echo esc_html( $card['label'] ); ?></p>
+                <p class="gti-ue-stat-value"><?php echo esc_html( $card['value'] ); ?></p>
             </div>
         </div>
         <?php
@@ -173,13 +177,14 @@ function gti_render_action_menu( array $items ) {
 }
 
 /**
- * Empty-state block for a table with no rows.
+ * Empty-state block for a table with no rows. It goes inside
+ * <td class="gti-ue-empty-cell">, which carries the spacing.
  */
 function gti_render_empty_state( $icon, $title, $description = '' ) {
     ?>
     <div class="gti-ue-empty">
         <i class="fas <?php echo esc_attr( $icon ); ?>"></i>
-        <h3><?php echo esc_html( $title ); ?></h3>
+        <p class="gti-ue-empty-title"><?php echo esc_html( $title ); ?></p>
         <?php if ( $description ) : ?><p><?php echo esc_html( $description ); ?></p><?php endif; ?>
     </div>
     <?php
@@ -206,31 +211,32 @@ function gti_render_drawer_row( $label, $value, $class = '', $raw = false ) {
  * Timeline built from wp_gti_status_history (PRD §3.3 C-06).
  *
  * The old timeline was inferred from created_at/updated_at and could therefore
- * only ever show two points.
+ * only ever show two points. The markup and order are still the old drawer's —
+ * oldest first, the latest event last with the gold dot — and inbox-ui.js
+ * renderTimeline() builds the same thing.
  */
 function gti_render_timeline( $entity_type, $entity_id ) {
-    $events = gti_get_status_history( $entity_type, $entity_id );
+    // History comes newest first; the timeline reads top to bottom in time.
+    $events = array_reverse( gti_get_status_history( $entity_type, $entity_id ) );
 
     if ( ! $events ) {
-        gti_render_empty_state( 'fa-clock', 'No history yet' );
+        echo '<p class="gti-drawer-empty">Belum ada riwayat.</p>';
         return;
     }
+
+    $last = count( $events ) - 1;
     ?>
     <div class="gti-drawer-timeline">
         <?php foreach ( $events as $i => $event ) : ?>
-            <div class="gti-timeline-item <?php echo $i === 0 ? 'is-latest' : ''; ?>">
-                <div class="gti-timeline-dot"></div>
-                <div class="gti-timeline-content">
-                    <strong><?php echo esc_html( gti_status_label( $entity_type, $event['to_status'] ) ); ?></strong>
-                    <?php if ( ! empty( $event['note'] ) ) : ?>
-                        <p><?php echo esc_html( $event['note'] ); ?></p>
-                    <?php endif; ?>
-                    <span>
-                        <?php echo esc_html( gti_format_date( $event['created_at'], 'd M Y, H:i' ) ); ?>
-                        <?php if ( ! empty( $event['actor'] ) ) : ?>
-                            &middot; <?php echo esc_html( $event['actor'] ); ?>
-                        <?php endif; ?>
-                    </span>
+            <div class="gti-drawer-timeline-item">
+                <div class="gti-drawer-timeline-dot<?php echo $i === $last ? ' is-active' : ''; ?>"></div>
+                <div class="gti-drawer-timeline-event"><?php echo esc_html( gti_status_label( $entity_type, $event['to_status'] ) ); ?></div>
+                <?php if ( ! empty( $event['note'] ) ) : ?>
+                    <div class="gti-drawer-timeline-meta"><?php echo esc_html( $event['note'] ); ?></div>
+                <?php endif; ?>
+                <div class="gti-drawer-timeline-meta">
+                    <?php echo esc_html( gti_format_date( $event['created_at'], 'd M Y, H:i' ) ); ?>
+                    <?php if ( ! empty( $event['actor'] ) ) : ?>&middot; by <?php echo esc_html( $event['actor'] ); ?><?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

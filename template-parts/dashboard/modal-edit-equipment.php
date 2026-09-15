@@ -5,9 +5,15 @@
  * Recovered during the R1 layout refactor: this markup sat after </main> in
  * the page template and was rendered inline there. It is a part now, requested
  * via gti_dashboard_close(['modals' => [...]]).
+ *
+ * @var array $gti_modal_args next_code
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+
+// Parts render inside gti_dashboard_close(), out of reach of the template's own
+// variables, so the placeholder code arrives as a setting (or is recomputed).
+$gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_code'] : 'GTI-GEN-' . date( 'Y' ) . '-001';
 ?>
     <div class="gti-ue-edit-overlay" id="gtiEditOverlay">
         <div class="gti-edit-backdrop" onclick="closeEditModal()"></div>

@@ -119,8 +119,9 @@ $_gti_sp_status_badge = function($status) use ($_gti_sp_status_label) {
 gti_dashboard_open( array(
     'page'     => 'spare-parts',
     'title'    => 'Spare Parts',
-    'subtitle' => 'Manage spare parts stock ⚙️',
+    'subtitle' => 'Manage your spare parts inventory <span>&#128295;</span>',
     'cap'      => 'gti_manage_spare_parts',
+    'css'      => array( 'add-equipment' ),
     'js'       => array( 'spare-parts' ),
 ) );
 ?>
@@ -312,7 +313,6 @@ gti_dashboard_open( array(
                             'params'   => $query_params,
                         ) );
                         ?>
-                        </div>
                     <?php endif; ?>
                 </div>
                 </div><!-- /.gti-content-left -->
@@ -385,5 +385,12 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'edit-spare-part' ),
+    'modals' => array(
+        'delete' => array(
+            'title'   => 'Delete Spare Part',
+            'icon'    => 'fa-cog',
+            'warning' => 'Spare part will be permanently removed from inventory. This data cannot be recovered.',
+        ),
+        'edit-spare-part' => array( 'next_code' => $gti_next_sp_code ),
+    ),
 ) );

@@ -22,8 +22,7 @@
                 'Brand': row.brand,
                 'Model': row.model,
                 'Year': row.year,
-                'Hours': row.hours,
-                'Condition': row.condition,
+                'Hours': row.hours ? Number(row.hours).toLocaleString() + ' hrs' : '',
                 'Location': row.equipment_location,
                 'Offered Price': row.price_text,
                 'Submission Date': row.submitted_text,
@@ -37,7 +36,17 @@
                 if (!label || !value || value.dataset.field === 'whatsapp') return;
                 var key = label.textContent.trim();
                 if (key in values) value.textContent = values[key] || '—';
+                if (key === 'Condition') {
+                    value.innerHTML = row.condition
+                        ? '<span class="gti-condition-badge ' + GTI.fmt.escape(String(row.condition).toLowerCase()) + '">' +
+                          GTI.fmt.escape(row.condition) + '</span>'
+                        : '—';
+                }
             });
+
+            // Titled by the unit on offer, as the drawer was before PRD v2.
+            var title = drawerEl.querySelector('[data-field="ref"]');
+            if (title) title.textContent = row.equipment_name || '—';
 
             var message = drawerEl.querySelector('[data-field="message"]');
             if (message) message.textContent = row.message || '—';
@@ -47,11 +56,11 @@
             var gallery = drawerEl.querySelector('[data-field="images"]');
             if (gallery) {
                 gallery.innerHTML = (row.images && row.images.length)
-                    ? row.images.map(function (url) {
+                    ? '<div class="gti-drawer-images">' + row.images.map(function (url) {
                         return '<a href="' + GTI.fmt.escape(url) + '" target="_blank" rel="noopener">' +
-                               '<img src="' + GTI.fmt.escape(url) + '" alt="" loading="lazy"></a>';
-                      }).join('')
-                    : '<p class="gti-drawer-empty">Tidak ada gambar.</p>';
+                               '<img src="' + GTI.fmt.escape(url) + '" alt="Equipment image" loading="lazy"></a>';
+                      }).join('') + '</div>'
+                    : '<div class="gti-drawer-no-images">No images uploaded</div>';
             }
 
             setWhatsApp(row);

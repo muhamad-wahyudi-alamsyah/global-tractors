@@ -50,8 +50,9 @@ $query_params = array_filter( array_merge(
 gti_dashboard_open( array(
     'page'     => 'request-quotation',
     'title'    => 'Request Quotation',
-    'subtitle' => 'Prepare and send quotations to customers 📄',
+    'subtitle' => 'Manage quotation requests and create proposals <span>&#128203;</span>',
     'cap'      => 'gti_manage_quotations',
+    'css'      => array( 'dashboard-table', 'dashboard-drawer' ),
     'js'       => array( 'request-quotation' ),
 ) );
 ?>
@@ -61,13 +62,13 @@ gti_dashboard_open( array(
 
         <?php
         gti_render_stat_cards( array(
-            array( 'label' => 'Total',        'value' => $counts['all'] ?? 0,              'icon' => 'fa-clipboard-list', 'tone' => '' ),
-            array( 'label' => 'New',          'value' => $counts['new'] ?? 0,              'icon' => 'fa-plus-circle',    'tone' => 'available' ),
-            array( 'label' => 'Processing',   'value' => $counts['processing'] ?? 0,       'icon' => 'fa-spinner',        'tone' => 'reserved' ),
+            array( 'label' => 'New',        'value' => $counts['new'] ?? 0,        'icon' => 'fa-plus-circle',  'tone' => '' ),
+            array( 'label' => 'Processing', 'value' => $counts['processing'] ?? 0, 'icon' => 'fa-spinner',      'tone' => 'reserved' ),
             // Label per §5.1: the DB key stays 'waiting_customer' so existing rows remain valid.
-            array( 'label' => 'Waiting Approval', 'value' => $counts['waiting_customer'] ?? 0, 'icon' => 'fa-hourglass-half', 'tone' => 'reserved' ),
-            array( 'label' => 'Approved',     'value' => $counts['approved'] ?? 0,         'icon' => 'fa-check-circle',   'tone' => 'available' ),
-            array( 'label' => 'Rejected',     'value' => $counts['rejected'] ?? 0,         'icon' => 'fa-times-circle',   'tone' => 'sold' ),
+            array( 'label' => 'Waiting Approval', 'value' => $counts['waiting_customer'] ?? 0, 'icon' => 'fa-clock', 'tone' => 'maintenance' ),
+            array( 'label' => 'Approved',   'value' => $counts['approved'] ?? 0,   'icon' => 'fa-check-circle', 'tone' => 'available' ),
+            array( 'label' => 'Rejected',   'value' => $counts['rejected'] ?? 0,   'icon' => 'fa-times-circle', 'tone' => 'sold' ),
+            array( 'label' => 'Completed',  'value' => $counts['completed'] ?? 0,  'icon' => 'fa-flag-checkered', 'tone' => '' ),
         ) );
         ?>
 
@@ -76,7 +77,7 @@ gti_dashboard_open( array(
             <div class="gti-ue-toolbar-left">
                 <div class="gti-ue-search">
                     <i class="fas fa-search"></i>
-                    <input type="text" name="search" placeholder="Search quotations…" value="<?php echo esc_attr( $search ); ?>">
+                    <input type="text" name="search" placeholder="Search quotations..." value="<?php echo esc_attr( $search ); ?>">
                 </div>
                 <div class="gti-ue-filter">
                     <select name="status">
@@ -123,54 +124,60 @@ gti_dashboard_open( array(
             <table class="gti-ue-table">
                 <thead>
                     <tr>
-                        <th class="col-reqid">Quotation ID</th>
+                        <th class="col-quotid">Quotation ID</th>
                         <th class="col-customer">Customer</th>
                         <th class="col-company">Company</th>
-                        <th class="col-equipment">Requested Items</th>
+                        <th class="col-items">Requested Items</th>
                         <th class="col-pic">Sales PIC</th>
                         <th class="col-status">Status</th>
                         <th class="col-date">Request Date</th>
-                        <th class="col-actions"></th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if ( ! $result['items'] ) : ?>
                     <tr>
-                        <td colspan="8">
-                            <?php gti_render_empty_state( 'fa-clipboard-list', 'No quotations found',
+                        <td colspan="8" class="gti-ue-empty-cell">
+                            <?php gti_render_empty_state( 'fa-inbox', 'No quotations found',
                                 ( $search || array_filter( $filters ) )
-                                    ? 'Try adjusting your filters.'
-                                    : 'No quotation requests have come in yet.' ); ?>
+                                    ? 'Try adjusting your filters'
+                                    : 'No quotation requests yet' ); ?>
                         </td>
                     </tr>
                 <?php else : ?>
                     <?php foreach ( $result['items'] as $quot ) :
                         $payload = gti_quotation_row_payload( $quot );
+
+                        // "3 Items (Komatsu PC200 + more)", as this column always read.
+                        $item_count   = count( $payload['items'] );
+                        $first_item   = $payload['items'][0]['name'] ?? '';
+                        $item_summary = $item_count > 0 ? $item_count . ' Item' . ( $item_count > 1 ? 's' : '' ) : '-';
+                        if ( $item_count > 1 ) {
+                            $item_summary .= ' (' . $first_item . ' + more)';
+                        } elseif ( $first_item ) {
+                            $item_summary = $first_item;
+                        }
                         ?>
                         <tr data-id="<?php echo (int) $quot['id']; ?>"
                             data-row="<?php echo esc_attr( wp_json_encode( $payload ) ); ?>">
-                            <td class="col-reqid"><strong><?php echo esc_html( $quot['quotation_id'] ); ?></strong></td>
-                            <td class="col-customer"><?php echo esc_html( $quot['customer_name'] ); ?></td>
-                            <td class="col-company"><?php echo esc_html( $quot['customer_company'] ?: '—' ); ?></td>
-                            <td class="col-equipment">
-                                <?php
-                                $first_item = $payload['items'][0]['name'] ?? '';
-                                echo esc_html( $first_item ?: '—' );
-                                if ( count( $payload['items'] ) > 1 ) {
-                                    echo ' <small>+' . ( count( $payload['items'] ) - 1 ) . '</small>';
-                                }
-                                ?>
+                            <td class="col-quotid"><strong><?php echo esc_html( $quot['quotation_id'] ); ?></strong></td>
+                            <td class="col-customer">
+                                <strong style="color: #1a1f36;"><?php echo esc_html( $quot['customer_name'] ); ?></strong>
                             </td>
+                            <td class="col-company">
+                                <small style="color: #6b7280;"><?php echo esc_html( $quot['customer_company'] ); ?></small>
+                            </td>
+                            <td class="col-items" title="<?php echo esc_attr( $item_summary ); ?>"><?php echo esc_html( $item_summary ); ?></td>
                             <td class="col-pic"><?php echo esc_html( $quot['sales_pic'] ?: 'Unassigned' ); ?></td>
                             <td class="col-status"><?php gti_render_status_badge( 'quotation', $quot['status'] ); ?></td>
-                            <td class="col-date"><?php echo esc_html( $payload['request_date_text'] ); ?></td>
+                            <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $quot['request_date'] ?: $quot['created_at'] ) ) ); ?></td>
                             <td class="col-actions">
                                 <?php gti_render_action_menu( array(
                                     array( 'label' => 'View Details',     'icon' => 'fa-eye',          'class' => 'js-view' ),
                                     array( 'label' => 'Create Quotation', 'icon' => 'fa-file-invoice', 'class' => 'js-quotation' ),
                                     array( 'label' => 'Assign PIC',       'icon' => 'fa-user-check',   'class' => 'js-assign' ),
                                     array( 'label' => 'Reply',            'icon' => 'fa-envelope',     'class' => 'js-reply' ),
-                                    array( 'label' => 'Delete',           'icon' => 'fa-trash',        'class' => 'js-delete danger' ),
+                                    array( 'label' => 'Delete',           'icon' => 'fa-trash',        'class' => 'js-delete delete' ),
                                 ) ); ?>
                             </td>
                         </tr>
@@ -199,5 +206,14 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'email', 'upload', 'assign' ),
+    'modals' => array(
+        'delete' => array(
+            'title'   => 'Delete Quotation',
+            'icon'    => 'fa-clipboard-list',
+            'warning' => 'Quotation will be permanently removed from the system. This data cannot be recovered.',
+        ),
+        'email',
+        'upload',
+        'assign',
+    ),
 ) );

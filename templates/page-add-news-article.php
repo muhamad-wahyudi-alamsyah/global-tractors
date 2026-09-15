@@ -95,8 +95,11 @@ $existing_thumb = $article ? $article->featured_image : '';
 
 gti_dashboard_open( array(
     'page'     => 'add-news-article',
-    'title'    => 'Add Article',
+    'title'    => $page_title,
+    'subtitle' => $page_intro,
     'cap'      => 'edit_posts',
+    'css'      => array( 'add-equipment' ),
+    'js'       => array( 'add-news-article' ),
 ) );
 ?>
 

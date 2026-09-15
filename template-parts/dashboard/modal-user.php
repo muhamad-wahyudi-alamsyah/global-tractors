@@ -5,9 +5,17 @@
  * Recovered during the R1 layout refactor: this markup sat after </main> in
  * the page template and was rendered inline there. It is a part now, requested
  * via gti_dashboard_close(['modals' => [...]]).
+ *
+ * Parts render inside gti_dashboard_close(), out of reach of the template's own
+ * variables, so the role list is handed over as settings.
+ *
+ * @var array $gti_modal_args editable_roles, role_labels
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
+
+$editable_roles = isset( $gti_modal_args['editable_roles'] ) ? (array) $gti_modal_args['editable_roles'] : array();
+$role_labels    = isset( $gti_modal_args['role_labels'] ) ? (array) $gti_modal_args['role_labels'] : array();
 ?>
     <div class="gti-users-modal" id="gti-user-modal">
         <div class="gti-users-modal-box">

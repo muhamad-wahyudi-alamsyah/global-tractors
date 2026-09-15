@@ -55,6 +55,26 @@ function gti_dashboard_menu() {
 }
 
 /**
+ * Menu slug to highlight for a page.
+ *
+ * A page that is not in the menu lights up the entry it belongs under, as the
+ * hand-written sidebars did: an add form under its list, a customer under
+ * Customers. The Dashboard entry's slug is ''.
+ */
+function gti_menu_active_slug( $page ) {
+    $map = array(
+        'dashboard'            => '',
+        'add-used-equipment'   => 'used-equipment',
+        'add-rental-equipment' => 'rental-equipment',
+        'add-spare-part'       => 'spare-parts',
+        'add-news-article'     => 'news-articles',
+        'customer-detail'      => 'customers',
+    );
+
+    return array_key_exists( $page, $map ) ? $map[ $page ] : $page;
+}
+
+/**
  * Menu with entries the current user cannot reach removed.
  *
  * Also drops a section heading that ends up with nothing under it, so a

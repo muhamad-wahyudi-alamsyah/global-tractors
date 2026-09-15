@@ -51,7 +51,7 @@ $categories = gti_article_used_categories();
 gti_dashboard_open( array(
     'page'     => 'news-articles',
     'title'    => 'News & Articles',
-    'subtitle' => 'Publish and manage articles 📰',
+    'subtitle' => 'Manage news, articles &amp; announcements <span>&#128240;</span>',
     'cap'      => 'edit_posts',
     'js'       => array( 'news-articles' ),
 ) );
@@ -235,7 +235,6 @@ gti_dashboard_open( array(
                             'params'   => $query_params,
                         ) );
                         ?>
-                        </div>
                     <?php endif; ?>
                 </div>
                 </div><!-- /.gti-content-left -->

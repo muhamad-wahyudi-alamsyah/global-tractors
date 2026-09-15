@@ -28,8 +28,11 @@ $gti_ajax_url = admin_url('admin-ajax.php');
 
 gti_dashboard_open( array(
     'page'     => 'add-used-equipment',
-    'title'    => 'Add Used Equipment',
+    'title'    => 'Add New Equipment',
+    'subtitle' => 'Fill in the details below to add new equipment',
     'cap'      => 'gti_manage_equipment',
+    'css'      => array( 'add-equipment' ),
+    'js'       => array( 'add-used-equipment' ),
 ) );
 ?>
 

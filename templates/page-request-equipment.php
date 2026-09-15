@@ -50,8 +50,9 @@ $query_params = array_filter( array_merge(
 gti_dashboard_open( array(
     'page'     => 'request-equipment',
     'title'    => 'Request Equipment',
-    'subtitle' => 'Track and respond to incoming equipment requests 📋',
+    'subtitle' => 'Manage equipment requests from customers <span>&#128203;</span>',
     'cap'      => 'gti_manage_requests',
+    'css'      => array( 'dashboard-table', 'dashboard-drawer' ),
     'js'       => array( 'request-equipment' ),
 ) );
 ?>
@@ -61,11 +62,11 @@ gti_dashboard_open( array(
 
         <?php
         gti_render_stat_cards( array(
-            array( 'label' => 'Total Requests', 'value' => $counts['all'] ?? 0,           'icon' => 'fa-file-alt',    'tone' => '' ),
-            array( 'label' => 'New',            'value' => $counts['new'] ?? 0,           'icon' => 'fa-plus-circle', 'tone' => 'available' ),
-            array( 'label' => 'Processing',     'value' => $counts['processing'] ?? 0,    'icon' => 'fa-spinner',     'tone' => 'reserved' ),
-            array( 'label' => 'Proposal Sent',  'value' => $counts['proposal_sent'] ?? 0, 'icon' => 'fa-paper-plane', 'tone' => 'available' ),
-            array( 'label' => 'Closed',         'value' => $counts['closed'] ?? 0,        'icon' => 'fa-check',       'tone' => 'sold' ),
+            array( 'label' => 'All Requests',  'value' => $counts['all'] ?? 0,           'icon' => 'fa-file-alt',     'tone' => '' ),
+            array( 'label' => 'New',           'value' => $counts['new'] ?? 0,           'icon' => 'fa-plus-circle',  'tone' => 'available' ),
+            array( 'label' => 'Processing',    'value' => $counts['processing'] ?? 0,    'icon' => 'fa-spinner',      'tone' => 'reserved' ),
+            array( 'label' => 'Proposal Sent', 'value' => $counts['proposal_sent'] ?? 0, 'icon' => 'fa-paper-plane',  'tone' => 'available' ),
+            array( 'label' => 'Closed',        'value' => $counts['closed'] ?? 0,        'icon' => 'fa-check-circle', 'tone' => 'sold' ),
         ) );
         ?>
 
@@ -74,7 +75,7 @@ gti_dashboard_open( array(
             <div class="gti-ue-toolbar-left">
                 <div class="gti-ue-search">
                     <i class="fas fa-search"></i>
-                    <input type="text" name="search" placeholder="Search requests…" value="<?php echo esc_attr( $search ); ?>">
+                    <input type="text" name="search" placeholder="Search requests..." value="<?php echo esc_attr( $search ); ?>">
                 </div>
                 <div class="gti-ue-filter">
                     <select name="status">
@@ -126,23 +127,23 @@ gti_dashboard_open( array(
                         <th class="col-reqid">Request ID</th>
                         <th class="col-customer">Customer</th>
                         <th class="col-equipment">Requested Equipment</th>
-                        <th class="col-qty">Qty</th>
+                        <th class="col-qty">Quantity</th>
                         <th class="col-location">Location</th>
                         <th class="col-budget">Budget</th>
                         <th class="col-status">Status</th>
                         <th class="col-date">Request Date</th>
                         <th class="col-pic">PIC</th>
-                        <th class="col-actions"></th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if ( ! $result['items'] ) : ?>
                     <tr>
-                        <td colspan="10">
+                        <td colspan="10" class="gti-ue-empty-cell">
                             <?php gti_render_empty_state( 'fa-inbox', 'No requests found',
                                 ( $search || array_filter( $filters ) )
-                                    ? 'Try adjusting your filters.'
-                                    : 'No equipment requests have come in yet.' ); ?>
+                                    ? 'Try adjusting your filters'
+                                    : 'No equipment requests yet' ); ?>
                         </td>
                     </tr>
                 <?php else : ?>
@@ -153,17 +154,17 @@ gti_dashboard_open( array(
                             data-row="<?php echo esc_attr( wp_json_encode( $payload ) ); ?>">
                             <td class="col-reqid"><strong><?php echo esc_html( $req['request_id'] ); ?></strong></td>
                             <td class="col-customer">
-                                <strong><?php echo esc_html( $req['customer_name'] ); ?></strong>
+                                <strong style="color: #1a1f36;"><?php echo esc_html( $req['customer_name'] ); ?></strong>
                                 <?php if ( ! empty( $req['customer_company'] ) ) : ?>
-                                    <br><small><?php echo esc_html( $req['customer_company'] ); ?></small>
+                                    <br><small style="color: #9ca3af; font-size: 12px;"><?php echo esc_html( $req['customer_company'] ); ?></small>
                                 <?php endif; ?>
                             </td>
                             <td class="col-equipment"><?php echo esc_html( $req['equipment'] ); ?></td>
-                            <td class="col-qty"><?php echo esc_html( $req['quantity'] ?: '—' ); ?></td>
-                            <td class="col-location"><?php echo esc_html( $req['location'] ?: '—' ); ?></td>
+                            <td class="col-qty"><?php echo esc_html( $req['quantity'] ); ?> Units</td>
+                            <td class="col-location"><?php echo esc_html( $req['location'] ); ?></td>
                             <td class="col-budget"><?php echo esc_html( $payload['budget_text'] ); ?></td>
                             <td class="col-status"><?php gti_render_status_badge( 'request', $req['status'] ); ?></td>
-                            <td class="col-date"><?php echo esc_html( $payload['request_date_text'] ); ?></td>
+                            <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $req['request_date'] ?: $req['created_at'] ) ) ); ?></td>
                             <td class="col-pic"><?php echo esc_html( $req['sales_pic'] ?: 'Unassigned' ); ?></td>
                             <td class="col-actions">
                                 <?php
@@ -171,7 +172,7 @@ gti_dashboard_open( array(
                                     array( 'label' => 'View Details', 'icon' => 'fa-eye',        'class' => 'js-view' ),
                                     array( 'label' => 'Assign PIC',   'icon' => 'fa-user-check', 'class' => 'js-assign' ),
                                     array( 'label' => 'Reply',        'icon' => 'fa-envelope',   'class' => 'js-reply' ),
-                                    array( 'label' => 'Delete',       'icon' => 'fa-trash',      'class' => 'js-delete danger' ),
+                                    array( 'label' => 'Delete',       'icon' => 'fa-trash',      'class' => 'js-delete delete' ),
                                 );
                                 gti_render_action_menu( $actions );
                                 ?>
@@ -204,5 +205,14 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'email', 'upload', 'assign' ),
+    'modals' => array(
+        'delete' => array(
+            'title'   => 'Delete Request',
+            'icon'    => 'fa-file-alt',
+            'warning' => 'Request will be permanently removed from the system. This data cannot be recovered.',
+        ),
+        'email',
+        'upload',
+        'assign',
+    ),
 ) );

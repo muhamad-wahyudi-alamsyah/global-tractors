@@ -119,15 +119,16 @@
                 return;
             }
 
-            host.innerHTML = '<div class="gti-drawer-timeline">' + items.map(function (item, i) {
-                return '<div class="gti-timeline-item' + (i === 0 ? ' is-latest' : '') + '">' +
-                    '<div class="gti-timeline-dot"></div>' +
-                    '<div class="gti-timeline-content">' +
-                        '<strong>' + GTI.fmt.escape(item.event) + '</strong>' +
-                        (item.note ? '<p>' + GTI.fmt.escape(item.note) + '</p>' : '') +
-                        '<span>' + GTI.fmt.dateTimeID(item.date) +
-                            (item.actor ? ' · ' + GTI.fmt.escape(item.actor) : '') + '</span>' +
-                    '</div>' +
+            // Same markup and order as gti_render_timeline(): oldest first, the
+            // latest event last with the active dot. The server sends newest first.
+            var ordered = items.slice().reverse();
+            host.innerHTML = '<div class="gti-drawer-timeline">' + ordered.map(function (item, i) {
+                return '<div class="gti-drawer-timeline-item">' +
+                    '<div class="gti-drawer-timeline-dot' + (i === ordered.length - 1 ? ' is-active' : '') + '"></div>' +
+                    '<div class="gti-drawer-timeline-event">' + GTI.fmt.escape(item.event) + '</div>' +
+                    (item.note ? '<div class="gti-drawer-timeline-meta">' + GTI.fmt.escape(item.note) + '</div>' : '') +
+                    '<div class="gti-drawer-timeline-meta">' + GTI.fmt.dateTimeID(item.date) +
+                        (item.actor ? ' &middot; by ' + GTI.fmt.escape(item.actor) : '') + '</div>' +
                 '</div>';
             }).join('') + '</div>';
         }

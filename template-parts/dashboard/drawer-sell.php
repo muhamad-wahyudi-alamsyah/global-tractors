@@ -10,11 +10,15 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 $gti_id      = $first ? (int) $first['id'] : 0;
 $gti_status  = $first ? $first['status'] : 'new';
 $gti_payload = $first ? gti_sell_row_payload( $first ) : array();
+
+$gti_condition = $first['equipment_condition'] ?? '';
+$gti_hours     = $first['equipment_hours'] ?? '';
 ?>
 <div class="gti-drawer" id="detailDrawer" data-entity="sell" data-id="<?php echo $gti_id; ?>">
     <div class="gti-drawer-header">
         <div class="gti-drawer-header-left">
-            <h2 data-field="ref"><?php echo esc_html( $gti_payload['ref'] ?? '—' ); ?></h2>
+            <?php // Titled by the unit on offer, as the drawer was before PRD v2. ?>
+            <h2 data-field="ref"><?php echo esc_html( ! empty( $first['equipment_name'] ) ? $first['equipment_name'] : '—' ); ?></h2>
             <span class="gti-drawer-status" data-field="status-badge"><?php
                 echo esc_html( gti_status_label( 'sell', $gti_status ) );
             ?></span>
@@ -53,8 +57,15 @@ $gti_payload = $first ? gti_sell_row_payload( $first ) : array();
             gti_render_drawer_row( 'Brand',     $first['equipment_brand']     ?? '' );
             gti_render_drawer_row( 'Model',     $first['equipment_model']     ?? '' );
             gti_render_drawer_row( 'Year',      $first['equipment_year']      ?? '' );
-            gti_render_drawer_row( 'Hours',     $first['equipment_hours']     ?? '' );
-            gti_render_drawer_row( 'Condition', $first['equipment_condition'] ?? '' );
+            gti_render_drawer_row( 'Hours',     $gti_hours ? number_format_i18n( (float) $gti_hours ) . ' hrs' : '' );
+            gti_render_drawer_row(
+                'Condition',
+                $gti_condition !== ''
+                    ? '<span class="gti-condition-badge ' . esc_attr( strtolower( $gti_condition ) ) . '">' . esc_html( $gti_condition ) . '</span>'
+                    : '',
+                '',
+                true
+            );
             gti_render_drawer_row( 'Location',  $first['equipment_location']  ?? '' );
             ?>
         </div>
@@ -71,15 +82,15 @@ $gti_payload = $first ? gti_sell_row_payload( $first ) : array();
 
         <div class="gti-drawer-section">
             <div class="gti-drawer-section-title"><i class="fas fa-images"></i> Equipment Images</div>
-            <div class="gti-drawer-gallery" data-field="images">
+            <div data-field="images">
                 <?php if ( ! empty( $gti_payload['images'] ) ) : ?>
-                    <?php foreach ( $gti_payload['images'] as $gti_image ) : ?>
-                        <a href="<?php echo esc_url( $gti_image ); ?>" target="_blank" rel="noopener">
-                            <img src="<?php echo esc_url( $gti_image ); ?>" alt="" loading="lazy">
-                        </a>
-                    <?php endforeach; ?>
+                    <div class="gti-drawer-images">
+                        <?php foreach ( $gti_payload['images'] as $gti_image ) : ?>
+                            <a href="<?php echo esc_url( $gti_image ); ?>" target="_blank" rel="noopener"><img src="<?php echo esc_url( $gti_image ); ?>" alt="Equipment image" loading="lazy"></a>
+                        <?php endforeach; ?>
+                    </div>
                 <?php else : ?>
-                    <p class="gti-drawer-empty">Tidak ada gambar.</p>
+                    <div class="gti-drawer-no-images">No images uploaded</div>
                 <?php endif; ?>
             </div>
         </div>

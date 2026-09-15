@@ -107,8 +107,10 @@ $my_count = (int) $wpdb->get_var($wpdb->prepare(
 gti_dashboard_open( array(
     'page'     => 'activity-log',
     'title'    => 'Activity Log',
-    'subtitle' => 'Every change, who made it, and when 📜',
+    'subtitle' => 'Track all system activities and user actions <span>&#128269;</span>',
     'cap'      => 'gti_manage_settings',
+    // The row detail drawer is new on this page (PRD §6.13).
+    'css'      => array( 'dashboard-drawer' ),
     'js'       => array( 'activity-log' ),
 ) );
 ?>
@@ -295,7 +297,6 @@ gti_dashboard_open( array(
                                     'params'   => $query_params,
                                 ) );
                                 ?>
-                                </div>
                             <?php endif; ?>
                     </div>
 

@@ -43,7 +43,7 @@ $can_upload = current_user_can('upload_files');
 gti_dashboard_open( array(
     'page'     => 'media-library',
     'title'    => 'Media Library',
-    'subtitle' => 'Manage uploads and documents 🖼️',
+    'subtitle' => 'Manage all uploaded files and images <span>&#128247;</span>',
     'cap'      => 'upload_files',
     'js'       => array( 'media-library' ),
 ) );

@@ -25,8 +25,7 @@
                 'Rental Period': row.rental_period,
                 'Budget': row.budget_text,
                 'Total Items': row.total_items,
-                'Est. Total Value': row.total_text,
-                'Sales PIC': row.sales_pic || 'Unassigned'
+                'Est. Total Value': row.total_text
             };
 
             drawer.querySelectorAll('.gti-drawer-row').forEach(function (el) {
@@ -36,6 +35,10 @@
                 var key = label.textContent.trim();
                 if (key in values) value.textContent = values[key] || '—';
             });
+
+            // Sales PIC card.
+            var pic = row.sales_pic || 'Unassigned';
+            GTI.inbox.setRows(drawer, { 'pic-name': pic, 'pic-initial': pic.charAt(0).toUpperCase() });
 
             var notes = drawer.querySelector('[data-field="notes"]');
             if (notes) notes.textContent = row.notes || '—';

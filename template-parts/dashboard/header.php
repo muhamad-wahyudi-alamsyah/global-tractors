@@ -30,6 +30,7 @@ $gti_unread     = gti_notification_count();
         <div class="gti-date-filter">
             <i class="fas fa-calendar"></i>
             <span><?php echo esc_html( date_i18n( 'M j, Y' ) ); ?></span>
+            <i class="fas fa-chevron-down"></i>
         </div>
         <div class="gti-notifications" title="<?php echo esc_attr( sprintf( '%d pesanan baru', $gti_unread ) ); ?>">
             <i class="fas fa-bell"></i>

@@ -65,7 +65,7 @@ $source_labels = array(
 gti_dashboard_open( array(
     'page'     => 'customers',
     'title'    => 'Customers',
-    'subtitle' => 'Manage customer data and relationships 👥',
+    'subtitle' => 'Manage customer data and relationships <span>&#128101;</span>',
     'cap'      => 'gti_manage_customers',
     'js'       => array( 'customers' ),
 ) );
@@ -229,7 +229,6 @@ gti_dashboard_open( array(
                             'params'   => array( 'gti_page' => 'customers', 'search' => $search, 'status' => $status_filter, 'source' => $source_filter ),
                         ) );
                         ?>
-                        </div>
                     <?php endif; ?>
                 </div>
                 </div><!-- /.gti-content-left -->

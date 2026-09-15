@@ -7,7 +7,9 @@
  * cache key, and the logo comes from a theme option instead of a hardcoded
  * .test domain (R-08, R-09).
  *
- * @var array $args page, title, subtitle, body_class, extra_css[], extra_js[]
+ * gti_dashboard_head() stands in for wp_head(); its docblock explains why.
+ *
+ * @var array $args page, title, subtitle, body_class, css[], js[]
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -19,7 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo esc_html( $args['title'] ); ?> &ndash; <?php bloginfo( 'name' ); ?></title>
-    <?php wp_head(); ?>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <?php gti_dashboard_head(); ?>
 </head>
 <body class="gti-body <?php echo esc_attr( $args['body_class'] ); ?>">
     <div class="gti-wrapper">

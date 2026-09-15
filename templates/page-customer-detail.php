@@ -122,8 +122,8 @@ gti_page_data( array(
 
 gti_dashboard_open( array(
     'page'     => 'customer-detail',
-    'title'    => $customer ? $customer->name : 'Customer Detail',
-    'subtitle' => $customer && $customer->company ? $customer->company : '',
+    'title'    => 'Customer Detail',
+    'subtitle' => gti_welcome_back(),
     'cap'      => 'gti_manage_customers',
     'js'       => array( 'customer-detail' ),
 ) );

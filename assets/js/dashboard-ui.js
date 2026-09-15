@@ -137,12 +137,34 @@
                 if (backdrop) backdrop.classList.add('show');
             },
             close: function (id) {
-                var el = document.getElementById(id || 'detailDrawer');
-                if (el) el.classList.remove('open');
-                var backdrop = document.getElementById('gti-drawer-backdrop') || document.getElementById('drawerBackdrop');
-                if (backdrop) backdrop.classList.remove('show');
-                document.querySelectorAll('.gti-ue-table tbody tr.active-row')
-                    .forEach(function (r) { r.classList.remove('active-row'); });
+                // The equipment and spare-part pages name their own drawer
+                // (eqDetailDrawer, spDetailDrawer) and backdrop (drawerBackdrop),
+                // so with no id close whatever is open instead of guessing a name.
+                var drawers = id ? [document.getElementById(id)] : document.querySelectorAll('.gti-drawer.open');
+                Array.prototype.forEach.call(drawers, function (el) {
+                    if (!el) return;
+                    el.classList.remove('open');
+                    GTI.ui.drawer.reset(el);
+                });
+                document.querySelectorAll('.gti-drawer-backdrop.show')
+                    .forEach(function (b) { b.classList.remove('show'); });
+                document.body.style.overflow = '';
+            },
+            /** A drawer reopens scrolled to the top and on its first step, as before PRD v2. */
+            reset: function (el) {
+                var body = el.querySelector('.gti-drawer-body');
+                if (body) body.scrollTop = 0;
+
+                var steps = el.querySelectorAll('.gti-drawer-step');
+                if (!steps.length) return;
+                steps.forEach(function (s, i) {
+                    s.classList.remove('active', 'completed');
+                    if (i === 0) s.classList.add('active');
+                });
+                el.querySelectorAll('.gti-drawer-step-line')
+                    .forEach(function (l) { l.classList.remove('active'); });
+                el.querySelectorAll('.gti-drawer-section[data-section]')
+                    .forEach(function (s, i) { s.classList.toggle('active', i === 0); });
             },
             isOpen: function (id) {
                 var el = document.getElementById(id || 'detailDrawer');

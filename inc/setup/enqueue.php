@@ -10,15 +10,31 @@ add_action('wp_enqueue_scripts', 'gti_enqueue_dashboard_assets');
  * Dashboard assets.
  *
  * Font Awesome and Google Fonts used to be raw <link> tags repeated in 18
- * templates, and the 4,100 lines of CSS those templates carried inline are now
- * the dashboard-*.css files loaded here (PRD §13.7). Shared sheets load before
- * the per-page sheet so page-level overrides still win.
+ * templates, and the 4,100 lines of CSS those templates carried inline now live
+ * in files loaded here (PRD §13.7). The order reproduces what the templates
+ * printed before PRD v2, so every page still renders as it was designed:
+ *
+ *   dashboard.css → shared components → sheets the template opts into
+ *   ('css' => [...], e.g. add-equipment, dashboard-drawer) → the page's own sheet.
+ *
+ * The shared components load on every page, so they may only style classes no
+ * pre-v2 template styled. A rule that belongs to a page — even one several pages
+ * happen to repeat — stays in that page's sheet; merging differing copies into
+ * one shared file is what changed the look of pages that had not changed (§13.4).
+ *
+ * Printed by gti_dashboard_head() and gti_dashboard_footer(), not wp_head().
  */
 function gti_enqueue_dashboard_assets() {
     $page = get_query_var('gti_page');
     if (!$page) {
         return;
     }
+
+    $assets = gti_page_assets();
+
+    // The template's own slug: add-equipment renders add-used-equipment, and
+    // contact-messages / website-settings share the coming-soon template.
+    $slug = $assets['page'] ?: $page;
 
     wp_enqueue_style(
         'gti-google-fonts',
@@ -36,8 +52,9 @@ function gti_enqueue_dashboard_assets() {
 
     gti_enqueue_style('gti-dashboard', 'assets/css/dashboard.css', ['gti-google-fonts']);
 
-    // Shared component stylesheets, in cascade order.
-    foreach (['layout', 'table', 'drawer', 'modal', 'toast', 'forms'] as $component) {
+    // Components any page can show: the delete modal, toasts, and the modal /
+    // form / header-menu styles PRD v2 introduced.
+    foreach (['modal', 'toast', 'forms'] as $component) {
         gti_enqueue_style(
             'gti-dashboard-' . $component,
             'assets/css/dashboard-' . $component . '.css',
@@ -45,14 +62,12 @@ function gti_enqueue_dashboard_assets() {
         );
     }
 
-    $assets = gti_page_assets();
-
     foreach ((array) $assets['css'] as $handle) {
         gti_enqueue_style('gti-css-' . $handle, 'assets/css/' . $handle . '.css', ['gti-dashboard']);
     }
 
     // The page's own sheet loads last so it can override anything above.
-    gti_enqueue_style('gti-page-' . $page, 'assets/css/pages/' . $page . '.css', ['gti-dashboard']);
+    gti_enqueue_style('gti-page-' . $slug, 'assets/css/pages/' . $slug . '.css', ['gti-dashboard']);
 
     // Shared UI behaviour: toast, drawer, modal, dropdown, sidebar, fetch wrapper.
     gti_enqueue_script('gti-dashboard-ui', 'assets/js/dashboard-ui.js', []);
@@ -68,7 +83,7 @@ function gti_enqueue_dashboard_assets() {
 
     // Inbox pages share one behaviour layer on top of dashboard-ui.
     $deps = ['gti-dashboard-ui'];
-    if (in_array($page, ['request-equipment', 'request-quotation', 'sell-equipment'], true)) {
+    if (in_array($slug, ['request-equipment', 'request-quotation', 'sell-equipment'], true)) {
         gti_enqueue_script('gti-inbox-ui', 'assets/js/inbox-ui.js', ['gti-dashboard-ui']);
         $deps[] = 'gti-inbox-ui';
     }
@@ -85,13 +100,15 @@ function gti_enqueue_dashboard_assets() {
 
     // The article form renders wp_editor(); on a front-end route its scripts and
     // styles are not registered unless we ask for them here (PRD §6.10 gap 2).
-    if ($page === 'add-news-article') {
+    if ($slug === 'add-news-article') {
         wp_enqueue_editor();
         wp_enqueue_media();
     }
 
-    if (in_array($page, ['add-equipment', 'add-used-equipment', 'add-rental-equipment', 'add-spare-part'], true)) {
-        gti_enqueue_style('gti-add-equipment', 'assets/css/add-equipment.css', ['gti-dashboard']);
+    // The used and rental add forms ran on add-equipment.js before PRD v2. The
+    // spare-part form never did — its own page script drives it. The stylesheet
+    // is requested by each template that linked it ('css' => ['add-equipment']).
+    if (in_array($slug, ['add-used-equipment', 'add-rental-equipment'], true)) {
         gti_enqueue_script('gti-add-equipment', 'assets/js/add-equipment.js', ['gti-dashboard-ui']);
     }
 }

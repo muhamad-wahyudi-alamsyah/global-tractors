@@ -6,12 +6,17 @@
  * (PRD §9.4 layer 1), and badge numbers are real counts rather than the
  * hardcoded "3" that used to ship in every template (B-06).
  *
+ * The markup is the shape the templates used to write by hand, because that is
+ * what dashboard.css styles: a section heading and all of its links share one
+ * .gti-nav-group, and a group holding a parent menu is itself the
+ * .gti-has-children element that opens (.gti-nav-group.open shows the children).
+ *
  * @var array $args page (current slug)
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-$gti_current = $args['page'];
+$gti_current = gti_menu_active_slug( $args['page'] );
 $gti_badges  = gti_menu_badge_counts();
 
 /** Render one leaf link. */
@@ -23,7 +28,7 @@ $gti_render_item = function ( array $item, $child = false ) use ( $gti_current, 
         ? (int) $gti_badges[ $item['badge'] ] : 0;
     ?>
     <a href="<?php echo esc_url( gti_dashboard_url( $slug ) ); ?>" class="<?php echo esc_attr( $class . $active ); ?>">
-        <i class="<?php echo $child ? '' : 'fas ' . esc_attr( $item['icon'] ); ?>"></i>
+        <i<?php echo $child ? '' : ' class="fas ' . esc_attr( $item['icon'] ) . '"'; ?>></i>
         <span><?php echo esc_html( $item['label'] ); ?></span>
         <?php if ( $count ) : ?>
             <span class="gti-nav-badge"><?php echo esc_html( $count > 99 ? '99+' : $count ); ?></span>
@@ -31,6 +36,20 @@ $gti_render_item = function ( array $item, $child = false ) use ( $gti_current, 
     </a>
     <?php
 };
+
+// Every section heading starts a new group; items before the first heading
+// (Dashboard) get a group of their own.
+$gti_groups = array();
+foreach ( gti_visible_dashboard_menu() as $gti_item ) {
+    $gti_type = isset( $gti_item['type'] ) ? $gti_item['type'] : 'item';
+
+    if ( $gti_type === 'section' || ! $gti_groups ) {
+        $gti_groups[] = array( 'label' => $gti_type === 'section' ? $gti_item['label'] : '', 'items' => array() );
+    }
+    if ( $gti_type !== 'section' ) {
+        $gti_groups[ count( $gti_groups ) - 1 ]['items'][] = $gti_item;
+    }
+}
 ?>
 <aside class="gti-sidebar" id="gti-sidebar">
     <div class="gti-sidebar-header">
@@ -43,31 +62,41 @@ $gti_render_item = function ( array $item, $child = false ) use ( $gti_current, 
     <div class="gti-sidebar-divider"></div>
 
     <nav class="gti-nav">
-        <?php
-        $gti_menu = gti_visible_dashboard_menu();
-        $gti_open = false;
+        <?php foreach ( $gti_groups as $gti_group ) :
+            $gti_parent_group = false;
+            $gti_group_active = false;
 
-        foreach ( $gti_menu as $gti_item ) :
-            $gti_type = isset( $gti_item['type'] ) ? $gti_item['type'] : 'item';
-
-            if ( $gti_type === 'section' ) :
-                if ( $gti_open ) { echo '</div>'; }
-                echo '<div class="gti-nav-group">';
-                $gti_open = true;
-                echo '<div class="gti-nav-section">' . esc_html( $gti_item['label'] ) . '</div>';
-                continue;
-            endif;
-
-            if ( ! $gti_open ) { echo '<div class="gti-nav-group">'; $gti_open = true; }
-
-            if ( $gti_type === 'parent' ) :
-                $gti_child_active = false;
-                foreach ( $gti_item['children'] as $gti_child ) {
-                    if ( $gti_child['slug'] === $gti_current ) { $gti_child_active = true; }
+            foreach ( $gti_group['items'] as $gti_item ) {
+                $gti_links = isset( $gti_item['children'] ) ? $gti_item['children'] : array( $gti_item );
+                if ( isset( $gti_item['type'] ) && $gti_item['type'] === 'parent' ) {
+                    $gti_parent_group = true;
                 }
-                ?>
-                <div class="gti-has-children<?php echo $gti_child_active ? ' open' : ''; ?>">
-                    <a href="#" class="gti-nav-parent" data-toggle="dropdown">
+                if ( in_array( $gti_current, wp_list_pluck( $gti_links, 'slug' ), true ) ) {
+                    $gti_group_active = true;
+                }
+            }
+
+            // The group stays open while any page inside it is showing — Spare
+            // Parts included, as before.
+            $gti_group_class = 'gti-nav-group';
+            if ( $gti_parent_group ) {
+                $gti_group_class .= ' gti-has-children' . ( $gti_group_active ? ' open' : '' );
+            }
+            ?>
+            <div class="<?php echo esc_attr( $gti_group_class ); ?>">
+                <?php if ( $gti_group['label'] !== '' ) : ?>
+                    <div class="gti-nav-section"><?php echo esc_html( $gti_group['label'] ); ?></div>
+                <?php endif; ?>
+
+                <?php foreach ( $gti_group['items'] as $gti_item ) :
+                    if ( ! isset( $gti_item['type'] ) || $gti_item['type'] !== 'parent' ) {
+                        $gti_render_item( $gti_item );
+                        continue;
+                    }
+
+                    $gti_child_active = in_array( $gti_current, wp_list_pluck( $gti_item['children'], 'slug' ), true );
+                    ?>
+                    <a href="#" class="gti-nav-parent<?php echo $gti_child_active ? ' active' : ''; ?>" data-toggle="dropdown">
                         <i class="fas <?php echo esc_attr( $gti_item['icon'] ); ?>"></i>
                         <span><?php echo esc_html( $gti_item['label'] ); ?></span>
                         <i class="fas fa-chevron-down gti-nav-arrow"></i>
@@ -75,16 +104,9 @@ $gti_render_item = function ( array $item, $child = false ) use ( $gti_current, 
                     <div class="gti-nav-children">
                         <?php foreach ( $gti_item['children'] as $gti_child ) { $gti_render_item( $gti_child, true ); } ?>
                     </div>
-                </div>
-                <?php
-                continue;
-            endif;
-
-            $gti_render_item( $gti_item );
-        endforeach;
-
-        if ( $gti_open ) { echo '</div>'; }
-        ?>
+                <?php endforeach; ?>
+            </div>
+        <?php endforeach; ?>
     </nav>
 
     <div class="gti-sidebar-footer">

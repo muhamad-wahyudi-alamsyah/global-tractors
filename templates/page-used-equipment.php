@@ -105,8 +105,9 @@ $_gti_eq_status_badge = function($status, $price_valid_until = null) {
 gti_dashboard_open( array(
     'page'     => 'used-equipment',
     'title'    => 'Used Equipment',
-    'subtitle' => 'Manage your used equipment inventory 🚜',
+    'subtitle' => gti_welcome_back(),
     'cap'      => 'gti_manage_equipment',
+    'css'      => array( 'add-equipment' ),
     'js'       => array( 'used-equipment' ),
 ) );
 ?>
@@ -281,7 +282,6 @@ gti_dashboard_open( array(
                             'params'   => $query_params,
                         ) );
                         ?>
-                        </div>
                     <?php endif; ?>
                 </div>
                 </div><!-- /.gti-content-left -->
@@ -445,5 +445,12 @@ gti_dashboard_open( array(
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'edit-equipment' ),
+    'modals' => array(
+        'delete' => array(
+            'title'   => 'Delete Equipment',
+            'icon'    => 'fa-truck',
+            'warning' => 'Equipment will be permanently removed from the system. This data cannot be recovered.',
+        ),
+        'edit-equipment' => array( 'next_code' => $gti_next_code ),
+    ),
 ) );

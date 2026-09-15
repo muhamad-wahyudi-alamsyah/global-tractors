@@ -37,7 +37,7 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
         </div>
 
         <div class="gti-drawer-section">
-            <div class="gti-drawer-section-title"><i class="fas fa-file-invoice"></i> Quotation Details</div>
+            <div class="gti-drawer-section-title"><i class="fas fa-file-alt"></i> Request Information</div>
             <?php
             gti_render_drawer_row( 'Requested Date',    $gti_payload['request_date_text'] ?? '' );
             gti_render_drawer_row( 'Needed Date',       $gti_payload['needed_date'] ?? '' );
@@ -80,12 +80,23 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
         </div>
 
         <div class="gti-drawer-section">
-            <div class="gti-drawer-section-title"><i class="fas fa-calculator"></i> Summary</div>
+            <div class="gti-drawer-section-title"><i class="fas fa-list-alt"></i> Summary</div>
             <?php
             gti_render_drawer_row( 'Total Items',     $gti_payload['total_items'] ?? '' );
             gti_render_drawer_row( 'Est. Total Value', $gti_payload['total_text'] ?? '' );
-            gti_render_drawer_row( 'Sales PIC',       $gti_payload['sales_pic'] ?? 'Unassigned' );
+
+            $gti_pic = ! empty( $gti_payload['sales_pic'] ) ? $gti_payload['sales_pic'] : 'Unassigned';
             ?>
+            <div style="margin-top: 12px;">
+                <span class="gti-drawer-label" style="display: block; margin-bottom: 4px;">Sales PIC</span>
+                <div class="gti-drawer-pic-card">
+                    <div class="gti-drawer-pic-avatar-placeholder" data-field="pic-initial"><?php echo esc_html( strtoupper( mb_substr( $gti_pic, 0, 1 ) ) ); ?></div>
+                    <div class="gti-drawer-pic-info">
+                        <span class="gti-drawer-pic-name" data-field="pic-name"><?php echo esc_html( $gti_pic ); ?></span>
+                        <span class="gti-drawer-pic-role">Sales Representative</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="gti-drawer-section">

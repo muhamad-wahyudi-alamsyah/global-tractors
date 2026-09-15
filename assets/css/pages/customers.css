@@ -1,22 +1,97 @@
-/* customers — page-specific rules (PRD §13.7 / R2) */
+/* customers — this page's own stylesheet.
 
-/* Border overrides — match request-equipment style */ {  }
+   Verbatim copy of the <style> block templates/page-customers.php carried before
+   PRD v2. It loads after the shared sheets, so the page renders exactly as it
+   was designed (PRD §13.4: the refactor must be pixel-identical). Rules for
+   components PRD v2 added to this page, if any, follow the marker at the end. */
+
+/* Border overrides — match request-equipment style */
+.gti-ue-stat-card { border: 1px solid #e5e7eb; }
+.gti-ue-search { border: 1px solid #d1d5db; }
+.gti-ue-filter select { border: 1px solid #d1d5db; }
+.gti-ue-btn-reset { border: 1px solid #d1d5db; text-decoration: none; }
+.gti-ue-btn-reset:hover { border-color: #d1d5db; }
 .gti-ue-table-card { border: 1px solid #e5e7eb; overflow: hidden; }
-/* Table column widths */ {  }
+.gti-ue-action-toggle { border: 1px solid #e5e7eb; }
+.gti-ue-action-toggle:hover { border-color: #d1d5db; }
+.gti-ue-action-dropdown { border: 1px solid #e5e7eb; }
+.gti-ue-action-item { cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+.gti-ue-page-btn { border: 1px solid #e5e7eb; }
+.gti-ue-page-btn:hover:not(:disabled) { border-color: #d1d5db; }
+.gti-ue-table thead th { font-size: 13px; font-weight: 600; color: #374151; text-transform: none; letter-spacing: normal; padding: 13px 16px; }
+.gti-ue-table td { font-size: 14px; color: #374151; padding: 14px 16px; }
+
+/* Table column widths */
+.gti-ue-table { width: 100%; table-layout: fixed; }
 .gti-ue-table .col-customer { width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-company { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-email { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-phone { width: 130px; }
 .gti-ue-table .col-status { width: 110px; text-align: center; white-space: nowrap; }
 .gti-ue-table .col-transactions { width: 100px; text-align: center; }
-/* ====== Drawer Header ====== */ {  }
+.gti-ue-table .col-actions { width: 70px; text-align: center; }
+
+/* ====== Content Layout ====== */
+.gti-content { display: flex; gap: 24px; align-items: flex-start; }
+.gti-content-left { flex: 1; min-width: 0; }
+
+/* ====== Right Drawer — In-Flow (≥1600px) ====== */
+.gti-drawer { width: 320px; max-width: calc(33vw - 100px); flex-shrink: 0; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; display: flex; flex-direction: column; height: fit-content; }
+.gti-drawer-body { overflow-y: visible; }
+.gti-drawer .gti-drawer-close { display: none; }
+.gti-main { min-width: 0; }
+
+/* ====== Drawer Backdrop (only for <1200px) ====== */
+.gti-drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+.gti-drawer-backdrop.show { display: block; opacity: 1; }
+
+/* ====== Fixed Drawer Mode (<1600px) ====== */
+@media (max-width: 1599px) {
+    .gti-content { display: block; }
+    .gti-drawer { position: fixed; top: 0; right: 0; bottom: 0; left: auto; width: 420px; max-width: 100vw; max-height: 100vh; border-radius: 12px 0 0 12px; border: none; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 1001; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); height: auto; }
+    .gti-drawer.open { transform: translateX(0); }
+    .gti-drawer .gti-drawer-close { display: flex; }
+    .gti-drawer-body { overflow-y: auto; flex: 1; }
+}
+@media (max-width: 560px) {
+    .gti-drawer { width: 100%; border-radius: 16px 16px 0 0; top: auto; max-height: 85vh; transform: translateY(100%); }
+    .gti-drawer.open { transform: translateY(0); }
+}
+
+/* ====== Drawer Header ====== */
+.gti-drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+.gti-drawer-header-left { display: flex; align-items: center; gap: 12px; }
+.gti-drawer-header-left h2 { margin: 0; font-size: 16px; font-weight: 600; color: #1a1f36; }
+.gti-drawer-status { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 .gti-drawer-status.status-active { background: #d1fae5; color: #047857; }
 .gti-drawer-status.status-inactive { background: #fee2e2; color: #dc2626; }
-/* ====== Drawer Detail Rows ====== */ {  }
+.gti-drawer-close { width: 32px; height: 32px; border-radius: 6px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6b7280; font-size: 14px; transition: all 0.15s; flex-shrink: 0; }
+.gti-drawer-close:hover { background: #f3f4f6; }
+
+/* ====== Drawer Body ====== */
+.gti-drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ====== Drawer Sections ====== */
+.gti-drawer-section { margin-bottom: 24px; }
+.gti-drawer-section:last-child { margin-bottom: 0; }
+.gti-drawer-section-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f3f4f6; }
+.gti-drawer-section-title i { color: #F5A623; font-size: 14px; }
+
+/* ====== Drawer Detail Rows ====== */
+.gti-drawer-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; gap: 12px; }
+.gti-drawer-row + .gti-drawer-row { border-top: 1px solid #f9fafb; }
 .gti-drawer-label { font-size: 13px; color: #9ca3af; flex-shrink: 0; min-width: 110px; }
-/* ====== Drawer Footer ====== */ {  }
+.gti-drawer-value { font-size: 13px; font-weight: 500; color: #1a1f36; text-align: right; word-break: break-word; }
+.gti-drawer-value.is-link { color: #2563eb; }
+
+/* ====== Drawer Footer ====== */
+.gti-drawer-footer { display: flex; align-items: center; gap: 8px; padding: 16px 24px; border-top: 1px solid #e5e7eb; flex-shrink: 0; background: #fff; }
 .gti-drawer-btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid #e5e7eb; background: #fff; color: #374151; font-family: inherit; text-decoration: none; }
-/* ====== Customer Cell ====== */ {  }
+.gti-drawer-btn:hover { background: #f9fafb; }
+.gti-drawer-btn-primary { background: #F5A623; color: #1a1f36; border-color: #F5A623; font-weight: 600; }
+.gti-drawer-btn-primary:hover { background: #e6991a; }
+
+/* ====== Customer Cell ====== */
 .gti-cust-cell { display: flex; align-items: center; gap: 12px; }
 .gti-cust-avatar { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; color: #fff; }
 .gti-cust-avatar.bg-1 { background: #f59e0b; }
@@ -29,3 +104,8 @@
 .gti-cust-name-group { display: flex; flex-direction: column; min-width: 0; }
 .gti-cust-name-group strong { font-size: 13px; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gti-cust-name-group small { font-size: 11px; color: #9ca3af; }
+
+/* ====== Active Row Highlight ====== */
+.gti-ue-table tbody tr.active-row { background: #FFF8EC; }
+.gti-ue-table tbody tr { cursor: pointer; transition: background 0.15s; }
+.gti-ue-table tbody tr:hover { background: #f9fafb; }
