@@ -178,5 +178,9 @@ function gti_logo_url( $variant = 'full' ) {
         return get_site_icon_url();
     }
 
-    return GTI_CHILD_URL . '/assets/images/' . ( $variant === 'favicon' ? 'logo-mark.png' : 'logo.png' );
+    // Media-library originals; baseurl keeps this domain-agnostic (R-09).
+    $uploads = wp_get_upload_dir();
+    return $uploads['baseurl'] . '/2026/07/' . ( $variant === 'favicon'
+        ? 'logo-pt-global-tractors-indonesia.png'
+        : 'logo-header-footer-pt-global-tractors-indonesia.png' );
 }
