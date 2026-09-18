@@ -14,6 +14,19 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+/**
+ * Append "Label: value" lines for form fields that have no DB column.
+ */
+function gti_ff_append_extras($text, $formData, array $extras) {
+    $lines = array();
+    foreach ($extras as $key => $label) {
+        if (isset($formData[$key]) && $formData[$key] !== '') {
+            $lines[] = $label . ': ' . sanitize_text_field($formData[$key]);
+        }
+    }
+    return trim($text . ($lines ? "\n\n" . implode("\n", $lines) : ''));
+}
+
 // ── FluentForms → Request Equipment sync ─────────────────────────────────────
 /**
  * Sinkronkan submission FluentForms ke tabel wp_gti_requests.
@@ -91,7 +104,17 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
         'budget'            => ['budget', 'estimated_budget', 'anggaran', 'harga', 'price', 'budget_estimation'],
         'required_date'     => ['required_date', 'tanggal_dibutuhkan', 'need_date', 'delivery_date', 'due_date'],
         'notes'             => ['notes', 'catatan', 'message', 'additional_notes', 'keterangan', 'remarks'],
+        'usage_purpose'     => ['usage_purpose', 'tujuan', 'purpose', 'project'],
     );
+
+    // Fields without their own column are appended to notes so nothing is lost.
+    $notes = gti_ff_append_extras($get($formData, $field_map['notes']), $formData, array(
+        'merk_detail' => 'Merk (detail)',
+        'year_min'    => 'Tahun (min)',
+        'year_max'    => 'Tahun (max)',
+        'kondisi'     => 'Kondisi',
+        'durasi'      => 'Durasi',
+    ));
 
     $data = array(
         'request_id'        => $request_id,
@@ -107,7 +130,8 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
         'location'          => sanitize_text_field($get($formData, $field_map['location'])),
         'budget'            => floatval($get($formData, $field_map['budget'], 0)),
         'required_date'     => $get($formData, $field_map['required_date']) ?: null,
-        'notes'             => wp_kses_post($get($formData, $field_map['notes'])),
+        'notes'             => wp_kses_post($notes),
+        'usage_purpose'     => sanitize_text_field($get($formData, $field_map['usage_purpose'])),
         'status'            => 'new',
         'request_date'      => current_time('mysql'),
         'created_at'        => current_time('mysql'),
@@ -176,6 +200,8 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'equipment_condition' => ['equipment_condition', 'condition', 'kondisi', 'kondisi_alat'],
         'equipment_hours'     => ['equipment_hours', 'hours', 'jam', 'jam_operasi', 'operating_hours'],
         'offered_price'       => ['offered_price', 'price', 'harga', 'harga_tawar', 'selling_price', 'harga_jual'],
+        'equipment_location'  => ['equipment_location', 'location', 'lokasi', 'lokasi_projek'],
+        'message'             => ['message', 'description', 'deskripsi', 'notes', 'catatan'],
     );
 
     $data = array(
@@ -190,6 +216,10 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'equipment_condition' => sanitize_text_field($get($formData, $field_map['equipment_condition'])),
         'equipment_hours'     => intval($get($formData, $field_map['equipment_hours'])) ?: null,
         'offered_price'       => floatval($get($formData, $field_map['offered_price'], 0)),
+        'equipment_location'  => sanitize_text_field($get($formData, $field_map['equipment_location'])),
+        'message'             => wp_kses_post(gti_ff_append_extras($get($formData, $field_map['message']), $formData, array(
+            'ketersediaan' => 'Ketersediaan',
+        ))),
         'status'              => 'new',
         'created_at'          => current_time('mysql'),
     );

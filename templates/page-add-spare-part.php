@@ -82,6 +82,9 @@ gti_dashboard_open( array(
                     <a href="<?php echo esc_url(gti_dashboard_url('spare-parts')); ?>" class="gti-ae-back-btn">
                         <i class="fas fa-arrow-left"></i> Back to Spare Parts List
                     </a>
+                    <button type="button" class="gti-ae-back-btn gti-autofill-btn">
+                        <i class="fas fa-magic"></i> Otomatis terisi semua (untuk testing)
+                    </button>
                 </div>
 
                 <?php if ($success): ?>

@@ -111,6 +111,11 @@ function gti_enqueue_dashboard_assets() {
     if (in_array($slug, ['add-used-equipment', 'add-rental-equipment'], true)) {
         gti_enqueue_script('gti-add-equipment', 'assets/js/add-equipment.js', ['gti-dashboard-ui']);
     }
+
+    // Testing helper behind the "Otomatis terisi semua" button on the add forms.
+    if (in_array($slug, ['add-used-equipment', 'add-rental-equipment', 'add-spare-part'], true)) {
+        gti_enqueue_script('gti-autofill-test', 'assets/js/autofill-test.js', ['gti-dashboard-ui']);
+    }
 }
 
 // ── Frontend: Search Card Assets ─────────────────────────────────────────

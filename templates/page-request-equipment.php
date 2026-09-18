@@ -127,7 +127,6 @@ gti_dashboard_open( array(
                         <th class="col-reqid">Request ID</th>
                         <th class="col-customer">Customer</th>
                         <th class="col-equipment">Requested Equipment</th>
-                        <th class="col-qty">Quantity</th>
                         <th class="col-location">Location</th>
                         <th class="col-budget">Budget</th>
                         <th class="col-status">Status</th>
@@ -139,7 +138,7 @@ gti_dashboard_open( array(
                 <tbody>
                 <?php if ( ! $result['items'] ) : ?>
                     <tr>
-                        <td colspan="10" class="gti-ue-empty-cell">
+                        <td colspan="9" class="gti-ue-empty-cell">
                             <?php gti_render_empty_state( 'fa-inbox', 'No requests found',
                                 ( $search || array_filter( $filters ) )
                                     ? 'Try adjusting your filters'
@@ -160,7 +159,6 @@ gti_dashboard_open( array(
                                 <?php endif; ?>
                             </td>
                             <td class="col-equipment"><?php echo esc_html( $req['equipment'] ); ?></td>
-                            <td class="col-qty"><?php echo esc_html( $req['quantity'] ); ?> Units</td>
                             <td class="col-location"><?php echo esc_html( $req['location'] ); ?></td>
                             <td class="col-budget"><?php echo esc_html( $payload['budget_text'] ); ?></td>
                             <td class="col-status"><?php gti_render_status_badge( 'request', $req['status'] ); ?></td>
