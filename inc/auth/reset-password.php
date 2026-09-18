@@ -48,7 +48,7 @@ function gti_ajax_forgot_password() {
             $message .= "Terima kasih,\n";
             $message .= get_bloginfo( 'name' );
             
-            wp_mail( $user->user_email, $subject, $message );
+            gti_send_mail( $user->user_email, $subject, $message );
         }
     }
     

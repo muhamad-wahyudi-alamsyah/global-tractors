@@ -277,28 +277,18 @@ class GTI_Mailer {
             );
         }
 
-        $headers = array(
-            'Content-Type: text/html; charset=UTF-8',
-            'Reply-To: ' . self::reply_to(),
-        );
+        $headers = array( 'Reply-To: ' . self::reply_to() );
         if ( $args['cc'] && is_email( $args['cc'] ) ) {
             $headers[] = 'Cc: ' . $args['cc'];
         }
 
         $paths = gti_attachment_paths( (array) $args['attachment_ids'] );
 
-        $error = '';
-        $catch = function ( $wp_error ) use ( &$error ) {
-            $error = $wp_error->get_error_message();
-        };
-        add_action( 'wp_mail_failed', $catch );
-
-        $sent = wp_mail( $args['to'], $args['subject'], $args['body'], $headers, $paths );
-
-        remove_action( 'wp_mail_failed', $catch );
+        $result = gti_send_mail( $args['to'], $args['subject'], $args['body'], true, $paths, $headers );
+        $sent   = true === $result;
 
         $log['send_result']   = $sent ? 1 : 0;
-        $log['error_message'] = $sent ? null : ( $error ?: 'wp_mail() returned false' );
+        $log['error_message'] = $sent ? null : $result;
 
         $wpdb->insert( $wpdb->prefix . 'gti_email_logs', $log );
         $log_id = (int) $wpdb->insert_id;

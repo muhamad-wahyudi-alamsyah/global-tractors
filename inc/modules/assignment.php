@@ -148,11 +148,11 @@ function gti_notify_assignee( $entity_type, $id, array $row, WP_User $user ) {
         'cta'       => array( 'url' => $link, 'label' => 'Buka pesanan' ),
     ) );
 
-    return (bool) wp_mail(
+    return true === gti_send_mail(
         $user->user_email,
         sprintf( '[GTI] Pesanan %s ditugaskan kepada Anda', $ref ),
         $body,
-        array( 'Content-Type: text/html; charset=UTF-8' )
+        true
     );
 }
 

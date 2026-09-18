@@ -252,10 +252,10 @@ function gti_notify_admin_new_quotation( $id, $quotation_id, array $data, $equip
         'cta'       => array( 'url' => $link, 'label' => 'Buka di dashboard' ),
     ) );
 
-    wp_mail(
+    gti_send_mail(
         get_option( 'gti_inbox_email', get_option( 'admin_email' ) ),
         sprintf( '[%s] Quotation Request — %s', get_bloginfo( 'name' ), $quotation_id ),
         $body,
-        array( 'Content-Type: text/html; charset=UTF-8' )
+        true
     );
 }

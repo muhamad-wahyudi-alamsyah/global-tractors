@@ -18,6 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 require_once GTI_CHILD_DIR . '/inc/helpers/url-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/format-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/log-helpers.php';
+require_once GTI_CHILD_DIR . '/inc/helpers/notification-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/template-loader.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/equipment-taxonomy.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/spare-parts-taxonomy.php';
