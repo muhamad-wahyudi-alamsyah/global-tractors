@@ -34,17 +34,17 @@ $stale_requests = $wpdb->get_results(
     "SELECT id, request_id AS ref, customer_name, created_at, 'request' AS entity
        FROM {$wpdb->prefix}gti_requests
       WHERE status = 'new' AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-    . gti_scope_where_sql( 'request' ) . ' ORDER BY created_at ASC LIMIT 10',
+    . gti_scope_where_sql( 'request' ) . ' ORDER BY created_at ASC',
     ARRAY_A
 );
 
 $stale_quotations = $wpdb->get_results(
     "SELECT id, quotation_id AS ref, customer_name, created_at, 'quotation' AS entity
        FROM {$wpdb->prefix}gti_quotations
-      WHERE ( status = 'new' AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR) )
+      WHERE ( ( status = 'new' AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR) )
          OR ( status = 'waiting_customer' AND valid_until IS NOT NULL
-              AND valid_until <> '0000-00-00' AND valid_until < CURDATE() )"
-    . gti_scope_where_sql( 'quotation' ) . ' ORDER BY created_at ASC LIMIT 10',
+              AND valid_until <> '0000-00-00' AND valid_until < CURDATE() ) )"
+    . gti_scope_where_sql( 'quotation' ) . ' ORDER BY created_at ASC',
     ARRAY_A
 );
 
