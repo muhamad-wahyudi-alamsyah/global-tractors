@@ -252,7 +252,7 @@
 .gti-ue-action-menu{position:relative;display:inline-block}
 .gti-ue-action-toggle{width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;color:var(--gti-gray);cursor:pointer;transition:all .2s}
 .gti-ue-action-toggle:hover{background:#f5f5f5;color:var(--gti-dark);border-color:#d1d5db}
-.gti-ue-action-dropdown{display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--gti-card);border:1px solid var(--gti-border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:150px;z-index:100;overflow:hidden}
+.gti-ue-action-dropdown{display:none;position:fixed;width:max-content;white-space:nowrap;background:var(--gti-card);border:1px solid var(--gti-border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:150px;z-index:100;overflow:hidden}
 .gti-ue-action-dropdown.show{display:block}
 .gti-ue-action-item{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;color:var(--gti-dark);text-decoration:none;transition:background .15s}
 .gti-ue-action-item:hover{background:#f5f5f5}
