@@ -176,10 +176,6 @@ gti_dashboard_open( array(
                                  were href="#" with nothing behind them and no module to build
                                  on, so they are gone rather than left as decoration (B-05). */ ?>
                         <div class="gti-cd-more-dropdown" id="cd-more-dropdown">
-                            <button type="button" class="gti-cd-more-item" id="cd-status-btn">
-                                <i class="fas fa-tag"></i>
-                                <?php echo $customer->status === 'active' ? 'Set Inactive' : 'Set Active'; ?>
-                            </button>
                             <button type="button" class="gti-cd-more-item" id="cd-delete-btn" style="color:#dc2626">
                                 <i class="fas fa-trash" style="color:#dc2626"></i> Delete Customer
                             </button>
@@ -195,9 +191,6 @@ gti_dashboard_open( array(
                             <div class="gti-cd-avatar-lg"><?php echo esc_html($initials); ?></div>
                             <div class="gti-cd-profile-info">
                                 <div class="gti-cd-profile-name"><?php echo esc_html($customer->name); ?></div>
-                                <span class="gti-cd-profile-status <?php echo esc_attr($customer->status === 'active' ? 'active' : 'inactive'); ?>">
-                                    <?php echo $customer->status === 'active' ? 'Active Customer' : 'Inactive Customer'; ?>
-                                </span>
                                 <div class="gti-cd-profile-company"><?php echo esc_html(gti_cd_val($customer->company, 'Individual customer')); ?></div>
                             </div>
                         </div>
@@ -222,10 +215,6 @@ gti_dashboard_open( array(
                         <div class="gti-cd-meta-item">
                             <i class="fas fa-phone"></i>
                             <span><?php echo esc_html(gti_cd_val($customer->phone)); ?></span>
-                        </div>
-                        <div class="gti-cd-meta-item">
-                            <i class="fas fa-building"></i>
-                            <span><?php echo esc_html(gti_cd_val($customer->industry)); ?></span>
                         </div>
                         <div class="gti-cd-meta-item">
                             <i class="fas fa-map-marker-alt"></i>
@@ -271,28 +260,12 @@ gti_dashboard_open( array(
                                 <span><?php echo esc_html(gti_cd_val($customer->company)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
-                                <label>NPWP</label>
-                                <span><?php echo esc_html(gti_cd_val($customer->npwp)); ?></span>
-                            </div>
-                            <div class="gti-cd-info-field">
-                                <label>Industry</label>
-                                <span><?php echo esc_html(gti_cd_val($customer->industry)); ?></span>
-                            </div>
-                            <div class="gti-cd-info-field">
                                 <label>Company Phone</label>
                                 <span><?php echo esc_html(gti_cd_val($customer->phone)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Company Email</label>
                                 <span><a href="mailto:<?php echo esc_attr($customer->email); ?>"><?php echo esc_html($customer->email); ?></a></span>
-                            </div>
-                            <div class="gti-cd-info-field">
-                                <label>Website</label>
-                                <span>
-                                    <?php if ($customer->website): ?>
-                                        <a href="<?php echo esc_url(preg_match('#^https?://#', $customer->website) ? $customer->website : 'https://' . $customer->website); ?>" target="_blank" rel="noopener"><?php echo esc_html($customer->website); ?></a>
-                                    <?php else: ?>—<?php endif; ?>
-                                </span>
                             </div>
                             <div class="gti-cd-info-field gti-cd-info-field-full">
                                 <label>Address</label>
@@ -308,10 +281,6 @@ gti_dashboard_open( array(
                             <div class="gti-cd-info-field">
                                 <label>Contact Name</label>
                                 <span><?php echo esc_html(gti_cd_val($customer->contact_person ?: $customer->name)); ?></span>
-                            </div>
-                            <div class="gti-cd-info-field">
-                                <label>Position</label>
-                                <span><?php echo esc_html(gti_cd_val($customer->contact_position)); ?></span>
                             </div>
                             <div class="gti-cd-info-field">
                                 <label>Phone</label>

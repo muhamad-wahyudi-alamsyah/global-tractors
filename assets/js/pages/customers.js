@@ -51,20 +51,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDrawerContent(cust) {
         _currentDrawerCust = cust;
         document.getElementById('drawer-cust-name').textContent = cust.name || '-';
-        var badge = document.getElementById('drawer-status-badge');
-        badge.textContent = (cust.status || 'active').charAt(0).toUpperCase() + (cust.status || 'active').slice(1);
-        badge.className = 'gti-drawer-status status-' + (cust.status || 'active');
 
         document.getElementById('drawer-cust-id').textContent = cust.customer_id || '-';
         document.getElementById('drawer-email').textContent = cust.email || '-';
         document.getElementById('drawer-phone').textContent = cust.phone || '-';
         document.getElementById('drawer-since').textContent = cust.registered_date ? formatDateID(cust.registered_date) : '-';
-        document.getElementById('drawer-rating').textContent = cust.rating ? cust.rating + ' / 5.0' : '-';
 
         document.getElementById('drawer-company').textContent = cust.company || '-';
-        document.getElementById('drawer-industry').textContent = cust.industry || '-';
         document.getElementById('drawer-location').textContent = [cust.city, cust.province, cust.country].filter(Boolean).join(', ') || '-';
-        document.getElementById('drawer-npwp').textContent = cust.npwp || '-';
 
         document.getElementById('drawer-transactions').textContent = cust.total_transactions || '0';
         document.getElementById('drawer-spent').textContent = cust.total_spent ? formatCurrencyID(cust.total_spent) : '-';

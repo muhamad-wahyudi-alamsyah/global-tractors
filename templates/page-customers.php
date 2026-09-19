@@ -48,8 +48,6 @@ $offset      = $result['offset'];
 // Unfiltered on purpose: the cards describe the whole book, not the search.
 $customer_counts = gti_count_by_status( 'customers', array( 'ignore_scope' => true ) );
 $total_customers = $customer_counts['all'];
-$active_count    = $customer_counts['active'] ?? 0;
-$inactive_count  = $total_customers - $active_count;
 $total_requests  = (int) $wpdb->get_var( "SELECT COALESCE(SUM(total_transactions), 0) FROM {$table_name}" );
 
 // Where customers came from, for the filter dropdown
@@ -85,20 +83,6 @@ gti_dashboard_open( array(
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
-                        <div class="gti-ue-stat-icon available"><i class="fas fa-user-check"></i></div>
-                        <div class="gti-ue-stat-info">
-                            <p class="gti-ue-stat-label">Active</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($active_count); ?></p>
-                        </div>
-                    </div>
-                    <div class="gti-ue-stat-card">
-                        <div class="gti-ue-stat-icon sold"><i class="fas fa-user-clock"></i></div>
-                        <div class="gti-ue-stat-info">
-                            <p class="gti-ue-stat-label">Inactive</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($inactive_count); ?></p>
-                        </div>
-                    </div>
-                    <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon reserved"><i class="fas fa-file-signature"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Requests &amp; Quotations</p>
@@ -114,13 +98,6 @@ gti_dashboard_open( array(
                         <div class="gti-ue-search">
                             <i class="fas fa-search"></i>
                             <input type="text" name="search" placeholder="Search customers..." value="<?php echo esc_attr($search); ?>">
-                        </div>
-                        <div class="gti-ue-filter">
-                            <select name="status">
-                                <option value="">All Status</option>
-                                <option value="active" <?php selected($status_filter, 'active'); ?>>Active</option>
-                                <option value="inactive" <?php selected($status_filter, 'inactive'); ?>>Inactive</option>
-                            </select>
                         </div>
                         <?php if (!empty($sources)): ?>
                         <div class="gti-ue-filter">
@@ -149,7 +126,6 @@ gti_dashboard_open( array(
                                 <th class="col-company">Company</th>
                                 <th class="col-email">Email</th>
                                 <th class="col-phone">Phone</th>
-                                <th class="col-status">Status</th>
                                 <th class="col-transactions">Transactions</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
@@ -157,7 +133,7 @@ gti_dashboard_open( array(
                         <tbody>
                             <?php if (empty($customers)): ?>
                                 <tr>
-                                    <td colspan="7" style="text-align: center; padding: 60px 20px;">
+                                    <td colspan="6" style="text-align: center; padding: 60px 20px;">
                                         <div style="color: #9ca3af;">
                                             <i class="fas fa-users" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                                             <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No customers found</p>
@@ -192,9 +168,6 @@ gti_dashboard_open( array(
                                             <a href="mailto:<?php echo esc_attr($c->email); ?>" style="color:#2563eb;text-decoration:none;font-size:13px"><?php echo esc_html($c->email); ?></a>
                                         </td>
                                         <td class="col-phone"><?php echo esc_html($c->phone ?: '—'); ?></td>
-                                        <td class="col-status">
-                                            <span class="gti-badge-status <?php echo $c->status === 'active' ? 'available' : 'sold'; ?>"><?php echo esc_html(ucfirst($c->status)); ?></span>
-                                        </td>
                                         <td class="col-transactions"><?php echo (int) $c->total_transactions; ?></td>
                                         <td class="col-actions">
                                             <div class="gti-ue-action-menu">
@@ -239,7 +212,6 @@ gti_dashboard_open( array(
                     <div class="gti-drawer-header">
                         <div class="gti-drawer-header-left">
                             <h2 id="drawer-cust-name">-</h2>
-                            <span class="gti-drawer-status" id="drawer-status-badge">Active</span>
                         </div>
                         <button type="button" class="gti-drawer-close" onclick="closeDetailDrawer()"><i class="fas fa-times"></i></button>
                     </div>
@@ -250,14 +222,11 @@ gti_dashboard_open( array(
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Email</span><span class="gti-drawer-value is-link" id="drawer-email">-</span></div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Phone</span><span class="gti-drawer-value" id="drawer-phone">-</span></div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Since</span><span class="gti-drawer-value" id="drawer-since">-</span></div>
-                            <div class="gti-drawer-row"><span class="gti-drawer-label">Rating</span><span class="gti-drawer-value" id="drawer-rating">-</span></div>
                         </div>
                         <div class="gti-drawer-section">
                             <div class="gti-drawer-section-title"><i class="fas fa-building"></i> Company Information</div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Company</span><span class="gti-drawer-value" id="drawer-company">-</span></div>
-                            <div class="gti-drawer-row"><span class="gti-drawer-label">Industry</span><span class="gti-drawer-value" id="drawer-industry">-</span></div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Location</span><span class="gti-drawer-value" id="drawer-location">-</span></div>
-                            <div class="gti-drawer-row"><span class="gti-drawer-label">NPWP</span><span class="gti-drawer-value" id="drawer-npwp">-</span></div>
                         </div>
                         <div class="gti-drawer-section">
                             <div class="gti-drawer-section-title"><i class="fas fa-chart-bar"></i> Statistics</div>

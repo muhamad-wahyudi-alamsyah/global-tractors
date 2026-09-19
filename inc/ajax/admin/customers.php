@@ -28,17 +28,19 @@ trait GTI_Ajax_Customers {
         
         $id = intval($_POST['id'] ?? 0);
         $data = array(
-            'customer_id'   => sanitize_text_field($_POST['customer_id']),
-            'name'          => sanitize_text_field($_POST['name']),
-            'company'       => sanitize_text_field($_POST['company']),
-            'email'         => sanitize_email($_POST['email']),
-            'phone'         => sanitize_text_field($_POST['phone']),
-            'address'       => wp_kses_post($_POST['address']),
-            'industry'      => sanitize_text_field($_POST['industry']),
-            'location'      => sanitize_text_field($_POST['location']),
-            'status'        => sanitize_text_field($_POST['status']),
-            'registered_date' => sanitize_text_field($_POST['registered_date']),
+            'customer_id'   => sanitize_text_field($_POST['customer_id'] ?? ''),
+            'name'          => sanitize_text_field($_POST['name'] ?? ''),
+            'company'       => sanitize_text_field($_POST['company'] ?? ''),
+            'email'         => sanitize_email($_POST['email'] ?? ''),
+            'phone'         => sanitize_text_field($_POST['phone'] ?? ''),
+            'address'       => wp_kses_post($_POST['address'] ?? ''),
+            'industry'      => sanitize_text_field($_POST['industry'] ?? ''),
+            'location'      => sanitize_text_field($_POST['location'] ?? ''),
+            'status'        => sanitize_text_field($_POST['status'] ?? ''),
+            'registered_date' => sanitize_text_field($_POST['registered_date'] ?? ''),
         );
+        // Only touch columns the form actually sent; the rest keep their value.
+        $data = array_intersect_key($data, $_POST);
         
         if ($id > 0) {
             $result = $wpdb->update($table, $data, array('id' => $id));

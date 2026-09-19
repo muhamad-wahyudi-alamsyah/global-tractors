@@ -60,30 +60,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                         <label for="cf-country">Country</label>
                         <input type="text" id="cf-country" name="country">
                     </div>
-                    <div class="gti-field">
-                        <label for="cf-industry">Industry</label>
-                        <input type="text" id="cf-industry" name="industry">
-                    </div>
-                </div>
-                <div class="gti-field-grid">
-                    <div class="gti-field">
-                        <label for="cf-website">Website</label>
-                        <input type="text" id="cf-website" name="website">
-                    </div>
-                    <div class="gti-field">
-                        <label for="cf-npwp">NPWP</label>
-                        <input type="text" id="cf-npwp" name="npwp">
-                    </div>
                 </div>
 
                 <div class="gti-field-grid">
                     <div class="gti-field">
                         <label for="cf-contact-person">Contact Person</label>
                         <input type="text" id="cf-contact-person" name="contact_person">
-                    </div>
-                    <div class="gti-field">
-                        <label for="cf-contact-position">Position</label>
-                        <input type="text" id="cf-contact-position" name="contact_position">
                     </div>
                 </div>
                 <div class="gti-field-grid">
@@ -100,13 +82,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                     <div class="gti-field">
                         <label for="cf-contact-whatsapp">Contact WhatsApp</label>
                         <input type="tel" id="cf-contact-whatsapp" name="contact_whatsapp">
-                    </div>
-                    <div class="gti-field">
-                        <label for="cf-status">Status</label>
-                        <select id="cf-status" name="status">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
                     </div>
                 </div>
 

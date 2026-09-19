@@ -1,7 +1,7 @@
 /**
  * Customer Detail page script (PRD §6.9).
  *
- * Edit / Change Status / Delete / Send Email were all href="#" before this —
+ * Edit / Delete / Send Email were all href="#" before this —
  * the markup promised actions that had nothing behind them (B-05). The save
  * endpoint (gti_save_customer) already existed; it just had no UI.
  */
@@ -75,24 +75,6 @@
                     })
                     .catch(function () {})
                     .then(unlock);
-            });
-        }
-
-        // ── Change status ────────────────────────────────────────────────────
-        var statusBtn = document.getElementById('cd-status-btn');
-        if (statusBtn) {
-            statusBtn.addEventListener('click', function () {
-                var next = customer.status === 'active' ? 'inactive' : 'active';
-
-                GTI.api.post('gti_save_customer', {
-                    id: customer.id,
-                    customer_id: customer.customer_id,
-                    name: customer.name,
-                    status: next
-                }).then(function () {
-                    GTI.ui.toast('Status diubah menjadi ' + next + '.', 'success');
-                    setTimeout(function () { window.location.reload(); }, 600);
-                }).catch(function () {});
             });
         }
 
