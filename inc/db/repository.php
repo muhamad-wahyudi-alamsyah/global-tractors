@@ -33,9 +33,9 @@ function gti_entity_schema( $entity = null ) {
         ),
         'spare_parts' => array(
             'table'   => $wpdb->prefix . 'gti_spare_parts',
-            'search'  => array( 'name', 'part_code', 'brand', 'part_number' ),
+            'search'  => array( 'name', 'brand', 'part_number' ),
             'filters' => array( 'category', 'brand', 'status', 'supplier' ),
-            'soft'    => 'deleted_at',
+            'soft'    => null, // table has no deleted_at; delete_spare_part() hard-deletes
             'order'   => 'created_at',
             'scope'   => null,
         ),

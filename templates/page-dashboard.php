@@ -17,7 +17,7 @@ global $wpdb;
 $counts = array(
     'used'       => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_equipment WHERE type = 'used' AND deleted_at IS NULL" ),
     'rental'     => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_equipment WHERE type = 'rental' AND deleted_at IS NULL" ),
-    'spare'      => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_spare_parts WHERE deleted_at IS NULL" ),
+    'spare'      => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_spare_parts" ),
     'customers'  => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_customers" ),
 );
 
