@@ -133,6 +133,11 @@ function gti_build_where( $entity, array $args ) {
         }
     }
 
+    // Trusted SQL fragments built by the caller, never from the request.
+    foreach ( (array) ( $args['raw'] ?? array() ) as $fragment ) {
+        $where[] = '(' . $fragment . ')';
+    }
+
     // Date range on the ordering column.
     if ( ! empty( $args['date_from'] ) ) {
         $where[]  = "`{$schema['order']}` >= %s";

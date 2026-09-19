@@ -141,3 +141,12 @@ if ( ! function_exists( 'gti_is_price_valid' ) ) {
         return strtotime( $price_valid_until ) >= strtotime( current_time( 'Y-m-d' ) );
     }
 }
+
+if ( ! function_exists( 'gti_price_expired_sql' ) ) {
+    /**
+     * SQL twin of ! gti_is_price_valid(), for list filters and public queries.
+     */
+    function gti_price_expired_sql( $column = 'price_valid_until' ) {
+        return "{$column} IS NOT NULL AND {$column} <> '0000-00-00' AND {$column} < '" . esc_sql( current_time( 'Y-m-d' ) ) . "'";
+    }
+}

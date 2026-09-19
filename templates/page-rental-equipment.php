@@ -64,7 +64,17 @@ $query_args = array(
     'output'   => OBJECT,
 );
 
-$result      = gti_query_list( 'equipment', $query_args );
+// "Expired" is not a stored status: it is a past price_valid_until, which the
+// badge shows over any status. Real statuses therefore exclude expired rows.
+$list_args = $query_args;
+if ( $status_filter === 'expired' ) {
+    $list_args['filters']['status'] = '';
+    $list_args['raw'] = array( gti_price_expired_sql() );
+} elseif ( $status_filter !== '' ) {
+    $list_args['raw'] = array( 'NOT (' . gti_price_expired_sql() . ')' );
+}
+
+$result      = gti_query_list( 'equipment', $list_args );
 $equipments  = $result['items'];
 $total       = $result['total'];
 $total_pages = $result['pages'];
@@ -179,6 +189,7 @@ gti_dashboard_open( array(
                                 <option value="reserved" <?php selected($status_filter, 'reserved'); ?>>Reserved</option>
                                 <option value="maintenance" <?php selected($status_filter, 'maintenance'); ?>>Maintenance</option>
                                 <option value="draft" <?php selected($status_filter, 'draft'); ?>>Draft</option>
+                                <option value="expired" <?php selected($status_filter, 'expired'); ?>>Expired</option>
                             </select>
                         </div>
                         <div class="gti-ue-filter">
