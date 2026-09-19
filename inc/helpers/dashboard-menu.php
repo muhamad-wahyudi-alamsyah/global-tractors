@@ -152,6 +152,46 @@ function gti_notification_count() {
 }
 
 /**
+ * Latest rows still in status "new", newest first, for the header bell popup.
+ * Same scope rules as the badge counts above.
+ *
+ * @return array[] type, label, icon, ref, customer, time, url
+ */
+function gti_notification_items( $limit = 10 ) {
+    global $wpdb;
+
+    $sources = array(
+        'request'   => array( 'gti_requests',      'Request Equipment', 'fa-truck-pickup',   'request-equipment' ),
+        'quotation' => array( 'gti_quotations',    'Request Quotation', 'fa-file-invoice',   'request-quotation' ),
+        'sell'      => array( 'gti_sell_requests', 'Sell Equipment',    'fa-hand-holding-usd', 'sell-equipment' ),
+    );
+
+    $items = array();
+    foreach ( $sources as $type => $src ) {
+        $rows = $wpdb->get_results( $wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}{$src[0]} WHERE status = 'new'" . gti_scope_where_sql( $type ) . ' ORDER BY created_at DESC LIMIT %d',
+            $limit
+        ), ARRAY_A );
+
+        foreach ( (array) $rows as $row ) {
+            $items[] = array(
+                'type'     => $type,
+                'label'    => $src[1],
+                'icon'     => $src[2],
+                'ref'      => gti_entity_ref( $type, $row ),
+                'customer' => $row['customer_name'],
+                'created'  => $row['created_at'],
+                'url'      => add_query_arg( array( 'status' => 'new', 'open' => (int) $row['id'] ), gti_dashboard_url( $src[3] ) ),
+            );
+        }
+    }
+
+    usort( $items, function ( $a, $b ) { return strcmp( $b['created'], $a['created'] ); } );
+
+    return array_slice( $items, 0, $limit );
+}
+
+/**
  * Dashboard logo URL.
  *
  * R-09: this was hardcoded to a local .test hostname in 18 templates,

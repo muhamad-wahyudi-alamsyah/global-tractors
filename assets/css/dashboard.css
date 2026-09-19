@@ -70,8 +70,6 @@
 .gti-page-title{font-size:22px;font-weight:700;color:var(--gti-dark)}
 .gti-welcome{font-size:13px;color:var(--gti-gray);margin-top:2px}
 .gti-header-right{display:flex;align-items:center;gap:20px}
-.gti-date-filter{display:flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--gti-border);border-radius:var(--gti-radius-sm);font-size:13px;color:var(--gti-gray);cursor:pointer;background:var(--gti-card)}
-.gti-date-filter i{font-size:12px}
 .gti-notifications{position:relative;cursor:pointer;font-size:18px;color:var(--gti-gray)}
 .gti-badge{position:absolute;top:-6px;right:-8px;background:#ef4444;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center}
 .gti-user-menu{display:flex;align-items:center;gap:10px;cursor:pointer}
@@ -176,7 +174,7 @@
 
 /* Responsive */
 @media(max-width:1200px){.gti-stats-grid{flex-wrap:wrap}.gti-stat-card{flex:1 1 calc(33.333% - 12px);min-width:180px}.gti-stats-row{flex-wrap:wrap}.gti-stats-row .gti-stat-card{flex:1 1 calc(50% - 9px);min-width:200px}.gti-bottom-row{grid-template-columns:1fr 1fr}}
-@media(max-width:768px){.gti-sidebar{display:none}.gti-main{margin-left:0;width:100%}.gti-main.collapsed{margin-left:0;width:100%}.gti-content{padding:16px}.gti-header{padding:12px 16px}.gti-menu-toggle{display:block}.gti-stats-grid{flex-direction:column}.gti-stat-card{min-width:100%}.gti-stats-row{flex-direction:column}.gti-stats-row .gti-stat-card{min-width:100%}.gti-charts-row,.gti-bottom-row{grid-template-columns:1fr}.gti-date-filter{display:none}}
+@media(max-width:768px){.gti-sidebar{display:none}.gti-main{margin-left:0;width:100%}.gti-main.collapsed{margin-left:0;width:100%}.gti-content{padding:16px}.gti-header{padding:12px 16px}.gti-menu-toggle{display:block}.gti-stats-grid{flex-direction:column}.gti-stat-card{min-width:100%}.gti-stats-row{flex-direction:column}.gti-stats-row .gti-stat-card{min-width:100%}.gti-charts-row,.gti-bottom-row{grid-template-columns:1fr}}
 
 /* ===== Used Equipment Page ===== */
 
@@ -281,3 +279,18 @@
 /* Used Equipment Responsive */
 @media(max-width:1200px){.gti-ue-stats-row{flex-wrap:wrap}.gti-ue-stat-card{flex:1 1 calc(50% - 9px);min-width:200px}.gti-ue-toolbar{flex-direction:column;align-items:stretch}.gti-ue-toolbar-left{flex-wrap:wrap}.gti-ue-search{max-width:none;flex:1 1 180px}.gti-ue-btn-add{align-self:flex-end}}
 @media(max-width:768px){.gti-ue-stats-row{flex-direction:column}.gti-ue-stat-card{min-width:100%}.gti-ue-toolbar-left{flex-direction:column}.gti-ue-search{min-width:100%;max-width:none}.gti-ue-table-card{overflow-x:auto;-webkit-overflow-scrolling:touch}.gti-ue-table{min-width:900px}.gti-ue-pagination{flex-direction:column;gap:12px}}
+
+/* Header notification popup */
+.gti-notifications-wrap{position:relative}
+.gti-notifications{background:none;border:0;padding:0;font:inherit}
+.gti-notif-dropdown{display:none;position:absolute;top:calc(100% + 10px);right:-8px;width:320px;max-height:420px;overflow-y:auto;background:var(--gti-card);border:1px solid var(--gti-border);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:900}
+.gti-notif-dropdown.show{display:block}
+.gti-notif-head{padding:12px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--gti-border)}
+.gti-notif-empty{padding:24px 14px;font-size:13px;color:var(--gti-gray);text-align:center}
+.gti-notif-item{display:flex;gap:10px;padding:10px 14px;text-decoration:none;color:inherit;border-bottom:1px solid var(--gti-border)}
+.gti-notif-item:last-child{border-bottom:0}
+.gti-notif-item:hover{background:rgba(0,0,0,.03)}
+.gti-notif-item>i{margin-top:2px;width:16px;font-size:14px;color:var(--gti-gray)}
+.gti-notif-item strong,.gti-notif-item span,.gti-notif-item small{display:block;font-size:12px}
+.gti-notif-item span{color:var(--gti-gray)}
+.gti-notif-item small{font-size:11px;color:var(--gti-gray);margin-top:2px}

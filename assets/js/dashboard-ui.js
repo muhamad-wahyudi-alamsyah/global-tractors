@@ -378,22 +378,27 @@
 
     /** Header user menu, including the only Log Out control on the dashboard. */
     function initUserMenu() {
-        var toggle = document.getElementById('gti-user-menu-toggle');
-        var menu = document.getElementById('gti-user-dropdown');
+        // User menu and notification bell: toggle on click, close on outside click.
+        [
+            ['gti-user-menu-toggle', 'gti-user-dropdown', '.gti-user-menu-wrap'],
+            ['gti-notif-toggle', 'gti-notif-dropdown', '.gti-notifications-wrap']
+        ].forEach(function (ids) {
+            var toggle = document.getElementById(ids[0]);
+            var menu = document.getElementById(ids[1]);
+            if (!toggle || !menu) return;
 
-        if (toggle && menu) {
             toggle.addEventListener('click', function (e) {
                 e.stopPropagation();
                 var open = menu.classList.toggle('show');
                 toggle.setAttribute('aria-expanded', String(open));
             });
             document.addEventListener('click', function (e) {
-                if (!e.target.closest('.gti-user-menu-wrap')) {
+                if (!e.target.closest(ids[2])) {
                     menu.classList.remove('show');
                     toggle.setAttribute('aria-expanded', 'false');
                 }
             });
-        }
+        });
 
         var logout = document.getElementById('gti-logout-btn');
         if (logout) {

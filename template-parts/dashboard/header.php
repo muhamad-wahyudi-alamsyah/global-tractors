@@ -2,10 +2,10 @@
 /**
  * Dashboard topbar.
  *
- * Fixes three things that were hardcoded in every copy of this block:
+ * Fixes two things that were hardcoded in every copy of this block:
  *   B-06 — the notification badge said "3" regardless of the data
  *   B-07 — the role under the username always said "Super Admin"
- *   B-08 — the date range was the literal string "May 1, 2024 - May 31, 2024"
+ * The bell opens a popup of the latest "new" inbox rows (gti_notification_items()).
  *
  * @var array $args title, subtitle
  */
@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 $gti_user       = wp_get_current_user();
 $gti_role_label = gti_role_label_for_user();
 $gti_unread     = gti_notification_count();
+$gti_notifs     = gti_notification_items();
 ?>
 <header class="gti-header">
     <div class="gti-header-left">
@@ -27,16 +28,30 @@ $gti_unread     = gti_notification_count();
         </div>
     </div>
     <div class="gti-header-right">
-        <div class="gti-date-filter">
-            <i class="fas fa-calendar"></i>
-            <span><?php echo esc_html( date_i18n( 'M j, Y' ) ); ?></span>
-            <i class="fas fa-chevron-down"></i>
-        </div>
-        <div class="gti-notifications" title="<?php echo esc_attr( sprintf( '%d pesanan baru', $gti_unread ) ); ?>">
-            <i class="fas fa-bell"></i>
-            <?php if ( $gti_unread > 0 ) : ?>
-                <span class="gti-badge"><?php echo esc_html( $gti_unread > 99 ? '99+' : $gti_unread ); ?></span>
-            <?php endif; ?>
+        <div class="gti-notifications-wrap">
+            <button type="button" class="gti-notifications" id="gti-notif-toggle" aria-haspopup="true" aria-expanded="false"
+                    title="<?php echo esc_attr( sprintf( '%d pesanan baru', $gti_unread ) ); ?>">
+                <i class="fas fa-bell"></i>
+                <?php if ( $gti_unread > 0 ) : ?>
+                    <span class="gti-badge"><?php echo esc_html( $gti_unread > 99 ? '99+' : $gti_unread ); ?></span>
+                <?php endif; ?>
+            </button>
+            <div class="gti-notif-dropdown" id="gti-notif-dropdown">
+                <div class="gti-notif-head">Notifikasi</div>
+                <?php if ( ! $gti_notifs ) : ?>
+                    <div class="gti-notif-empty">Tidak ada notifikasi baru</div>
+                <?php endif; ?>
+                <?php foreach ( $gti_notifs as $n ) : ?>
+                    <a href="<?php echo esc_url( $n['url'] ); ?>" class="gti-notif-item">
+                        <i class="fas <?php echo esc_attr( $n['icon'] ); ?>"></i>
+                        <div>
+                            <strong><?php echo esc_html( $n['label'] ); ?></strong>
+                            <span><?php echo esc_html( implode( ' · ', array_filter( array( $n['customer'], $n['ref'] ) ) ) ); ?></span>
+                            <small><?php echo esc_html( gti_time_ago( $n['created'] ) ); ?></small>
+                        </div>
+                    </a>
+                <?php endforeach; ?>
+            </div>
         </div>
         <div class="gti-user-menu-wrap">
             <button type="button" class="gti-user-menu" id="gti-user-menu-toggle" aria-haspopup="true" aria-expanded="false">

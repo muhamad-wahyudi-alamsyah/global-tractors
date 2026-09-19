@@ -549,6 +549,15 @@
                 });
             });
 
+            // ?open=ID (from the header notification popup) highlights that row and opens its drawer.
+            var openId = new URLSearchParams(window.location.search).get('open');
+            var target = openId && document.querySelector('.gti-ue-table tbody tr[data-id="' + parseInt(openId, 10) + '"]');
+            if (target) {
+                selectRow(target, true);
+                target.scrollIntoView({ block: 'center' });
+                return;
+            }
+
             // Populate the drawer from the first row without opening it.
             var first = document.querySelector('.gti-ue-table tbody tr[data-row]');
             if (first) {

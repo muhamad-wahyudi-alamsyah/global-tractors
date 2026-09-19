@@ -17,7 +17,8 @@ function gti_format_number($number) {
 }
 
 function gti_time_ago($datetime) {
-    $now = new DateTime();
+    // Stored timestamps are site-local (current_time('mysql')); compare like with like.
+    $now = new DateTime( current_time( 'mysql' ) );
     $ago = new DateTime($datetime);
     $diff = $now->diff($ago);
 
