@@ -433,12 +433,13 @@ gti_dashboard_open( array(
                                         <label>Price Valid Until</label>
                                         <input type="date" name="price_valid_until">
                                     </div>
+                                </div>
+                                <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field">
-                                        <label>Negotiable</label>
-                                        <select name="negotiable">
-                                            <option value="">-- Select --</option>
-                                            <option value="yes">Yes</option>
-                                            <option value="no">No</option>
+                                        <label>Negotiable?</label>
+                                        <select name="negotiable" required>
+                                            <option value="0" selected>No</option>
+                                            <option value="1">Yes</option>
                                         </select>
                                     </div>
                                 </div>

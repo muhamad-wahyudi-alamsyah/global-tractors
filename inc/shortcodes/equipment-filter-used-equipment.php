@@ -1034,7 +1034,7 @@ function gti_used_render_equipment_detail( $equipment_id ) {
                                 </span>
 
                                 <span class="gti-ed-spec-value-quick">
-                                    <?php echo esc_html( ucfirst( $item['negotiable'] ) ?: '—' ); ?>
+                                    <?php echo esc_html( $item['negotiable'] ? 'Yes' : ($item['negotiable'] === '0' || $item['negotiable'] === 0 ? 'No' : '—') ); ?>
                                 </span>
                             </div>
 

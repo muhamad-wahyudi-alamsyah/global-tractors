@@ -236,7 +236,7 @@
         setText('drawer-vat', eq.vat_included ? 'Yes' : (eq.vat_included === false ? 'No' : null));
         setText('drawer-currency', eq.currency);
         setText('drawer-price-valid-until', formatDate(eq.price_valid_until));
-        setText('drawer-negotiable', eq.negotiable ? 'Yes' : (eq.negotiable === false ? 'No' : null));
+        setText('drawer-negotiable', eq.negotiable == null || eq.negotiable === '' ? null : (eq.negotiable == 1 ? 'Yes' : 'No'));
         // Availability
         setText('drawer-availability-status', eq.status ? eq.status.charAt(0).toUpperCase() + eq.status.slice(1) : null);
         setText('drawer-ready-to-use', eq.ready_to_use ? 'Yes' : (eq.ready_to_use === false ? 'No' : null));
@@ -600,7 +600,7 @@ function openEditModal(eq) {
     populateField(
         form,
         'negotiable',
-        eq.negotiable
+        eq.negotiable == 1 ? '1' : '0'
     );
 
 

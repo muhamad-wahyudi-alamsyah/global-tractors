@@ -171,7 +171,7 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                                     <div class="gti-ae-field"><label>VAT Included?</label><select name="vat_included"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option></select></div>
                                     <div class="gti-ae-field"><label>Currency</label><select name="currency"><option value="IDR">IDR (Rp)</option><option value="USD">USD ($)</option><option value="EUR">EUR (€)</option></select></div>
                                     <div class="gti-ae-field"><label>Price Valid Until</label><input type="date" name="price_valid_until"></div>
-                                    <div class="gti-ae-field"><label>Negotiable</label><select name="negotiable"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                                    <div class="gti-ae-field"><label>Negotiable</label><select name="negotiable" required><option value="0">No</option><option value="1">Yes</option></select></div>
                                 </div>
                             </div>
                         </div>

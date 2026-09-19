@@ -171,7 +171,7 @@ trait GTI_Ajax_Equipment {
             'currency'          => sanitize_text_field( $_POST['currency'] ?? 'IDR' ),
             'vat_included'      => sanitize_text_field( $_POST['vat_included'] ?? '' ),
             'price_valid_until' => sanitize_text_field( $_POST['price_valid_until'] ?? '' ) ?: null,
-            'negotiable'        => sanitize_text_field( $_POST['negotiable'] ?? '' ),
+            'negotiable'        => intval( $_POST['negotiable'] ?? 0 ),
 
             // Status & Availability
             'status'              => $is_draft ? 'draft' : sanitize_text_field( $_POST['status'] ?? $_POST['availability_status'] ?? 'available' ),

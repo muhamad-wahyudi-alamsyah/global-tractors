@@ -283,7 +283,7 @@
         setText('drawer-vat', eq.vat_included ? eq.vat_included.charAt(0).toUpperCase() + eq.vat_included.slice(1) : null);
         setText('drawer-currency', eq.currency);
         setText('drawer-price-valid-until', eq.price_valid_until ? formatDateShort(eq.price_valid_until) : null);
-        setText('drawer-negotiable', eq.negotiable ? eq.negotiable.charAt(0).toUpperCase() + eq.negotiable.slice(1) : null);
+        setText('drawer-negotiable', eq.negotiable == null || eq.negotiable === '' ? null : (eq.negotiable == 1 ? 'Yes' : 'No'));
         setText('drawer-availability-status', eq.availability_status ? eq.availability_status.charAt(0).toUpperCase() + eq.availability_status.slice(1).replace(/_/g,' ') : null);
         setText('drawer-ready-to-use', eq.ready_to_use ? eq.ready_to_use.charAt(0).toUpperCase() + eq.ready_to_use.slice(1).replace(/_/g,' ') : null);
         var shMap = { 'full':'Full Service History', 'partial':'Partial Service History', 'none':'No Service History' };
@@ -492,7 +492,7 @@
         populateField(form, 'vat_included', eq.vat_included);
         populateField(form, 'currency', eq.currency || 'IDR');
         populateField(form, 'price_valid_until', eq.price_valid_until);
-        populateField(form, 'negotiable', eq.negotiable);
+        populateField(form, 'negotiable', eq.negotiable == 1 ? '1' : '0');
         // Step 3 — Availability
         populateField(form, 'availability_status', eq.availability_status);
         populateField(form, 'ready_to_use', eq.ready_to_use);
