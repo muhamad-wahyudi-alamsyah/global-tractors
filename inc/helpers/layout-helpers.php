@@ -82,6 +82,9 @@ function gti_dashboard_open( array $args = array() ) {
         'js'   => (array) $args['js'],
     ) );
 
+    // Before the sidebar renders, so the badge clears on this very visit.
+    gti_mark_list_seen( $args['page'] );
+
     include GTI_CHILD_DIR . '/template-parts/dashboard/head.php';
     include GTI_CHILD_DIR . '/template-parts/dashboard/sidebar.php';
 

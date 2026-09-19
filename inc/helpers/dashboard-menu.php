@@ -120,28 +120,56 @@ function gti_visible_dashboard_menu() {
 }
 
 /**
+ * The three badged inbox lists: type => table, label, icon, dashboard slug.
+ */
+function gti_inbox_sources() {
+    return array(
+        'request'   => array( 'gti_requests',      'Request Equipment', 'fa-truck-pickup',     'request-equipment' ),
+        'quotation' => array( 'gti_quotations',    'Request Quotation', 'fa-file-invoice',     'request-quotation' ),
+        'sell'      => array( 'gti_sell_requests', 'Sell Equipment',    'fa-hand-holding-usd', 'sell-equipment' ),
+    );
+}
+
+/**
+ * WHERE clause for rows still "new" that arrived after the current user last
+ * opened that list (gti_mark_list_seen()). Shared by the sidebar badges and the
+ * header bell so both always agree.
+ */
+function gti_unseen_where_sql( $type ) {
+    global $wpdb;
+    $sources = gti_inbox_sources();
+    $seen    = (string) get_user_meta( get_current_user_id(), 'gti_seen_' . $sources[ $type ][3], true );
+
+    return $wpdb->prepare( "WHERE status = 'new' AND created_at > %s", $seen ) . gti_scope_where_sql( $type );
+}
+
+/**
  * Live counts behind the sidebar badges (B-06 — this replaced a hardcoded "3").
  *
- * Cached for a minute: the sidebar renders on every dashboard page and these
- * numbers do not need to be to-the-second accurate.
+ * Not cached: a fresh submission has to show up on the very next page load,
+ * and three COUNT(*) queries are cheap.
  */
 function gti_menu_badge_counts() {
-    $cached = get_transient( 'gti_menu_badges_' . get_current_user_id() );
-    if ( is_array( $cached ) ) {
-        return $cached;
-    }
-
     global $wpdb;
 
-    $counts = array(
-        'requests_new'   => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_requests WHERE status = 'new'" . gti_scope_where_sql( 'request' ) ),
-        'quotations_new' => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_quotations WHERE status = 'new'" . gti_scope_where_sql( 'quotation' ) ),
-        'sell_new'       => (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}gti_sell_requests WHERE status = 'new'" . gti_scope_where_sql( 'sell' ) ),
-    );
-
-    set_transient( 'gti_menu_badges_' . get_current_user_id(), $counts, MINUTE_IN_SECONDS );
+    $keys   = array( 'request' => 'requests_new', 'quotation' => 'quotations_new', 'sell' => 'sell_new' );
+    $counts = array();
+    foreach ( gti_inbox_sources() as $type => $src ) {
+        $counts[ $keys[ $type ] ] = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->prefix}{$src[0]} " . gti_unseen_where_sql( $type ) );
+    }
 
     return $counts;
+}
+
+/**
+ * Record that the current user has opened a badged list, so its badge and bell
+ * entries only reappear once newer rows arrive. created_at is stored in site
+ * time, hence current_time().
+ */
+function gti_mark_list_seen( $page ) {
+    if ( in_array( $page, wp_list_pluck( gti_inbox_sources(), 3 ), true ) ) {
+        update_user_meta( get_current_user_id(), 'gti_seen_' . $page, current_time( 'mysql' ) );
+    }
 }
 
 /**
@@ -152,24 +180,17 @@ function gti_notification_count() {
 }
 
 /**
- * Latest rows still in status "new", newest first, for the header bell popup.
- * Same scope rules as the badge counts above.
+ * Latest unseen "new" rows, newest first, for the header bell popup.
  *
  * @return array[] type, label, icon, ref, customer, time, url
  */
 function gti_notification_items( $limit = 10 ) {
     global $wpdb;
 
-    $sources = array(
-        'request'   => array( 'gti_requests',      'Request Equipment', 'fa-truck-pickup',   'request-equipment' ),
-        'quotation' => array( 'gti_quotations',    'Request Quotation', 'fa-file-invoice',   'request-quotation' ),
-        'sell'      => array( 'gti_sell_requests', 'Sell Equipment',    'fa-hand-holding-usd', 'sell-equipment' ),
-    );
-
     $items = array();
-    foreach ( $sources as $type => $src ) {
+    foreach ( gti_inbox_sources() as $type => $src ) {
         $rows = $wpdb->get_results( $wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}{$src[0]} WHERE status = 'new'" . gti_scope_where_sql( $type ) . ' ORDER BY created_at DESC LIMIT %d',
+            "SELECT * FROM {$wpdb->prefix}{$src[0]} " . gti_unseen_where_sql( $type ) . ' ORDER BY created_at DESC LIMIT %d',
             $limit
         ), ARRAY_A );
 
