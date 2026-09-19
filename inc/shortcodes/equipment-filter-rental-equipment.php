@@ -368,7 +368,7 @@ function gti_get_rental_equipment_data() {
     }
 
     $rows = $wpdb->get_results(
-        "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' ORDER BY created_at DESC"
+        "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ") ORDER BY created_at DESC"
     );
 
     if ( empty( $rows ) ) {
@@ -379,8 +379,7 @@ function gti_get_rental_equipment_data() {
 
     $items = [];
     foreach ( $rows as $row ) {
-        // An expired price does not remove the unit from the catalogue; it is
-        // shown with a "Price no longer valid" badge instead (PRD §7.5).
+        // Expired prices are already filtered out in SQL; kept as a safety net.
         $price_expired = ! gti_is_price_valid( $row->price_valid_until );
 
         $image = '';
@@ -1789,7 +1788,7 @@ function gti_rental_get_equipment_by_id( $id ) {
 
     $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
     if ( $table_exists ) {
-        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND type = 'rental' AND deleted_at IS NULL AND status != 'draft'", $id ) );
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ")", $id ) );
         if ( $row ) {
             return gti_rental_map_complete_row( $row );
         }
@@ -1821,7 +1820,7 @@ function gti_rental_get_related_equipment( $current, $limit = 8 ) {
         if ( $category ) {
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
+                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ") AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
                     $category, $current_id, $limit
                 )
             );
@@ -1836,7 +1835,7 @@ function gti_rental_get_related_equipment( $current, $limit = 8 ) {
             $placeholders = implode( ',', array_fill( 0, count( $existing_ids ), '%d' ) );
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
+                    "SELECT * FROM {$table} WHERE type = 'rental' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ") AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
                     array_merge( $existing_ids, [ $limit - count( $items ) ] )
                 )
             );
