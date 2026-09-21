@@ -354,7 +354,6 @@ function gti_request_row_payload( array $row ) {
         'customer_email'    => $row['customer_email'],
         'customer_phone'    => $row['customer_phone'],
         'customer_address'  => $row['customer_address'] ?? '',
-        'equipment'         => $row['equipment'],
         'category'          => $row['category'],
         'brand'             => $row['brand'],
         'quantity'          => $row['quantity'],

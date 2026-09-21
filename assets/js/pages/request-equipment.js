@@ -24,7 +24,6 @@
                 'Email': row.customer_email,
                 'Phone': row.customer_phone,
                 'Address': row.customer_address,
-                'Equipment': row.equipment,
                 'Category': row.category,
                 'Brand': row.brand,
                 'Quantity': row.quantity,

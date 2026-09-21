@@ -96,6 +96,9 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
         'customer_email'    => ['email', 'customer_email', 'your_email', 'email_address'],
         'customer_phone'    => ['phone', 'customer_phone', 'telepon', 'phone_number', 'your_phone', 'no_hp', 'no_telp'],
         'customer_location' => ['location', 'customer_location', 'alamat', 'address', 'your_location', 'city'],
+        // Dipetakan ke dua kolom: customer_location dibaca /dashboard/customers,
+        // customer_address dibaca drawer detail request.
+        'customer_address'  => ['address', 'alamat', 'customer_address', 'street_address'],
         'equipment'         => ['equipment', 'equipment_type', 'alat_berat', 'alat', 'machine_type', 'equipment_name'],
         'category'          => ['category', 'equipment_category', 'kategori', 'type'],
         'brand'             => ['brand', 'equipment_brand', 'merek', 'merk', 'manufacturer'],
@@ -123,6 +126,7 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
         'customer_email'    => sanitize_email($get($formData, $field_map['customer_email'])),
         'customer_phone'    => sanitize_text_field($get($formData, $field_map['customer_phone'])),
         'customer_location' => sanitize_text_field($get($formData, $field_map['customer_location'])),
+        'customer_address'  => sanitize_text_field($get($formData, $field_map['customer_address'])),
         'equipment'         => sanitize_text_field($get($formData, $field_map['equipment'])),
         'category'          => sanitize_text_field($get($formData, $field_map['category'])),
         'brand'             => sanitize_text_field($get($formData, $field_map['brand'])),

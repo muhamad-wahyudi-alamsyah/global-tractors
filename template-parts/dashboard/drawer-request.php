@@ -41,7 +41,6 @@ $gti_status = $first ? $first['status'] : 'new';
         <div class="gti-drawer-section">
             <div class="gti-drawer-section-title"><i class="fas fa-file-alt"></i> Request Information</div>
             <?php
-            gti_render_drawer_row( 'Equipment',     $first['equipment'] ?? '' );
             gti_render_drawer_row( 'Category',      $first['category']  ?? '' );
             gti_render_drawer_row( 'Brand',         $first['brand']     ?? '' );
             gti_render_drawer_row( 'Quantity',      $first['quantity']  ?? '' );

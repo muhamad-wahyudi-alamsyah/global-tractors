@@ -126,7 +126,7 @@ gti_dashboard_open( array(
                     <tr>
                         <th class="col-reqid">Request ID</th>
                         <th class="col-customer">Customer</th>
-                        <th class="col-equipment">Requested Equipment</th>
+                        <th class="col-category">Category</th>
                         <th class="col-location">Location</th>
                         <th class="col-budget">Budget</th>
                         <th class="col-status">Status</th>
@@ -158,7 +158,7 @@ gti_dashboard_open( array(
                                     <br><small style="color: #9ca3af; font-size: 12px;"><?php echo esc_html( $req['customer_company'] ); ?></small>
                                 <?php endif; ?>
                             </td>
-                            <td class="col-equipment"><?php echo esc_html( $req['equipment'] ); ?></td>
+                            <td class="col-category"><?php echo esc_html( $req['category'] ); ?></td>
                             <td class="col-location"><?php echo esc_html( $req['location'] ); ?></td>
                             <td class="col-budget"><?php echo esc_html( $payload['budget_text'] ); ?></td>
                             <td class="col-status"><?php gti_render_status_badge( 'request', $req['status'] ); ?></td>

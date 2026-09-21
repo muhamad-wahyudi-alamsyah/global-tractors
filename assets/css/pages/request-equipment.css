@@ -27,7 +27,7 @@
 .gti-ue-table { width: 100%; table-layout: fixed; }
 .gti-ue-table .col-reqid { width: 110px; }
 .gti-ue-table .col-customer { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gti-ue-table .col-equipment { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gti-ue-table .col-category { width: 160px; font-size: 14px; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-qty { width: 70px; text-align: center; }
 .gti-ue-table .col-location { width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-budget { width: 100px; text-align: right; white-space: nowrap; }
