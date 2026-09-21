@@ -470,7 +470,7 @@
         populateField(form, 'type', eq.type);
         populateField(form, 'operating_weight', eq.operating_weight);
         populateField(form, 'bucket_capacity', eq.bucket_capacity);
-        populateField(form, 'location', eq.location);
+        window.GTI.customLocation(form, eq.location || '');
         populateField(form, 'status', eq.status);
         populateField(form, 'stock_number', eq.stock_number);
         populateField(form, 'description', eq.description);

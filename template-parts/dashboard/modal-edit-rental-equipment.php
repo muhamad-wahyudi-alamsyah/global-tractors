@@ -209,6 +209,7 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                                             <option value="Bandung">Bandung</option>
                                             <option value="Medan">Medan</option>
                                             <option value="Makassar">Makassar</option>
+                                            <option value="Lainnya" data-other>Lainnya</option>
                                         </select>
                                     </div>
 

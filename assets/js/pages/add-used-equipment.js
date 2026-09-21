@@ -12,6 +12,7 @@
             var catMap = (window.gtiPageData && gtiPageData.categoryMap) || {};
             var catSelect = document.querySelector('select[name="category"]');
             var codeInput = document.querySelector('input[name="equipment_code"]');
+            window.GTI.customLocation(document);
             if (!catSelect || !codeInput) return;
 
             function generateCode(catVal) {

@@ -19,9 +19,9 @@ $theme = dirname(__DIR__);
 // page's GET filter toolbar reuses names like 'category' and 'status' on purpose.
 $templates = array(
     'add form'   => array($theme . '/templates/page-add-used-equipment.php', 'gti-ae-form'),
-    'edit modal' => array($theme . '/templates/page-used-equipment.php', 'gti-edit-form'),
+    'edit modal' => array($theme . '/template-parts/dashboard/modal-edit-equipment.php', 'gti-edit-form'),
 );
-$handler = $theme . '/includes/class-gti-ajax.php';
+$handler = $theme . '/inc/ajax/admin/equipment.php';
 
 // Submitted, but never as a plain $_POST field: uploads land in $_FILES, checklist[]
 // is a UI-only confirmation, and action/nonce/id are the AJAX envelope.
@@ -80,6 +80,30 @@ foreach ($templates as $label => $info) {
         if (!in_array($name, $not_posted, true) && !in_array($name, $handled, true)) {
             $failures[] = "{$label}: '{$name}' is submitted but save_equipment() never reads it.";
         }
+    }
+}
+
+// The "Lainnya" custom-location input (GTI.customLocation in dashboard-ui.js) hangs
+// off data-other and mirrors its text into that option's value, so the input itself
+// must stay nameless — a second name="location" would be the one PHP keeps.
+$location_forms = array(
+    $theme . '/templates/page-add-used-equipment.php',
+    $theme . '/templates/page-add-rental-equipment.php',
+    $theme . '/template-parts/dashboard/modal-edit-equipment.php',
+    $theme . '/template-parts/dashboard/modal-edit-rental-equipment.php',
+);
+
+foreach ($location_forms as $file) {
+    $html = file_get_contents($file);
+    $name = basename($file);
+
+    if (strpos($html, '<option value="Lainnya" data-other>') === false) {
+        $failures[] = "{$name}: location select is missing <option value=\"Lainnya\" data-other>.";
+    }
+
+    $count = substr_count($html, 'name="location"');
+    if ($count !== 1) {
+        $failures[] = "{$name}: name=\"location\" appears {$count}x — the custom-location input must stay nameless.";
     }
 }
 

@@ -210,6 +210,7 @@ gti_dashboard_open( array(
                                             <option value="Bandung">Bandung</option>
                                             <option value="Medan">Medan</option>
                                             <option value="Makassar">Makassar</option>
+                                            <option value="Lainnya" data-other>Lainnya</option>
                                         </select>
                                     </div>
                                     <div class="gti-ae-field">

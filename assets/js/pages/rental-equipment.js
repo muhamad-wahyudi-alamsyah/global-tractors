@@ -488,14 +488,7 @@ function openEditModal(eq) {
     populateField(form, 'condition_status', eq.condition_status);
 
     populateField(form, 'type', eq.type);
-
-    var locationValue = eq.location || '';
-
-    if (locationValue) {
-        locationValue = locationValue.split(',')[0].trim();
-    }
-
-    populateField(form, 'location', locationValue);
+    window.GTI.customLocation(form, eq.location || '');
     populateField(form, 'status', eq.status);
     populateField(form, 'stock_number', eq.stock_number);
 

@@ -472,6 +472,57 @@
         initHighlight();
     });
 
+    /**
+     * Custom location behind the "Lainnya" option.
+     * The injected input has no name= on purpose: FormData must still send one
+     * `location`. Its text is written into the option's value instead.
+     * Pass `value` (edit modals) to preselect; omit it on the add forms.
+     */
+    GTI.customLocation = function (scope, value) {
+        var select = scope.querySelector('select[name="location"]');
+        if (!select) return;
+        var opt = select.querySelector('option[data-other]');
+        if (!opt) return;
+
+        var input = select.parentNode.querySelector('.gti-location-other');
+        if (!input) {
+            input = document.createElement('input');
+            input.type = 'text';
+            input.hidden = true;
+            input.className = 'gti-location-other';
+            input.placeholder = 'Tulis nama lokasi';
+            select.parentNode.insertBefore(input, select.nextSibling);
+
+            input.addEventListener('input', function () {
+                opt.value = input.value.trim() || 'Lainnya';
+            });
+            select.addEventListener('change', function () {
+                var other = select.options[select.selectedIndex] === opt;
+                input.hidden = !other;
+                if (other) {
+                    input.focus();
+                } else {
+                    input.value = '';
+                    opt.value = 'Lainnya';
+                }
+            });
+        }
+
+        // Edit modals pass the stored value; add forms leave it undefined.
+        if (value === undefined) return;
+        opt.value = 'Lainnya';
+        input.value = '';
+        input.hidden = true;
+        select.value = (value === null ? '' : value);
+        if (value && select.value !== value) {
+            // Not in the city list — it is a custom location.
+            opt.value = value;
+            select.value = value;
+            input.value = value;
+            input.hidden = false;
+        }
+    };
+
     // Back-compat shims: templates still call these by their old global names.
     window.showUeToast = function (message, type) { GTI.ui.toast(message, type); };
     window.formatDateID = function (value) { return GTI.fmt.dateID(value); };
