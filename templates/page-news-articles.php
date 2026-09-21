@@ -41,7 +41,6 @@ $counts          = gti_article_counts();
 $total_count     = $counts['total'];
 $published_count = $counts['published'];
 $draft_count     = $counts['draft'];
-$total_views     = $counts['views'];
 
 // Categories for filter
 $categories = gti_article_used_categories();
@@ -82,13 +81,6 @@ gti_dashboard_open( array(
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Draft</p>
                             <p class="gti-ue-stat-value"><?php echo esc_html($draft_count); ?></p>
-                        </div>
-                    </div>
-                    <div class="gti-ue-stat-card">
-                        <div class="gti-ue-stat-icon sold"><i class="fas fa-eye"></i></div>
-                        <div class="gti-ue-stat-info">
-                            <p class="gti-ue-stat-label">Total Views</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html(number_format($total_views)); ?></p>
                         </div>
                     </div>
                 </div>
@@ -136,7 +128,6 @@ gti_dashboard_open( array(
                                 <th class="col-category">Category</th>
                                 <th class="col-author">Author</th>
                                 <th class="col-status">Status</th>
-                                <th class="col-views">Views</th>
                                 <th class="col-date">Date</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
@@ -144,7 +135,7 @@ gti_dashboard_open( array(
                         <tbody>
                             <?php if (empty($articles)): ?>
                                 <tr>
-                                    <td colspan="8" style="text-align: center; padding: 60px 20px;">
+                                    <td colspan="7" style="text-align: center; padding: 60px 20px;">
                                         <div style="color: #9ca3af;">
                                             <i class="fas fa-newspaper" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                                             <p style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No articles found</p>
@@ -185,12 +176,6 @@ gti_dashboard_open( array(
                                         </td>
                                         <td class="col-status">
                                             <span class="gti-badge-status <?php echo esc_attr(gti_na_status_class($a->status)); ?>"><?php echo esc_html(ucfirst($a->status)); ?></span>
-                                        </td>
-                                        <td class="col-views">
-                                            <span class="gti-views-cell">
-                                                <i class="fas fa-eye"></i>
-                                                <?php echo esc_html(gti_na_format_views((int)$a->views)); ?>
-                                            </span>
                                         </td>
                                         <td class="col-date">
                                             <?php echo esc_html(date('M j, Y', strtotime($a->published_at ?: $a->created_at))); ?>
@@ -265,7 +250,6 @@ gti_dashboard_open( array(
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Author</span><span class="gti-drawer-value" id="drawer-author">-</span></div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Published</span><span class="gti-drawer-value" id="drawer-published">-</span></div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Created</span><span class="gti-drawer-value" id="drawer-created">-</span></div>
-                            <div class="gti-drawer-row"><span class="gti-drawer-label">Views</span><span class="gti-drawer-value" id="drawer-views">-</span></div>
                             <div class="gti-drawer-row"><span class="gti-drawer-label">Featured</span><span class="gti-drawer-value" id="drawer-featured">-</span></div>
                         </div>
 

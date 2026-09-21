@@ -87,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('drawer-author').textContent = article.author || '-';
         document.getElementById('drawer-published').textContent = article.published_at ? formatDateID(article.published_at) : '-';
         document.getElementById('drawer-created').textContent = article.created_at ? formatDateID(article.created_at) : '-';
-        document.getElementById('drawer-views').textContent = formatViews(article.views);
         document.getElementById('drawer-featured').textContent = article.is_featured ? 'Yes' : 'No';
 
         // Excerpt
@@ -160,11 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.gti-ue-action-dropdown.show').forEach(function(d) { d.classList.remove('show'); });
     }
 
-    function formatViews(views) {
-        views = parseInt(views) || 0;
-        if (views >= 1000) return (views / 1000).toFixed(1) + 'K views';
-        return views.toLocaleString() + ' views';
-    }
 
     function toggleStatusFromDrawer() {
         if (!_currentArticle) return;
