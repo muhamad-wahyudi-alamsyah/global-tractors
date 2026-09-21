@@ -60,7 +60,7 @@ function gti_customer_submit_quotation() {
     $needed_date       = $date( 'ed_needed_date' );
     $delivery_location = $text( 'ed_delivery_location' );
     $payment_terms     = $text( 'ed_payment_terms' );
-    $budget            = (float) preg_replace( '/[^\d.]/', '', str_replace( ',', '', $text( 'ed_budget' ) ) );
+    $budget            = gti_parse_amount( $text( 'ed_budget' ) );
 
     $rental_start    = $date( 'ed_rental_start' );
     $rental_end      = $date( 'ed_rental_end' );

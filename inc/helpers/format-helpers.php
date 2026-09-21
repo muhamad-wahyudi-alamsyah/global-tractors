@@ -58,6 +58,36 @@ if ( ! function_exists( 'gti_fmt_currency' ) ) {
     }
 }
 
+if ( ! function_exists( 'gti_parse_amount' ) ) {
+    /**
+     * Inverse of gti_fmt_currency(): "Rp 850.000.000" → 850000000.0
+     *
+     * The public forms format money while typing (id-ID, dots every three
+     * digits), so a plain floatval() read "850.000.000" as 850 and the
+     * drawer showed "Rp 850".
+     *
+     * ponytail: the last separator is decimal only when it is not followed by
+     * exactly three digits, so "1.500" is 1500 and never 1.5 — correct for
+     * id-ID input, switch on locale if en-US forms ever post here.
+     */
+    function gti_parse_amount( $value ) {
+        $s = preg_replace( '/[^\d.,]/', '', (string) $value );
+        if ( $s === '' ) {
+            return 0.0;
+        }
+
+        $dot     = strrpos( $s, '.' );
+        $comma   = strrpos( $s, ',' );
+        $dec_pos = max( $dot === false ? -1 : $dot, $comma === false ? -1 : $comma );
+
+        if ( $dec_pos === -1 || strlen( $s ) - $dec_pos - 1 === 3 ) {
+            return (float) str_replace( array( '.', ',' ), '', $s );
+        }
+
+        return (float) ( str_replace( array( '.', ',' ), '', substr( $s, 0, $dec_pos ) ) . '.' . substr( $s, $dec_pos + 1 ) );
+    }
+}
+
 if ( ! function_exists( 'gti_fmt_date' ) ) {
     function gti_fmt_date( $date ) {
         if ( ! $date || $date === '0000-00-00' || $date === '0000-00-00 00:00:00' ) {
