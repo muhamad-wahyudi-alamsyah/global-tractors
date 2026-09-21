@@ -56,10 +56,51 @@
         var _pendingFiles = [];
         function handleFiles(files) {
             _pendingFiles = Array.from(files);
+            renderPendingFiles();
             if (_pendingFiles.length > 0) {
                 document.getElementById('startUploadBtn').disabled = false;
+                document.getElementById('uploadProgress').style.display = 'block';
                 document.getElementById('uploadStatus').textContent = _pendingFiles.length + ' file(s) selected';
             }
+        }
+
+        // The modal used to swallow the picked files: only a count was shown, so
+        // there was no way to tell what had actually been attached.
+        function renderPendingFiles() {
+            var list = document.getElementById('uploadFileList');
+            if (!list) return;
+
+            list.innerHTML = '';
+            list.style.display = _pendingFiles.length ? 'block' : 'none';
+
+            _pendingFiles.forEach(function (file) {
+                var row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f3f4f6;';
+
+                var thumb;
+                if (file.type.indexOf('image/') === 0) {
+                    thumb = document.createElement('img');
+                    thumb.src = URL.createObjectURL(file);
+                    // Freed once the browser has painted it; the File stays valid.
+                    thumb.onload = function () { URL.revokeObjectURL(this.src); };
+                    thumb.style.cssText = 'width:36px;height:36px;object-fit:cover;border-radius:6px;flex-shrink:0;';
+                } else {
+                    thumb = document.createElement('i');
+                    thumb.className = 'fas fa-file';
+                    thumb.style.cssText = 'width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:#f3f4f6;border-radius:6px;color:#9ca3af;flex-shrink:0;';
+                }
+
+                var meta = document.createElement('div');
+                meta.style.cssText = 'min-width:0;flex:1;';
+                meta.innerHTML = '<div style="font-size:13px;color:#1a1f36;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>' +
+                                 '<div style="font-size:11px;color:#9ca3af;"></div>';
+                meta.firstChild.textContent = file.name;
+                meta.lastChild.textContent = GTI.fmt.bytes(file.size);
+
+                row.appendChild(thumb);
+                row.appendChild(meta);
+                list.appendChild(row);
+            });
         }
 
         document.getElementById('startUploadBtn').addEventListener('click', function () {
@@ -186,6 +227,8 @@
 
     function closeUploadModal() {
         document.getElementById('uploadModal').style.display = 'none';
+        var list = document.getElementById('uploadFileList');
+        if (list) { list.innerHTML = ''; list.style.display = 'none'; }
     }
 
     // Permanently remove the attachment, its resized files included.

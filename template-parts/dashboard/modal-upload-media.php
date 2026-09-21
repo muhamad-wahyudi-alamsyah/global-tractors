@@ -19,6 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                 <p style="margin:4px 0 0; font-size:12px; color:#9ca3af;">or click to browse</p>
                 <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" style="display:none;">
             </div>
+            <div id="uploadFileList" style="margin-top:12px; display:none; max-height:180px; overflow-y:auto; border:1px solid #f3f4f6; border-radius:8px;"></div>
             <div id="uploadProgress" style="margin-top:16px; display:none;">
                 <div style="background:#f3f4f6; border-radius:6px; height:6px; overflow:hidden;">
                     <div id="uploadProgressBar" style="background:#F5A623; height:100%; width:0; transition:width 0.3s; border-radius:6px;"></div>
