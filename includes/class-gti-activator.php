@@ -384,8 +384,96 @@ class GTI_Activator {
             }
         }
 
+        if (version_compare($db_version, '1.4.0', '<')) {
+            self::add_columns($table_requests, array(
+                'year_min'            => 'SMALLINT UNSIGNED NULL',
+                'year_max'            => 'SMALLINT UNSIGNED NULL',
+                'equipment_condition' => 'VARCHAR(100) NULL',
+                'duration'            => 'VARCHAR(100) NULL',
+            ));
+
+            self::add_columns($table_sell_requests, array(
+                'availability' => 'VARCHAR(100) NULL',
+            ));
+
+            self::backfill_appended_extras();
+        }
+
         // Store table version
-        update_option('gti_db_version', '1.3.0');
+        update_option('gti_db_version', '1.4.0');
+    }
+
+    /**
+     * v1.4.0: fields without a column used to be glued onto notes/message as
+     * "Label: value" lines. Move each one into the column added above and hand
+     * the free-text box back to the customer.
+     *
+     * Only rows whose new columns are all still NULL are touched. The appended
+     * block is recognised only when the text has a preceding paragraph *and*
+     * every line of the last one matches a known label — so a customer whose
+     * whole note reads "Durasi: 3 bulan ya pak" keeps their text intact.
+     * Every appended row in the live data has that shape.
+     */
+    private static function backfill_appended_extras() {
+        global $wpdb;
+
+        $jobs = array(
+            array(
+                'table'  => $wpdb->prefix . 'gti_requests',
+                'text'   => 'notes',
+                'labels' => array(
+                    // Recognised but discarded: the field is gone, yet the line
+                    // still has to match or the block would not split at all.
+                    'Merk (detail)' => null,
+                    'Tahun (min)'   => 'year_min',
+                    'Tahun (max)'   => 'year_max',
+                    'Kondisi'       => 'equipment_condition',
+                    'Durasi'        => 'duration',
+                ),
+            ),
+            array(
+                'table'  => $wpdb->prefix . 'gti_sell_requests',
+                'text'   => 'message',
+                'labels' => array('Ketersediaan' => 'availability'),
+            ),
+        );
+
+        foreach ($jobs as $job) {
+            $untouched = array();
+            foreach (array_filter($job['labels']) as $column) {
+                $untouched[] = "`{$column}` IS NULL";
+            }
+
+            $rows = $wpdb->get_results(
+                "SELECT id, `{$job['text']}` AS text FROM {$job['table']}
+                 WHERE " . implode(' AND ', $untouched) . " AND `{$job['text']}` LIKE '%: %'",
+                ARRAY_A
+            );
+
+            foreach ($rows as $row) {
+                $chunks = explode("\n\n", (string) $row['text']);
+                if (count($chunks) < 2) {
+                    continue; // no free-text paragraph in front: not our block
+                }
+
+                $update = array();
+
+                foreach (preg_split('/\R/', trim(end($chunks))) as $line) {
+                    $pair = explode(': ', $line, 2);
+                    if (count($pair) !== 2 || !array_key_exists($pair[0], $job['labels'])) {
+                        continue 2; // one stray line: leave the whole text alone
+                    }
+                    if ($job['labels'][$pair[0]] !== null) {
+                        $update[$job['labels'][$pair[0]]] = $pair[1];
+                    }
+                }
+
+                array_pop($chunks);
+                $update[$job['text']] = trim(implode("\n\n", $chunks));
+
+                $wpdb->update($job['table'], $update, array('id' => $row['id']));
+            }
+        }
     }
 
     /**

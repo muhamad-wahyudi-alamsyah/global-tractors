@@ -66,6 +66,7 @@ $gti_hours     = $first['equipment_hours'] ?? '';
                 '',
                 true
             );
+            gti_render_drawer_row( 'Availability', $first['availability']     ?? '' );
             gti_render_drawer_row( 'Location',  $first['equipment_location']  ?? '' );
             ?>
         </div>

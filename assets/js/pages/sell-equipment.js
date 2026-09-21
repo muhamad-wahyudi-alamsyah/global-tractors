@@ -23,6 +23,7 @@
                 'Model': row.model,
                 'Year': row.year,
                 'Hours': row.hours ? Number(row.hours).toLocaleString() + ' hrs' : '',
+                'Availability': row.availability,
                 'Location': row.equipment_location,
                 'Offered Price': row.price_text,
                 'Submission Date': row.submitted_text,

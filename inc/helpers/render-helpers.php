@@ -340,6 +340,20 @@ function gti_wa_link( $phone, $message ) {
 }
 
 /**
+ * "2020 – 2021", or the single year when only one end is known.
+ */
+function gti_year_range( $min, $max ) {
+    $min = (int) $min;
+    $max = (int) $max;
+
+    if ( $min && $max ) {
+        return $min === $max ? (string) $min : $min . ' – ' . $max;
+    }
+
+    return (string) ( $min ?: $max ?: '' );
+}
+
+/**
  * Row payload handed to the drawer as JSON.
  *
  * Values are pre-formatted server-side so the client never has to re-derive a
@@ -356,7 +370,10 @@ function gti_request_row_payload( array $row ) {
         'customer_address'  => $row['customer_address'] ?? '',
         'category'          => $row['category'],
         'brand'             => $row['brand'],
+        'year_range'        => gti_year_range( $row['year_min'] ?? 0, $row['year_max'] ?? 0 ),
+        'condition'         => $row['equipment_condition'] ?? '',
         'quantity'          => $row['quantity'],
+        'duration'          => $row['duration'] ?? '',
         'location'          => $row['location'],
         'budget_text'       => $row['budget'] ? 'Rp ' . number_format( (float) $row['budget'], 0, ',', '.' ) : '—',
         'required_date'     => $row['required_date'] ?? '',
@@ -457,6 +474,7 @@ function gti_sell_row_payload( array $row ) {
         'year'               => $row['equipment_year'] ?? '',
         'hours'              => $row['equipment_hours'] ?? '',
         'condition'          => $row['equipment_condition'] ?? '',
+        'availability'       => $row['availability'] ?? '',
         'equipment_location' => $row['equipment_location'] ?? '',
         'price_text'         => $row['offered_price'] ? 'Rp ' . number_format( (float) $row['offered_price'], 0, ',', '.' ) : '—',
         'message'            => $row['message'] ?? ( $row['notes'] ?? '' ),

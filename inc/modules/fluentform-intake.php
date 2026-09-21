@@ -14,19 +14,6 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/**
- * Append "Label: value" lines for form fields that have no DB column.
- */
-function gti_ff_append_extras($text, $formData, array $extras) {
-    $lines = array();
-    foreach ($extras as $key => $label) {
-        if (isset($formData[$key]) && $formData[$key] !== '') {
-            $lines[] = $label . ': ' . sanitize_text_field($formData[$key]);
-        }
-    }
-    return trim($text . ($lines ? "\n\n" . implode("\n", $lines) : ''));
-}
-
 // ── FluentForms → Request Equipment sync ─────────────────────────────────────
 /**
  * Sinkronkan submission FluentForms ke tabel wp_gti_requests.
@@ -108,16 +95,11 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
         'required_date'     => ['required_date', 'tanggal_dibutuhkan', 'need_date', 'delivery_date', 'due_date'],
         'notes'             => ['notes', 'catatan', 'message', 'additional_notes', 'keterangan', 'remarks'],
         'usage_purpose'     => ['usage_purpose', 'tujuan', 'purpose', 'project'],
+        'year_min'            => ['year_min', 'tahun_min'],
+        'year_max'            => ['year_max', 'tahun_max'],
+        'equipment_condition' => ['kondisi', 'condition', 'equipment_condition'],
+        'duration'            => ['durasi', 'duration', 'lama_sewa'],
     );
-
-    // Fields without their own column are appended to notes so nothing is lost.
-    $notes = gti_ff_append_extras($get($formData, $field_map['notes']), $formData, array(
-        'merk_detail' => 'Merk (detail)',
-        'year_min'    => 'Tahun (min)',
-        'year_max'    => 'Tahun (max)',
-        'kondisi'     => 'Kondisi',
-        'durasi'      => 'Durasi',
-    ));
 
     $data = array(
         'request_id'        => $request_id,
@@ -134,8 +116,12 @@ function gti_fluentform_to_request($insertId, $formData, $form) {
         'location'          => sanitize_text_field($get($formData, $field_map['location'])),
         'budget'            => floatval($get($formData, $field_map['budget'], 0)),
         'required_date'     => $get($formData, $field_map['required_date']) ?: null,
-        'notes'             => wp_kses_post($notes),
+        'notes'             => wp_kses_post($get($formData, $field_map['notes'])),
         'usage_purpose'     => sanitize_text_field($get($formData, $field_map['usage_purpose'])),
+        'year_min'            => intval($get($formData, $field_map['year_min'])) ?: null,
+        'year_max'            => intval($get($formData, $field_map['year_max'])) ?: null,
+        'equipment_condition' => sanitize_text_field($get($formData, $field_map['equipment_condition'])),
+        'duration'            => sanitize_text_field($get($formData, $field_map['duration'])),
         'status'            => 'new',
         'request_date'      => current_time('mysql'),
         'created_at'        => current_time('mysql'),
@@ -206,6 +192,7 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'offered_price'       => ['offered_price', 'price', 'harga', 'harga_tawar', 'selling_price', 'harga_jual'],
         'equipment_location'  => ['equipment_location', 'location', 'lokasi', 'lokasi_projek'],
         'message'             => ['message', 'description', 'deskripsi', 'notes', 'catatan'],
+        'availability'        => ['ketersediaan', 'availability'],
     );
 
     $data = array(
@@ -221,9 +208,8 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'equipment_hours'     => intval($get($formData, $field_map['equipment_hours'])) ?: null,
         'offered_price'       => floatval($get($formData, $field_map['offered_price'], 0)),
         'equipment_location'  => sanitize_text_field($get($formData, $field_map['equipment_location'])),
-        'message'             => wp_kses_post(gti_ff_append_extras($get($formData, $field_map['message']), $formData, array(
-            'ketersediaan' => 'Ketersediaan',
-        ))),
+        'message'             => wp_kses_post($get($formData, $field_map['message'])),
+        'availability'        => sanitize_text_field($get($formData, $field_map['availability'])),
         'status'              => 'new',
         'created_at'          => current_time('mysql'),
     );

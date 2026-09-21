@@ -43,7 +43,10 @@ $gti_status = $first ? $first['status'] : 'new';
             <?php
             gti_render_drawer_row( 'Category',      $first['category']  ?? '' );
             gti_render_drawer_row( 'Brand',         $first['brand']     ?? '' );
+            gti_render_drawer_row( 'Year Range',    gti_year_range( $first['year_min'] ?? 0, $first['year_max'] ?? 0 ) );
+            gti_render_drawer_row( 'Condition',     $first['equipment_condition'] ?? '' );
             gti_render_drawer_row( 'Quantity',      $first['quantity']  ?? '' );
+            gti_render_drawer_row( 'Duration',      $first['duration']  ?? '' );
             gti_render_drawer_row( 'Location',      $first['location']  ?? '' );
             gti_render_drawer_row( 'Budget',        $first && $first['budget'] ? 'Rp ' . number_format( (float) $first['budget'], 0, ',', '.' ) : '' );
             // B-01: these two had no column at all before v1.3.0, so the drawer
