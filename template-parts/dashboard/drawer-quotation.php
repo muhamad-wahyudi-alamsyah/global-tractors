@@ -85,15 +85,11 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
         </div>
 
         <div class="gti-drawer-section">
-            <div class="gti-drawer-section-title"><i class="fas fa-list-alt"></i> Summary</div>
+            <div class="gti-drawer-section-title"><i class="fas fa-user-check"></i> Assign PIC</div>
             <?php
-            gti_render_drawer_row( 'Total Items',     $gti_payload['total_items'] ?? '' );
-            gti_render_drawer_row( 'Est. Total Value', $gti_payload['total_text'] ?? '' );
-
             $gti_pic = ! empty( $gti_payload['sales_pic'] ) ? $gti_payload['sales_pic'] : 'Unassigned';
             ?>
-            <div style="margin-top: 12px;">
-                <span class="gti-drawer-label" style="display: block; margin-bottom: 4px;">Sales PIC</span>
+            <div>
                 <div class="gti-drawer-pic-card">
                     <div class="gti-drawer-pic-avatar-placeholder" data-field="pic-initial"><?php echo esc_html( strtoupper( mb_substr( $gti_pic, 0, 1 ) ) ); ?></div>
                     <div class="gti-drawer-pic-info">

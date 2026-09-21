@@ -24,9 +24,7 @@
                 'Payment Terms': row.payment_terms,
                 'Delivery Location': row.delivery_location,
                 'Rental Period': row.rental_period,
-                'Budget': row.budget_text,
-                'Total Items': row.total_items,
-                'Est. Total Value': row.total_text
+                'Budget': row.budget_text
             };
 
             drawer.querySelectorAll('.gti-drawer-row').forEach(function (el) {
