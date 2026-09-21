@@ -27,6 +27,11 @@
 .gti-ue-delete-confirm:hover { background: #b91c1c; }
 .gti-ue-delete-confirm:disabled { opacity: 0.6; cursor: not-allowed; }
 
+/* Neutral variant: confirmations that are not deletions (e.g. status change). */
+.gti-ue-delete-modal.is-primary .gti-ue-delete-icon { background: #eff6ff; color: #2563eb; }
+.gti-ue-delete-modal.is-primary .gti-ue-delete-confirm { background: #2563eb; }
+.gti-ue-delete-modal.is-primary .gti-ue-delete-confirm:hover { background: #1d4ed8; }
+
 @keyframes gti-modal-in {
     from { opacity:0; transform: scale(0.95); }
     to { opacity:1; transform: scale(1); }

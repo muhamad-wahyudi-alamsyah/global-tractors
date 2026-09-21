@@ -214,11 +214,14 @@
             if (entity === 'sell' && status === 'invoice_requested') { return openInvoice(); }
 
             GTI.ui.confirm({
-                title: 'Ubah status',
+                title: 'Ubah Status',
+                subtitle: 'Status baru akan tercatat di timeline.',
                 name: current ? current.ref : '',
                 code: label,
                 warning: 'Pelanggan akan menerima email pemberitahuan.',
-                confirmLabel: 'Ubah Status'
+                confirmLabel: 'Ubah Status',
+                confirmIcon: 'fa-sync-alt',
+                tone: 'primary'
             }).then(function (ok) {
                 if (!ok) return;
                 return GTI.api.post('gti_change_status', {

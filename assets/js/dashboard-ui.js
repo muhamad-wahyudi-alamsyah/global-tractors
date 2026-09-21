@@ -175,7 +175,7 @@
         /**
          * Promise-based confirmation, replacing native confirm() (PRD Lampiran A).
          *
-         * @param {{title, name, code, warning, confirmLabel}} opts
+         * @param {{title, subtitle, name, code, warning, confirmLabel, confirmIcon, tone}} opts
          * @returns {Promise<boolean>}
          */
         confirm: function (opts) {
@@ -189,7 +189,13 @@
                     var el = document.getElementById(id);
                     if (el && text != null) el.textContent = text;
                 };
+                // Not every confirmation is a deletion: a status change gets the
+                // neutral treatment instead of the red, trash-icon one.
+                var box = overlay.querySelector('.gti-ue-delete-modal');
+                if (box) box.classList.toggle('is-primary', opts.tone === 'primary');
+
                 set('gti-delete-title', opts.title || 'Delete Item');
+                set('gti-delete-subtitle', opts.subtitle || 'This action cannot be undone.');
                 set('delete-eq-name', opts.name || '—');
                 set('delete-eq-code', opts.code || '—');
                 set('gti-delete-warning', opts.warning ||
@@ -197,7 +203,7 @@
 
                 var btn = document.getElementById('gti-delete-confirm-btn');
                 if (opts.confirmLabel && btn) {
-                    btn.innerHTML = '<i class="fas fa-trash"></i> ' + GTI.fmt.escape(opts.confirmLabel);
+                    btn.innerHTML = '<i class="fas ' + (opts.confirmIcon || 'fa-trash') + '"></i> ' + GTI.fmt.escape(opts.confirmLabel);
                 }
 
                 // Replace the node to drop listeners from any earlier call.

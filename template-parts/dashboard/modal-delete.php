@@ -25,7 +25,7 @@ $gti_delete = array_merge( array(
             <div class="gti-ue-delete-icon"><i class="fas fa-exclamation-triangle"></i></div>
             <div class="gti-ue-delete-header-text">
                 <h3 id="gti-delete-title"><?php echo esc_html( $gti_delete['title'] ); ?></h3>
-                <p>This action cannot be undone.</p>
+                <p id="gti-delete-subtitle">This action cannot be undone.</p>
             </div>
         </div>
         <div class="gti-ue-delete-body">
