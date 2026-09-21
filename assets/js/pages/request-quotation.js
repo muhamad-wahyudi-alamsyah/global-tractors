@@ -35,6 +35,9 @@
                 if (!label || !value) return;
                 var key = label.textContent.trim();
                 if (key in values) value.textContent = values[key] || '—';
+                if (key === 'Rental Period') {
+                    el.style.display = row.equipment_type === 'rental' ? '' : 'none';
+                }
             });
 
             // Sales PIC card.

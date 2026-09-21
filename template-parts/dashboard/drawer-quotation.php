@@ -46,9 +46,13 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
             // B-02: payment_terms had no column before v1.3.0 — the label was decorative.
             gti_render_drawer_row( 'Payment Terms',     $gti_payload['payment_terms'] ?? '' );
             gti_render_drawer_row( 'Delivery Location', $gti_payload['delivery_location'] ?? '' );
-            gti_render_drawer_row( 'Rental Period',     $gti_payload['rental_period'] ?? '' );
             gti_render_drawer_row( 'Budget',            $gti_payload['budget_text'] ?? '' );
             ?>
+            <?php // Rental Period only exists for rental quotations; request-quotation.js toggles it on repaint. ?>
+            <div class="gti-drawer-row"<?php echo ( ( $gti_payload['equipment_type'] ?? '' ) === 'rental' ) ? '' : ' style="display:none"'; ?>>
+                <span class="gti-drawer-label">Rental Period</span>
+                <span class="gti-drawer-value"><?php echo esc_html( $gti_payload['rental_period'] ?: '—' ); ?></span>
+            </div>
             <div class="gti-drawer-row gti-drawer-row-stacked">
                 <span class="gti-drawer-label">Notes</span>
                 <span class="gti-drawer-value is-message" data-field="notes"><?php
