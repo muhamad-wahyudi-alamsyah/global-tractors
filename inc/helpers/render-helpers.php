@@ -385,6 +385,12 @@ function gti_quotation_row_payload( array $row ) {
         $total_items += (int) ( $item['quantity'] ?? 1 );
     }
 
+    $type_labels = array(
+        'used'       => 'Used Equipment',
+        'rental'     => 'Rental',
+        'spare_part' => 'Spare Part',
+    );
+
     return array(
         'id'                => (int) $row['id'],
         'ref'               => $row['quotation_id'],
@@ -399,6 +405,7 @@ function gti_quotation_row_payload( array $row ) {
         'budget_text'       => ! empty( $row['budget'] ) ? 'Rp ' . number_format( (float) $row['budget'], 0, ',', '.' ) : '—',
         'quantity'          => $row['quantity'] ?? 1,
         'equipment_type'    => $row['equipment_type'] ?? '',
+        'equipment_type_label' => $type_labels[ $row['equipment_type'] ?? '' ] ?? '',
         'payment_terms'     => gti_payment_term_label( $row['payment_terms'] ?? '' ),
         'delivery_location' => $row['delivery_location'] ?? '',
         'needed_date'       => ! empty( $row['needed_date'] ) ? gti_format_date( $row['needed_date'], 'd M Y' ) : '',

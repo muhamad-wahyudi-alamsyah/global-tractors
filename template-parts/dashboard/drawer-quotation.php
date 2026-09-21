@@ -39,6 +39,7 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
         <div class="gti-drawer-section">
             <div class="gti-drawer-section-title"><i class="fas fa-file-alt"></i> Request Information</div>
             <?php
+            gti_render_drawer_row( 'Equipment Type',    $gti_payload['equipment_type_label'] ?? '' );
             gti_render_drawer_row( 'Requested Date',    $gti_payload['request_date_text'] ?? '' );
             gti_render_drawer_row( 'Needed Date',       $gti_payload['needed_date'] ?? '' );
             gti_render_drawer_row( 'Valid Until',       $gti_payload['valid_until'] ?? '' );

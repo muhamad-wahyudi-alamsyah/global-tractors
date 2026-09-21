@@ -126,8 +126,8 @@ gti_dashboard_open( array(
                     <tr>
                         <th class="col-quotid">Quotation ID</th>
                         <th class="col-customer">Customer</th>
-                        <th class="col-company">Company</th>
                         <th class="col-items">Requested Items</th>
+                        <th class="col-type">Type</th>
                         <th class="col-pic">Sales PIC</th>
                         <th class="col-status">Status</th>
                         <th class="col-date">Request Date</th>
@@ -164,10 +164,8 @@ gti_dashboard_open( array(
                             <td class="col-customer">
                                 <strong style="color: #1a1f36;"><?php echo esc_html( $quot['customer_name'] ); ?></strong>
                             </td>
-                            <td class="col-company">
-                                <small style="color: #6b7280;"><?php echo esc_html( $quot['customer_company'] ); ?></small>
-                            </td>
                             <td class="col-items" title="<?php echo esc_attr( $item_summary ); ?>"><?php echo esc_html( $item_summary ); ?></td>
+                            <td class="col-type"><?php echo esc_html( $payload['equipment_type_label'] ?: '—' ); ?></td>
                             <td class="col-pic"><?php echo esc_html( $quot['sales_pic'] ?: 'Unassigned' ); ?></td>
                             <td class="col-status"><?php gti_render_status_badge( 'quotation', $quot['status'] ); ?></td>
                             <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $quot['request_date'] ?: $quot['created_at'] ) ) ); ?></td>

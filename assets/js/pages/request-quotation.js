@@ -17,6 +17,7 @@
                 'Email': row.customer_email,
                 'Phone': row.customer_phone,
                 'Address': row.customer_address,
+                'Equipment Type': row.equipment_type_label,
                 'Requested Date': row.request_date_text,
                 'Needed Date': row.needed_date,
                 'Valid Until': row.valid_until,
