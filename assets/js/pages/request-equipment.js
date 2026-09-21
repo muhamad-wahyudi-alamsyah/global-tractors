@@ -30,7 +30,6 @@
                 'Quantity': row.quantity,
                 'Location': row.location,
                 'Budget': row.budget_text,
-                'Required Date': row.required_date ? GTI.fmt.dateID(row.required_date) : '',
                 'Usage Purpose': row.usage_purpose,
                 'Request Date': row.request_date_text,
                 'PIC': row.sales_pic || 'Unassigned'

@@ -47,7 +47,6 @@ $gti_status = $first ? $first['status'] : 'new';
             gti_render_drawer_row( 'Quantity',      $first['quantity']  ?? '' );
             gti_render_drawer_row( 'Location',      $first['location']  ?? '' );
             gti_render_drawer_row( 'Budget',        $first && $first['budget'] ? 'Rp ' . number_format( (float) $first['budget'], 0, ',', '.' ) : '' );
-            gti_render_drawer_row( 'Required Date', $first && ! empty( $first['required_date'] ) ? gti_format_date( $first['required_date'], 'd M Y' ) : '' );
             // B-01: these two had no column at all before v1.3.0, so the drawer
             // fell back to `notes` and the labels were effectively decorative.
             gti_render_drawer_row( 'Usage Purpose', $first['usage_purpose'] ?? '' );
