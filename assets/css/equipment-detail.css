@@ -1041,3 +1041,13 @@
 @media (max-width: 480px) {
     .gti-ed-form-row { grid-template-columns: 1fr; }
 }
+
+/* Parent theme (themify-ultra) styles bare input/select/textarea with
+   border-radius: var(--theme_rounded) (12px) at the same specificity as the
+   .gti-ed-form-group rules above, so the winner depended on stylesheet order.
+   Pin every inquiry-form control to 8px on used / rental / spare-part pages. */
+.gti-ed-inquiry-card .gti-ed-form input:not([type="checkbox"]),
+.gti-ed-inquiry-card .gti-ed-form select,
+.gti-ed-inquiry-card .gti-ed-form textarea {
+    border-radius: 8px;
+}
