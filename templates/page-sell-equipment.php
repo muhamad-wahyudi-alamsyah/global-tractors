@@ -136,13 +136,14 @@ gti_dashboard_open( array(
                                 <span class="gti-condition-badge <?php echo esc_attr( $condition ); ?>"><?php echo esc_html( ucfirst( $condition ) ); ?></span>
                             </td>
                             <td class="col-price" style="text-align: right;">
-                                <strong style="color: #1a1f36;">IDR <?php echo esc_html( number_format( (float) $sell['offered_price'], 0, ',', '.' ) ); ?></strong>
+                                <strong style="color: #1a1f36;" data-field="price">IDR <?php echo esc_html( number_format( (float) $sell['offered_price'], 0, ',', '.' ) ); ?></strong>
                             </td>
                             <td class="col-status"><?php gti_render_status_badge( 'sell', $sell['status'] ); ?></td>
                             <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $sell['created_at'] ) ) ); ?></td>
                             <td class="col-actions">
                                 <?php gti_render_action_menu( array(
                                     array( 'label' => 'View Details',    'icon' => 'fa-eye',          'class' => 'js-view' ),
+                                    array( 'label' => 'Update Offered Price', 'icon' => 'fa-tag',     'class' => 'js-price' ),
                                     array( 'label' => 'Contact on WhatsApp', 'icon' => 'fa-whatsapp', 'class' => 'js-whatsapp' ),
                                     array( 'label' => 'Reply by Email',  'icon' => 'fa-envelope',     'class' => 'js-reply' ),
                                     array( 'label' => 'Delete',          'icon' => 'fa-trash',        'class' => 'js-delete delete' ),
@@ -182,6 +183,7 @@ gti_dashboard_close( array(
         ),
         'email',
         'invoice',
+        'price',
         'assign',
     ),
 ) );

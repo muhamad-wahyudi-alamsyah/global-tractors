@@ -99,6 +99,83 @@
         }
     }
 
+    // ── Update Offered Price ────────────────────────────────────────────────
+    function openPrice(tr) {
+        if (!tr) return;
+
+        var row;
+        try { row = JSON.parse(tr.dataset.row); } catch (err) { return; }
+
+        document.getElementById('gti-price-id').value = row.id;
+        document.getElementById('gti-price-unit').textContent = row.equipment_name || row.unit || '—';
+        document.getElementById('gti-price-current').textContent = row.price_text || '—';
+        document.getElementById('gti-price-value').value = (row.price_text || '').replace(/[^\d.,]/g, '');
+
+        GTI.ui.modal.open('gtiPriceOverlay');
+    }
+
+    var priceForm = document.getElementById('gti-price-form');
+    if (priceForm) {
+        priceForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            var id = document.getElementById('gti-price-id').value;
+            var unlock = GTI.ui.lockButton(priceForm.querySelector('button[type="submit"]'), 'Menyimpan…');
+
+            GTI.api.post('gti_update_sell_request_price', new FormData(priceForm))
+                .then(function (data) {
+                    GTI.ui.modal.close('gtiPriceOverlay');
+                    GTI.ui.toast('Harga tawaran diperbarui.', 'success');
+
+                    var tr = document.querySelector('tr[data-id="' + id + '"]');
+                    if (tr) {
+                        var cell = tr.querySelector('[data-field="price"]');
+                        if (cell) cell.textContent = 'IDR ' + data.price_input;
+                        // Keep the drawer payload in sync so reopening shows the new price.
+                        try {
+                            var row = JSON.parse(tr.dataset.row);
+                            row.price_text = data.price_text;
+                            tr.dataset.row = JSON.stringify(row);
+                        } catch (err) { /* payload stays stale until reload */ }
+                    }
+
+                    // Repaint the open drawer's Offer Details row.
+                    if (drawer && drawer.dataset.id === String(id)) {
+                        drawer.querySelectorAll('.gti-drawer-row').forEach(function (el) {
+                            var label = el.querySelector('.gti-drawer-label');
+                            if (label && label.textContent.trim() === 'Offered Price') {
+                                el.querySelector('.gti-drawer-value').textContent = data.price_text;
+                            }
+                        });
+                    }
+                })
+                .catch(function () {})
+                .then(unlock);
+        });
+    }
+
+    // Row action menu.
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('.js-price');
+        if (!trigger) return;
+
+        e.stopPropagation();
+        document.querySelectorAll('.gti-ue-action-dropdown.show')
+            .forEach(function (d) { d.classList.remove('show'); });
+
+        openPrice(trigger.closest('tr[data-row]'));
+    });
+
+    // Drawer "more" menu — inbox-ui.js only dispatches the actions it owns.
+    if (drawer) {
+        drawer.addEventListener('click', function (e) {
+            if (!e.target.closest('[data-action="price"]')) return;
+            drawer.querySelectorAll('.gti-drawer-dropdown.show')
+                .forEach(function (m) { m.classList.remove('show'); });
+            openPrice(document.querySelector('tr[data-id="' + drawer.dataset.id + '"]'));
+        });
+    }
+
     // Row-level WhatsApp action.
     document.addEventListener('click', function (e) {
         var trigger = e.target.closest('.js-whatsapp');

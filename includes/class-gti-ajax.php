@@ -46,6 +46,7 @@ class GTI_Ajax {
         add_action('wp_ajax_gti_get_sell_request_detail', array(__CLASS__, 'get_sell_request_detail'));
         add_action('wp_ajax_gti_update_sell_request_status', array(__CLASS__, 'update_sell_request_status'));
         add_action('wp_ajax_gti_delete_sell_request', array(__CLASS__, 'delete_sell_request'));
+        add_action('wp_ajax_gti_update_sell_request_price', array(__CLASS__, 'update_sell_request_price'));
         
         // Customers AJAX
         add_action('wp_ajax_gti_save_customer', array(__CLASS__, 'save_customer'));

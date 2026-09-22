@@ -191,6 +191,36 @@ public static function update_sell_request_status() {
     }
 
 /**
+     * Update Offered Price — inline edit from the sell-equipment table.
+     */
+    public static function update_sell_request_price() {
+        self::verify_nonce();
+        self::require_cap('gti_manage_requests');
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'gti_sell_requests';
+        $id    = intval($_POST['id']);
+        $price = gti_parse_amount(wp_unslash($_POST['price'] ?? ''));
+
+        if ($id <= 0 || $price < 0) {
+            wp_send_json_error(array('message' => 'Harga tawaran tidak valid'));
+        }
+
+        $result = $wpdb->update($table, array('offered_price' => $price), array('id' => $id), array('%f'), array('%d'));
+
+        if ($result === false) {
+            wp_send_json_error(array('message' => 'Failed to update offered price'));
+        }
+
+        self::log_activity('update', 'sell_request', $id, array('offered_price' => $price));
+
+        wp_send_json_success(array(
+            'price_input' => number_format($price, 0, ',', '.'),
+            'price_text'  => $price ? 'Rp ' . number_format($price, 0, ',', '.') : '—',
+        ));
+    }
+
+/**
      * Delete Sell Request — hard delete (gti_sell_requests has no deleted_at column)
      */
     public static function delete_sell_request() {
