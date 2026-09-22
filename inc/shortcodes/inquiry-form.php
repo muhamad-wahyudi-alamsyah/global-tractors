@@ -88,7 +88,7 @@ function gti_render_inquiry_form( array $args ) {
 
             <div class="gti-ed-form-group">
                 <label class="gti-ed-form-label" for="ed-quantity">Jumlah <?php echo $type === 'spare_part' ? 'Part' : 'Unit'; ?> *</label>
-                <input type="number" name="ed_quantity" id="ed-quantity" value="1" min="1" step="1" required>
+                <input type="number" name="ed_quantity" id="ed-quantity" min="1" step="1" placeholder="Jumlah yang dibutuhkan" required>
             </div>
 
             <button type="button" class="gti-ed-form-toggle" id="gti-ed-more-toggle"
@@ -99,7 +99,7 @@ function gti_render_inquiry_form( array $args ) {
             <div class="gti-ed-form-more" id="gti-ed-more" hidden>
                 <div class="gti-ed-form-group">
                     <label class="gti-ed-form-label" for="ed-needed-date">Dibutuhkan Tanggal</label>
-                    <input type="date" name="ed_needed_date" id="ed-needed-date" min="<?php echo esc_attr( $today ); ?>">
+                    <input type="date" name="ed_needed_date" id="ed-needed-date" min="<?php echo esc_attr( $today ); ?>" placeholder="Pilih tanggal dibutuhkan">
                 </div>
 
                 <?php if ( $type === 'rental' ) : ?>
@@ -117,11 +117,11 @@ function gti_render_inquiry_form( array $args ) {
                     <div class="gti-ed-form-row">
                         <div class="gti-ed-form-group">
                             <label class="gti-ed-form-label" for="ed-rental-start">Mulai Sewa</label>
-                            <input type="date" name="ed_rental_start" id="ed-rental-start" min="<?php echo esc_attr( $today ); ?>">
+                            <input type="date" name="ed_rental_start" id="ed-rental-start" min="<?php echo esc_attr( $today ); ?>" placeholder="Tanggal mulai sewa">
                         </div>
                         <div class="gti-ed-form-group">
                             <label class="gti-ed-form-label" for="ed-rental-end">Selesai Sewa</label>
-                            <input type="date" name="ed_rental_end" id="ed-rental-end" min="<?php echo esc_attr( $today ); ?>">
+                            <input type="date" name="ed_rental_end" id="ed-rental-end" min="<?php echo esc_attr( $today ); ?>" placeholder="Tanggal selesai sewa">
                             <span class="gti-ed-form-error" data-for="ed_rental_end"></span>
                         </div>
                     </div>
@@ -152,12 +152,12 @@ function gti_render_inquiry_form( array $args ) {
 
                 <div class="gti-ed-form-group">
                     <label class="gti-ed-form-label" for="ed-delivery">Lokasi Pengiriman</label>
-                    <input type="text" name="ed_delivery_location" id="ed-delivery" placeholder="mis. Balikpapan, Kalimantan Timur">
+                    <input type="text" name="ed_delivery_location" id="ed-delivery" placeholder="Alamat pengiriman yang akan dituju">
                 </div>
                 <div class="gti-ed-form-group">
                     <label class="gti-ed-form-label" for="ed-payment">Metode Pembayaran</label>
                     <select name="ed_payment_terms" id="ed-payment">
-                        <option value="">&mdash; Pilih &mdash;</option>
+                        <option value="">&mdash; Pilih metode pembayaran &mdash;</option>
                         <?php foreach ( gti_payment_terms_options() as $gti_value => $gti_label ) : ?>
                             <option value="<?php echo esc_attr( $gti_value ); ?>"><?php echo esc_html( $gti_label ); ?></option>
                         <?php endforeach; ?>
@@ -165,7 +165,7 @@ function gti_render_inquiry_form( array $args ) {
                 </div>
                 <div class="gti-ed-form-group">
                     <label class="gti-ed-form-label" for="ed-budget">Estimasi Budget (IDR)</label>
-                    <input type="text" name="ed_budget" id="ed-budget" inputmode="numeric" placeholder="mis. 850.000.000">
+                    <input type="text" name="ed_budget" id="ed-budget" inputmode="numeric" placeholder="Budget">
                 </div>
                 <div class="gti-ed-form-group">
                     <label class="gti-ed-form-label" for="ed-address">Alamat</label>

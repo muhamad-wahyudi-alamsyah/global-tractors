@@ -97,6 +97,19 @@
         });
       }
 
+      // input[type=date] ignores placeholder, so the field starts as text and
+      // becomes a real date picker on focus. Reverts while still empty.
+      form.querySelectorAll('input[type="date"][placeholder]').forEach(function (el) {
+        el.type = 'text';
+        el.addEventListener('focus', function () {
+          this.type = 'date';
+          if (this.showPicker) { try { this.showPicker(); } catch (e) {} }
+        });
+        el.addEventListener('blur', function () {
+          if (!this.value) this.type = 'text';
+        });
+      });
+
       // Thousands separators while typing a budget.
       var budget = form.querySelector('[name="ed_budget"]');
       if (budget) {
