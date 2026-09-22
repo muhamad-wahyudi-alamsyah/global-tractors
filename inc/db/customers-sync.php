@@ -254,9 +254,10 @@ function gti_sync_customer($args, $refresh_stats = true) {
 }
 
 /**
- * Requests + quotations belonging to one customer, keyed on email then phone.
+ * Requests + quotations + sell submissions belonging to one customer, keyed on
+ * email then phone.
  *
- * @return array{requests:int, quotations:int, total_spent:float, last_contact:?string}
+ * @return array{requests:int, quotations:int, sells:int, total_spent:float, last_contact:?string}
  */
 function gti_customer_stats($customer) {
     global $wpdb;
@@ -264,7 +265,7 @@ function gti_customer_stats($customer) {
     $email = is_object($customer) ? $customer->email : ($customer['email'] ?? '');
     $phone = is_object($customer) ? $customer->phone : ($customer['phone'] ?? '');
 
-    $stats = array('requests' => 0, 'quotations' => 0, 'total_spent' => 0.0, 'last_contact' => null);
+    $stats = array('requests' => 0, 'quotations' => 0, 'sells' => 0, 'total_spent' => 0.0, 'last_contact' => null);
     if (!$email && !$phone) return $stats;
 
     $clauses = array();
@@ -275,6 +276,7 @@ function gti_customer_stats($customer) {
 
     $requests_table   = $wpdb->prefix . 'gti_requests';
     $quotations_table = $wpdb->prefix . 'gti_quotations';
+    $sell_table       = $wpdb->prefix . 'gti_sell_requests';
 
     if (gti_table_exists($requests_table)) {
         $stats['requests'] = (int) $wpdb->get_var($wpdb->prepare(
@@ -303,6 +305,20 @@ function gti_customer_stats($customer) {
         }
     }
 
+    // Offers the customer made to GTI count as contact too — they are a third
+    // list the customer appears on (/dashboard/sell-equipment).
+    if (gti_table_exists($sell_table)) {
+        $stats['sells'] = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$sell_table} WHERE {$where}", $params
+        ));
+        $last = $wpdb->get_var($wpdb->prepare(
+            "SELECT MAX(created_at) FROM {$sell_table} WHERE {$where}", $params
+        ));
+        if ($last && (!$stats['last_contact'] || $last > $stats['last_contact'])) {
+            $stats['last_contact'] = $last;
+        }
+    }
+
     return $stats;
 }
 
@@ -319,7 +335,7 @@ function gti_refresh_customer_stats($customer_id) {
     $stats = gti_customer_stats($customer);
 
     $wpdb->update($table, array(
-        'total_transactions' => $stats['requests'] + $stats['quotations'],
+        'total_transactions' => $stats['requests'] + $stats['quotations'] + $stats['sells'],
         'total_spent'        => (int) round($stats['total_spent']),
         'last_contact'       => $stats['last_contact'] ?: $customer->last_contact,
         'updated_at'         => current_time('mysql'),

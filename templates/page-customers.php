@@ -85,7 +85,7 @@ gti_dashboard_open( array(
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon reserved"><i class="fas fa-file-signature"></i></div>
                         <div class="gti-ue-stat-info">
-                            <p class="gti-ue-stat-label">Requests &amp; Quotations</p>
+                            <p class="gti-ue-stat-label">Request &amp; Sell</p>
                             <p class="gti-ue-stat-value"><?php echo esc_html($total_requests); ?></p>
                         </div>
                     </div>
@@ -126,7 +126,7 @@ gti_dashboard_open( array(
                                 <th class="col-company">Company</th>
                                 <th class="col-email">Email</th>
                                 <th class="col-phone">Phone</th>
-                                <th class="col-transactions">Transactions</th>
+                                <th class="col-transactions">Request &amp; Sell</th>
                                 <th class="col-actions">Actions</th>
                             </tr>
                         </thead>
@@ -178,9 +178,6 @@ gti_dashboard_open( array(
                                                     </button>
                                                     <a href="mailto:<?php echo esc_attr($c->email); ?>" class="gti-ue-action-item">
                                                         <i class="fas fa-envelope"></i> Send Email
-                                                    </a>
-                                                    <a href="<?php echo esc_url(gti_dashboard_url('customer-detail') . '?' . http_build_query(['id' => $c->customer_id])); ?>" class="gti-ue-action-item">
-                                                        <i class="fas fa-external-link-alt"></i> Full Profile
                                                     </a>
                                                 </div>
                                             </div>
@@ -236,7 +233,6 @@ gti_dashboard_open( array(
                         </div>
                     </div>
                     <div class="gti-drawer-footer">
-                        <a href="#" class="gti-drawer-btn gti-drawer-btn-primary" id="drawer-btn-profile"><i class="fas fa-external-link-alt"></i> Full Profile</a>
                         <a href="#" class="gti-drawer-btn" id="drawer-btn-email"><i class="fas fa-envelope"></i> Send Email</a>
                     </div>
                 </div>

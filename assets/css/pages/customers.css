@@ -28,7 +28,7 @@
 .gti-ue-table .col-email { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-phone { width: 130px; }
 .gti-ue-table .col-status { width: 110px; text-align: center; white-space: nowrap; }
-.gti-ue-table .col-transactions { width: 100px; text-align: center; }
+.gti-ue-table .col-transactions { width: 150px; text-align: center; }
 .gti-ue-table .col-actions { width: 70px; text-align: center; }
 
 /* ====== Content Layout ====== */

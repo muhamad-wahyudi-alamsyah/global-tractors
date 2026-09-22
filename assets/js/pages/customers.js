@@ -64,9 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('drawer-spent').textContent = cust.total_spent ? formatCurrencyID(cust.total_spent) : '-';
         document.getElementById('drawer-last-contact').textContent = cust.last_contact ? formatDateID(cust.last_contact) : '-';
 
-        var profileUrl = (gtiAjax.dashboard + '/customer-detail') + '?id=' + (cust.customer_id || '');
         var emailUrl = 'mailto:' + (cust.email || '');
-        document.getElementById('drawer-btn-profile').href = profileUrl;
         document.getElementById('drawer-btn-email').href = emailUrl;
 
         document.querySelectorAll('.gti-ue-table tbody tr').forEach(function(r) { r.classList.remove('active-row'); });
