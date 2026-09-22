@@ -180,3 +180,30 @@ if ( ! function_exists( 'gti_price_expired_sql' ) ) {
         return "{$column} IS NOT NULL AND {$column} <> '0000-00-00' AND {$column} < '" . esc_sql( current_time( 'Y-m-d' ) ) . "'";
     }
 }
+
+if ( ! function_exists( 'gti_quotation_split_notes' ) ) {
+    /**
+     * Peels the "Label: value" extras the catalogue inquiry form used to append
+     * to the customer message (§7.3).
+     *
+     * New submissions carry the type-specific answers inside the items JSON, so
+     * the message stays the message. Rows written before that still have them
+     * glued to the last line, and reading them back off here means the drawer
+     * shows a labelled row for old and new rows alike, with no migration.
+     *
+     * @return array { @type string $text @type string $operator_needed }
+     */
+    function gti_quotation_split_notes( $notes ) {
+        $text  = trim( (string) $notes );
+        $out   = array( 'text' => $text, 'operator_needed' => '' );
+        $lines = preg_split( '/\R/', $text );
+
+        if ( $lines && preg_match( '/^Butuh operator:\s*(\S.*)$/', trim( end( $lines ) ), $match ) ) {
+            $out['operator_needed'] = $match[1];
+            array_pop( $lines );
+            $out['text'] = trim( implode( "\n", $lines ) );
+        }
+
+        return $out;
+    }
+}

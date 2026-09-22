@@ -48,11 +48,23 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
             gti_render_drawer_row( 'Delivery Location', $gti_payload['delivery_location'] ?? '' );
             gti_render_drawer_row( 'Budget',            $gti_payload['budget_text'] ?? '' );
             ?>
-            <?php // Rental Period only exists for rental quotations; request-quotation.js toggles it on repaint. ?>
-            <div class="gti-drawer-row"<?php echo ( ( $gti_payload['equipment_type'] ?? '' ) === 'rental' ) ? '' : ' style="display:none"'; ?>>
-                <span class="gti-drawer-label">Rental Period</span>
-                <span class="gti-drawer-value"><?php echo esc_html( $gti_payload['rental_period'] ?: '—' ); ?></span>
-            </div>
+            <?php
+            // Each of these only exists for one equipment type, so the rest are
+            // rendered hidden; request-quotation.js re-applies the same rule on
+            // repaint from the row payload.
+            $gti_type       = $gti_payload['equipment_type'] ?? '';
+            $gti_type_rows  = array(
+                'Rental Period'   => array( 'rental',     $gti_payload['rental_period']   ?? '' ),
+                'Operator Needed' => array( 'rental',     $gti_payload['operator_needed'] ?? '' ),
+                'Unit Model'      => array( 'spare_part', $gti_payload['unit_model']      ?? '' ),
+                'Urgency'         => array( 'spare_part', $gti_payload['urgency']         ?? '' ),
+            );
+            foreach ( $gti_type_rows as $gti_label => $gti_spec ) : ?>
+                <div class="gti-drawer-row"<?php echo $gti_spec[0] === $gti_type ? '' : ' style="display:none"'; ?>>
+                    <span class="gti-drawer-label"><?php echo esc_html( $gti_label ); ?></span>
+                    <span class="gti-drawer-value"><?php echo esc_html( $gti_spec[1] ?: '—' ); ?></span>
+                </div>
+            <?php endforeach; ?>
             <div class="gti-drawer-row gti-drawer-row-stacked">
                 <span class="gti-drawer-label">Notes</span>
                 <span class="gti-drawer-value is-message" data-field="notes"><?php

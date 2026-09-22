@@ -396,10 +396,27 @@ function gti_quotation_row_payload( array $row ) {
     $items = json_decode( (string) $row['items'], true );
     $items = is_array( $items ) ? $items : array();
 
+    // The rental/spare-part answers the inquiry form collects (§7.2) used to end
+    // up either appended to the message or buried inside the items JSON, so the
+    // drawer never showed them. Lift them out once here, so the list and the
+    // drawer read the same fields.
     $total_items = 0;
-    foreach ( $items as $item ) {
+    $extras      = array( 'operator_needed' => '', 'unit_model' => '', 'urgency' => '' );
+
+    foreach ( $items as $index => $item ) {
         $total_items += (int) ( $item['quantity'] ?? 1 );
+
+        $split                    = gti_quotation_split_notes( $item['notes'] ?? '' );
+        $items[ $index ]['notes'] = $split['text'];
+
+        $extras['operator_needed'] = $extras['operator_needed'] ?: ( $item['operator_needed'] ?? '' ) ?: $split['operator_needed'];
+        $extras['unit_model']      = $extras['unit_model']      ?: ( $item['unit_model'] ?? '' );
+        $extras['urgency']         = $extras['urgency']         ?: ( $item['urgency'] ?? '' );
     }
+
+    $notes = gti_quotation_split_notes( $row['additional_notes'] ?? '' );
+
+    $extras['operator_needed'] = $extras['operator_needed'] ?: $notes['operator_needed'];
 
     $type_labels = array(
         'used'       => 'Used Equipment',
@@ -426,9 +443,12 @@ function gti_quotation_row_payload( array $row ) {
         'delivery_location' => $row['delivery_location'] ?? '',
         'needed_date'       => ! empty( $row['needed_date'] ) ? gti_format_date( $row['needed_date'], 'd M Y' ) : '',
         'rental_period'     => gti_rental_period_text( $row ),
+        'operator_needed'   => $extras['operator_needed'] ? ucfirst( $extras['operator_needed'] ) : '',
+        'unit_model'        => $extras['unit_model'],
+        'urgency'           => $extras['urgency'] ? ucfirst( $extras['urgency'] ) : '',
         'valid_until'       => ( ! empty( $row['valid_until'] ) && $row['valid_until'] !== '0000-00-00' )
                                 ? gti_format_date( $row['valid_until'], 'd M Y' ) : '',
-        'notes'             => $row['additional_notes'] ?? '',
+        'notes'             => $notes['text'],
         'source_url'        => $row['source_url'] ?? '',
         'request_date_text' => gti_format_date( $row['request_date'] ?: $row['created_at'], 'd M Y' ),
         'sales_pic'         => $row['sales_pic'] ?? '',

@@ -24,7 +24,19 @@
                 'Payment Terms': row.payment_terms,
                 'Delivery Location': row.delivery_location,
                 'Rental Period': row.rental_period,
+                'Operator Needed': row.operator_needed,
+                'Unit Model': row.unit_model,
+                'Urgency': row.urgency,
                 'Budget': row.budget_text
+            };
+
+            // Rows that belong to a single equipment type — the drawer markup
+            // renders all of them and this hides the ones that do not apply.
+            var typeOnly = {
+                'Rental Period': 'rental',
+                'Operator Needed': 'rental',
+                'Unit Model': 'spare_part',
+                'Urgency': 'spare_part'
             };
 
             drawer.querySelectorAll('.gti-drawer-row').forEach(function (el) {
@@ -33,8 +45,8 @@
                 if (!label || !value) return;
                 var key = label.textContent.trim();
                 if (key in values) value.textContent = values[key] || '—';
-                if (key === 'Rental Period') {
-                    el.style.display = row.equipment_type === 'rental' ? '' : 'none';
+                if (key in typeOnly) {
+                    el.style.display = typeOnly[key] === row.equipment_type ? '' : 'none';
                 }
             });
 

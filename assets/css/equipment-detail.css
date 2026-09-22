@@ -950,6 +950,9 @@
     grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
+/* input[type=date] has an intrinsic min-width wider than the column; without
+   this the grid item refuses to shrink and the row overflows on focus. */
+.gti-ed-form-row > .gti-ed-form-group { min-width: 0; }
 
 .gti-ed-form-toggle {
     display: flex;
@@ -1012,6 +1015,8 @@
 .gti-ed-form input[type="date"],
 .gti-ed-form input[type="number"] {
     width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 11px 14px;
     border: 1px solid #e5e7eb;
     border-radius: 8px;

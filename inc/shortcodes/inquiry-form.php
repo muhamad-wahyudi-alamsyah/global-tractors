@@ -106,7 +106,7 @@ function gti_render_inquiry_form( array $args ) {
                     <div class="gti-ed-form-group">
                         <label class="gti-ed-form-label" for="ed-rental-duration">Durasi Sewa</label>
                         <select name="ed_rental_duration" id="ed-rental-duration">
-                            <option value="">&mdash; Pilih &mdash;</option>
+                            <option value="">&mdash; Pilih durasi sewa &mdash;</option>
                             <option value="1 bulan">1 bulan</option>
                             <option value="3 bulan">3 bulan</option>
                             <option value="6 bulan">6 bulan</option>
@@ -128,7 +128,7 @@ function gti_render_inquiry_form( array $args ) {
                     <div class="gti-ed-form-group">
                         <label class="gti-ed-form-label" for="ed-operator">Butuh Operator?</label>
                         <select name="ed_operator_needed" id="ed-operator">
-                            <option value="">&mdash; Pilih &mdash;</option>
+                            <option value="">&mdash; Pilih kebutuhan operator &mdash;</option>
                             <option value="ya">Ya</option>
                             <option value="tidak">Tidak</option>
                         </select>

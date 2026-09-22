@@ -125,20 +125,21 @@ function gti_customer_submit_quotation() {
     $quotation_id = $prefix . str_pad( $sequence, 4, '0', STR_PAD_LEFT );
 
     // ── Items JSON (§7.3 item 5) ─────────────────────────────────────────
+    // The rental operator answer used to be appended to the message, which left
+    // the drawer showing it as free text instead of a labelled row. It now rides
+    // with the other type-specific answers and the message stays the message.
     $notes = $message;
-    if ( $operator_needed ) {
-        $notes = trim( $notes . "\n" . 'Butuh operator: ' . $operator_needed );
-    }
 
     $items = array( array(
-        'equipment_id' => $equipment_id,
-        'type'         => $equipment_type,
-        'name'         => $equipment_name,
-        'part_number'  => $part_number,
-        'quantity'     => $quantity,
-        'unit_model'   => $unit_model,
-        'urgency'      => $urgency,
-        'notes'        => $notes,
+        'equipment_id'    => $equipment_id,
+        'type'            => $equipment_type,
+        'name'            => $equipment_name,
+        'part_number'     => $part_number,
+        'quantity'        => $quantity,
+        'unit_model'      => $unit_model,
+        'urgency'         => $urgency,
+        'operator_needed' => $operator_needed,
+        'notes'           => $notes,
     ) );
 
     // ── Insert ───────────────────────────────────────────────────────────
@@ -230,6 +231,21 @@ function gti_notify_admin_new_quotation( $id, $quotation_id, array $data, $equip
         'Unit'         => $equipment_name ?: '—',
         'Jumlah'       => $data['quantity'] ?? 1,
     );
+
+    // The type-specific answers no longer ride inside the message, so list them
+    // here instead of dropping them from the notification.
+    $item   = json_decode( (string) ( $data['items'] ?? '' ), true );
+    $item   = is_array( $item ) && isset( $item[0] ) ? $item[0] : array();
+    $labels = array(
+        'operator_needed' => 'Butuh Operator',
+        'unit_model'      => 'Model Unit Terpasang',
+        'urgency'         => 'Urgensi',
+    );
+    foreach ( $labels as $key => $label ) {
+        if ( ! empty( $item[ $key ] ) ) {
+            $rows[ $label ] = ucfirst( $item[ $key ] );
+        }
+    }
 
     $html = '<table cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin-bottom:20px;">';
     foreach ( $rows as $label => $value ) {
