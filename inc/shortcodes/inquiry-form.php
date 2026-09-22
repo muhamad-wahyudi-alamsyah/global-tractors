@@ -138,11 +138,12 @@ function gti_render_inquiry_form( array $args ) {
                 <?php if ( $type === 'spare_part' ) : ?>
                     <div class="gti-ed-form-group">
                         <label class="gti-ed-form-label" for="ed-unit-model">Model Unit Terpasang</label>
-                        <input type="text" name="ed_unit_model" id="ed-unit-model" placeholder="mis. Komatsu PC200-8">
+                        <input type="text" name="ed_unit_model" id="ed-unit-model" placeholder="Model unit terpasang, mis. Komatsu PC200-8">
                     </div>
                     <div class="gti-ed-form-group">
                         <label class="gti-ed-form-label" for="ed-urgency">Tingkat Urgensi</label>
                         <select name="ed_urgency" id="ed-urgency">
+                            <option value="">&mdash; Pilih tingkat urgensi &mdash;</option>
                             <option value="normal">Normal</option>
                             <option value="urgent">Urgent</option>
                             <option value="critical">Critical</option>
