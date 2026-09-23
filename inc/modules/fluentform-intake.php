@@ -193,7 +193,11 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'equipment_location'  => ['equipment_location', 'location', 'lokasi', 'lokasi_projek'],
         'message'             => ['message', 'description', 'deskripsi', 'notes', 'catatan'],
         'availability'        => ['ketersediaan', 'availability'],
+        'images'              => ['images', 'image', 'image-upload', 'photos', 'foto', 'gambar'],
     );
+
+    // Image Upload field → array of URLs, stored as JSON (read by gti_resolve_image_urls)
+    $images = array_values(array_filter(array_map('esc_url_raw', (array) $get($formData, $field_map['images'], []))));
 
     $data = array(
         'customer_name'       => sanitize_text_field($get($formData, $field_map['customer_name'])),
@@ -210,7 +214,8 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'equipment_location'  => sanitize_text_field($get($formData, $field_map['equipment_location'])),
         'message'             => wp_kses_post($get($formData, $field_map['message'])),
         'availability'        => sanitize_text_field($get($formData, $field_map['availability'])),
-        'status'              => 'new',
+        'images'              => wp_json_encode($images),
+        'status'            => 'new',
         'created_at'          => current_time('mysql'),
     );
 
