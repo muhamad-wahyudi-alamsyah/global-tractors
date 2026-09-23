@@ -536,7 +536,7 @@ function gti_used_render_equipment_detail( $equipment_id ) {
     $display_gallery = array_slice( $gallery_images, 0, $max_thumbs );
 
     $related = gti_used_get_related_equipment( $item, 8 );
-    $wa_number = get_option( 'gti_whatsapp_number', '6281234567890' );
+    $wa_number = get_option( 'gti_whatsapp_number', '6281351774415' );
 
     ob_start();
     ?>

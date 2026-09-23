@@ -518,7 +518,7 @@ function gti_spare_render_part_detail( $part_id ) {
     }
 
     $related   = gti_spare_get_related_parts( $item, 8 );
-    $wa_number = get_option( 'gti_whatsapp_number', '6281234567890' );
+    $wa_number = get_option( 'gti_whatsapp_number', '6281351774415' );
 
     ob_start();
     ?>

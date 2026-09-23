@@ -537,7 +537,7 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
     }
 
     $related = gti_rental_get_related_equipment( $item, 8 );
-    $wa_number = get_option( 'gti_whatsapp_number', '6281234567890' );
+    $wa_number = get_option( 'gti_whatsapp_number', '6281351774415' );
 
     ob_start();
     ?>
