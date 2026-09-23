@@ -14,7 +14,7 @@ define( 'GTI_TEXT_DOMAIN',   'global-tractors' );
 
 // Database
 define( 'GTI_DB_VERSION_KEY', 'gti_db_version' );
-define( 'GTI_DB_VERSION',     '1.4.0' );
+define( 'GTI_DB_VERSION',     '1.4.1' );
 
 // Custom Role
 define( 'GTI_ROLE_CUSTOMER', 'gti_customer' );

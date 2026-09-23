@@ -58,7 +58,7 @@ class GTI_Activator {
             condition_status VARCHAR(50),
             status VARCHAR(50) DEFAULT 'available',
             price DECIMAL(15,2),
-            price_type ENUM('sale', 'monthly_rental'),
+            price_type VARCHAR(50),
             location VARCHAR(255),
             description TEXT,
             specifications JSON,
@@ -400,7 +400,7 @@ class GTI_Activator {
         }
 
         // Store table version
-        update_option('gti_db_version', '1.4.0');
+        update_option('gti_db_version', '1.4.1');
     }
 
     /**

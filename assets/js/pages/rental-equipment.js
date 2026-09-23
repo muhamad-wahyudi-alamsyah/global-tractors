@@ -231,7 +231,7 @@
         // Pricing
         setText('drawer-selling-price', eq.selling_price ? formatRupiah(eq.selling_price) : null);
         setText('drawer-rental-price', eq.rental_price ? formatRupiah(eq.rental_price) + '/bln' : null);
-        var ptMap = { 'monthly_rental':'Monthly Rental', 'daily_rental':'Daily Rental', 'sale':'For Sale' };
+        var ptMap = { 'sale':'For Sale', 'rental':'For Rental', 'sale_and_rental':'Sale & Rental', 'price_on_ask':'Price on Ask', 'monthly_rental':'Monthly Rental' };
         setText('drawer-price-type', ptMap[eq.price_type] || eq.price_type);
         setText('drawer-vat', eq.vat_included ? 'Yes' : (eq.vat_included === false ? 'No' : null));
         setText('drawer-currency', eq.currency);
