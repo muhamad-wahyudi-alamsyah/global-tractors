@@ -139,7 +139,7 @@ function gti_enqueue_search_card_assets() {
         'gti-search-card',
         GTI_CHILD_URL . '/assets/css/search-card.css',
         ['gti-google-fonts'],
-        GTI_VERSION
+        gti_asset_version('assets/css/search-card.css')
     );
 
     // Font Awesome (icons) — only if not already loaded
@@ -157,14 +157,9 @@ function gti_enqueue_search_card_assets() {
         'gti-search-card',
         GTI_CHILD_URL . '/assets/js/search-card.js',
         [],
-        GTI_VERSION,
+        gti_asset_version('assets/js/search-card.js'),
         true
     );
-
-    // Localize equipment page URL for search redirect
-    wp_localize_script('gti-search-card', 'gtiSearchData', [
-        'equipmentUrl' => home_url('/equipment/'),
-    ]);
 }
 
 // ── Frontend: Equipment Filter Assets ────────────────────────────────────
@@ -204,7 +199,7 @@ function gti_enqueue_equipment_filter_assets() {
             'gti-equipment-filter',
             GTI_CHILD_URL . '/assets/css/equipment-filter.css',
             ['gti-google-fonts'],
-            GTI_VERSION
+            gti_asset_version('assets/css/equipment-filter.css')
         );
 
         // Equipment Filter JS
@@ -212,7 +207,7 @@ function gti_enqueue_equipment_filter_assets() {
             'gti-equipment-filter',
             GTI_CHILD_URL . '/assets/js/equipment-filter.js',
             [],
-            GTI_VERSION,
+            gti_asset_version('assets/js/equipment-filter.js'),
             true
         );
 
@@ -221,7 +216,7 @@ function gti_enqueue_equipment_filter_assets() {
             'gti-equipment-detail',
             GTI_CHILD_URL . '/assets/css/equipment-detail.css',
             ['gti-google-fonts'],
-            GTI_VERSION
+            gti_asset_version('assets/css/equipment-detail.css')
         );
 
         // Equipment Detail JS
@@ -229,7 +224,7 @@ function gti_enqueue_equipment_filter_assets() {
             'gti-equipment-detail',
             GTI_CHILD_URL . '/assets/js/equipment-detail.js',
             [],
-            GTI_VERSION,
+            gti_asset_version('assets/js/equipment-detail.js'),
             true
         );
 

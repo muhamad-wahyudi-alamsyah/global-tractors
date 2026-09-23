@@ -35,6 +35,7 @@
       condition:   [],
       suppliers:   [],
       stock:       [],
+      keyword:     '',
       sortBy:      'newest',
       viewMode:    'grid',
       currentPage: 1,
@@ -158,6 +159,7 @@
         state.maxPrice  = '';
         state.minHours  = '';
         state.maxHours  = '';
+        state.keyword   = '';
         state.currentPage = 1;
 
         applyFilters();
@@ -308,6 +310,13 @@
         // Condition
         if (state.condition.length > 0 && !matchesAny(state.condition, card.dataset.condition)) return false;
 
+        // Keyword (from the homepage search card's ?q=)
+        if (state.keyword) {
+          var titleEl  = card.querySelector('.gti-ef-card-title');
+          var haystack = [titleEl ? titleEl.textContent : '', card.dataset.brand, card.dataset.category].join(' ').toLowerCase();
+          if (haystack.indexOf(state.keyword.toLowerCase()) === -1) return false;
+        }
+
         return true;
       });
 
@@ -431,7 +440,36 @@
       paginationEl.dataset.totalPages = totalPages;
     }
 
+    // ═══ PRESET FROM URL (homepage search card) ════════════════════════════
+    var urlParams = new URLSearchParams(window.location.search);
+    var presets   = {
+      brand:     'ef-brand',
+      category:  'ef-category',
+      year_min:  'ef-year-min',
+      year_max:  'ef-year-max',
+      price_min: 'ef-price-min',
+      price_max: 'ef-price-max',
+    };
+    Object.keys(presets).forEach(function (param) {
+      var value = urlParams.get(param);
+      if (!value) return;
+      document.querySelectorAll('input[name="' + presets[param] + '"]').forEach(function (input) {
+        if (input.type === 'checkbox') {
+          if (normKey(input.value) !== normKey(value)) return;
+          input.checked = true;
+        } else {
+          input.value = value;
+        }
+        // Expand the group so the visitor sees which filter is active.
+        var body   = input.closest('.gti-ef-filter-body');
+        var header = body && document.querySelector('.gti-ef-filter-header[data-filter="' + body.dataset.filterBody + '"]');
+        if (header && !header.classList.contains('open')) header.click();
+      });
+    });
+
     // ═══ INITIAL RENDER ════════════════════════════════════════════════════
+    collectFilterValues();
+    state.keyword = (urlParams.get('q') || '').trim();
     applyFilters();
   });
 })();
