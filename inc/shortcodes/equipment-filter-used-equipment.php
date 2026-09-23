@@ -589,22 +589,13 @@ function gti_used_render_equipment_detail( $equipment_id ) {
                     </div>
                     <div class="gti-ed-thumbnails">
                         <?php if ( ! empty( $display_gallery ) ) : ?>
-                            <?php $visible_count = min( 4, count( $display_gallery ) ); ?>
-                            <?php for ( $idx = 0; $idx < $visible_count; $idx++ ) : ?>
-                                <?php $img = $display_gallery[ $idx ]; ?>
+                            <?php foreach ( array_values( $display_gallery ) as $idx => $img ) : ?>
                                 <div class="gti-ed-thumb <?php echo $idx === 0 ? 'active' : ''; ?>" data-index="<?php echo esc_attr( $idx ); ?>" data-src="<?php echo esc_url( $img ); ?>">
-                                    <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title . ' photo ' . ( $idx + 1 ) ); ?>">
+                                    <img src="<?php echo esc_url( $img ); ?>" alt="<?php echo esc_attr( $title . ' photo ' . ( $idx + 1 ) ); ?>" loading="lazy">
                                 </div>
-                            <?php endfor; ?>
-                            <?php if ( count( $display_gallery ) > 4 ) : ?>
-                                <?php $extra = count( $display_gallery ) - 4; ?>
-                                <div class="gti-ed-thumb gti-ed-thumb-more">
-                                    <img src="<?php echo esc_url( $display_gallery[4] ?? $display_gallery[0] ); ?>" alt="More photos">
-                                    <span class="gti-ed-thumb-overlay">+<?php echo esc_html( $extra ); ?> More</span>
-                                </div>
-                            <?php endif; ?>
+                            <?php endforeach; ?>
                         <?php else : ?>
-                            <?php for ( $idx = 0; $idx < 5; $idx++ ) : ?>
+                            <?php for ( $idx = 0; $idx < 4; $idx++ ) : ?>
                                 <div class="gti-ed-thumb <?php echo $idx === 0 ? 'active' : ''; ?>" data-index="<?php echo esc_attr( $idx ); ?>">
                                     <div class="gti-ed-thumb-placeholder"><i class="fas fa-image"></i></div>
                                 </div>
@@ -617,6 +608,7 @@ function gti_used_render_equipment_detail( $equipment_id ) {
                             </a>
                         <?php endif; ?>
                     </div>
+                    <div class="gti-ed-thumbs-pager" hidden></div>
                 </div>
 
                 <div class="gti-ed-summary">

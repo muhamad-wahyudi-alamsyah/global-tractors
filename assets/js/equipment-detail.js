@@ -49,7 +49,59 @@
       thumbs.forEach(function (t, i) {
         t.classList.toggle('active', i === current);
       });
+      showThumbPage(Math.floor(current / THUMBS_PER_PAGE));
     }
+
+    // ── Thumbnail pagination (dots) ──
+    // Paginate every thumb incl. the video tile so it only shows on its own page.
+    var THUMBS_PER_PAGE = 4;
+    var pageItems  = document.querySelectorAll('.gti-ed-thumbnails .gti-ed-thumb');
+    var pager      = document.querySelector('.gti-ed-thumbs-pager');
+    var totalPages = Math.max(1, Math.ceil(pageItems.length / THUMBS_PER_PAGE));
+    var dots       = [];
+    var thumbPage  = 0;
+
+    // "+N more" overlay on the last thumb of a page; click → next page
+    var moreOverlay = document.createElement('span');
+    moreOverlay.className = 'gti-ed-thumb-more';
+    moreOverlay.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      showThumbPage(thumbPage + 1);
+    });
+
+    function showThumbPage(p) {
+      thumbPage = p;
+      pageItems.forEach(function (t, i) {
+        t.hidden = Math.floor(i / THUMBS_PER_PAGE) !== p;
+      });
+      dots.forEach(function (d, i) {
+        d.classList.toggle('active', i === p);
+      });
+
+      var lastIdx   = Math.min((p + 1) * THUMBS_PER_PAGE, pageItems.length) - 1;
+      var remaining = pageItems.length - lastIdx - 1;
+      if (remaining > 0) {
+        moreOverlay.textContent = '+' + remaining + ' more';
+        pageItems[lastIdx].appendChild(moreOverlay);
+      } else {
+        moreOverlay.remove();
+      }
+    }
+
+    if (pager && totalPages > 1) {
+      for (var p = 0; p < totalPages; p++) {
+        var dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = 'gti-ed-thumbs-dot';
+        dot.setAttribute('aria-label', 'Photos page ' + (p + 1));
+        dot.addEventListener('click', showThumbPage.bind(null, p));
+        pager.appendChild(dot);
+        dots.push(dot);
+      }
+      pager.hidden = false;
+    }
+    showThumbPage(0);
 
     if (prevBtn) prevBtn.addEventListener('click', function () { showImage(current - 1); });
     if (nextBtn) nextBtn.addEventListener('click', function () { showImage(current + 1); });
