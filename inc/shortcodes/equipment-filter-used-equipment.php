@@ -610,6 +610,12 @@ function gti_used_render_equipment_detail( $equipment_id ) {
                                 </div>
                             <?php endfor; ?>
                         <?php endif; ?>
+                        <?php if ( ! empty( $item['video_url'] ) ) : ?>
+                            <a class="gti-ed-thumb gti-ed-thumb-video" href="<?php echo esc_url( $item['video_url'] ); ?>" target="_blank" rel="noopener noreferrer" aria-label="Play video">
+                                <video src="<?php echo esc_url( $item['video_url'] ); ?>#t=0.1" preload="metadata" muted playsinline></video>
+                                <span class="gti-ed-thumb-play"><i class="fas fa-play"></i></span>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
