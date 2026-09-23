@@ -113,18 +113,34 @@
     // ═══ SHARE ═══════════════════════════════════════════════════════════
     var shareBtn = document.getElementById('gti-ed-share-btn');
     if (shareBtn) {
+      var shareOriginal = shareBtn.innerHTML;
+      var copied = function () {
+        shareBtn.innerHTML = '<i class="fas fa-check"></i> <span>LINK COPIED!</span>';
+        setTimeout(function () { shareBtn.innerHTML = shareOriginal; }, 2000);
+      };
+      // navigator.share/clipboard only exist on HTTPS; execCommand covers HTTP
+      // and older browsers, prompt() is the last resort so the click never no-ops.
+      var legacyCopy = function (url) {
+        var ta = document.createElement('textarea');
+        ta.value = url;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        if (ok) copied(); else window.prompt('Copy this link:', url);
+      };
       shareBtn.addEventListener('click', function () {
+        var url = window.location.href;
         if (navigator.share) {
-          navigator.share({
-            title: document.title,
-            url: window.location.href,
-          }).catch(function () {});
-        } else if (navigator.clipboard) {
-          navigator.clipboard.writeText(window.location.href).then(function () {
-            var original = shareBtn.innerHTML;
-            shareBtn.innerHTML = '<i class="fas fa-check"></i> <span>LINK COPIED!</span>';
-            setTimeout(function () { shareBtn.innerHTML = original; }, 2000);
-          });
+          navigator.share({ title: document.title, url: url }).catch(function () {});
+        } else if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(url).then(copied, function () { legacyCopy(url); });
+        } else {
+          legacyCopy(url);
         }
       });
     }
