@@ -366,3 +366,55 @@ function gti_distinct_values( $entity, $column, array $fixed = array() ) {
 
     return array_filter( (array) $values );
 }
+
+/**
+ * Insert a row whose reference number (REQ-0007, Q-202609-0003, …) must be
+ * unique, generating that number from the highest sequence already stored.
+ *
+ * Two things went wrong with the read-then-write this replaces:
+ *
+ *  - Nothing locked between the SELECT and the INSERT, so two visitors
+ *    submitting in the same second both computed the same sequence and the
+ *    second INSERT died on the UNIQUE key — the visitor saw "Gagal menyimpan
+ *    data" and the lead was lost. A duplicate now simply costs one retry.
+ *  - The sequence came from the newest row (ORDER BY id DESC), not the highest
+ *    number. One row with a hand-typed reference was enough to send the
+ *    generator back to an already-used sequence. MAX() over the numeric tail
+ *    ignores anything that does not fit the pattern.
+ *
+ * @param string $table   Full table name.
+ * @param array  $data    Row to insert, without the reference column.
+ * @param string $column  Reference column, e.g. 'request_id'.
+ * @param string $prefix  Reference prefix, e.g. 'REQ-' or 'Q-202609-'.
+ * @param int    $pad     Digits in the sequence.
+ * @return array{id:int, ref:string}|false
+ */
+function gti_insert_with_reference( $table, array $data, $column, $prefix, $pad = 4 ) {
+    global $wpdb;
+
+    $like = $wpdb->esc_like( $prefix ) . '%';
+
+    for ( $attempt = 0; $attempt < 5; $attempt++ ) {
+        $max = (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT MAX(CAST(SUBSTRING(`{$column}`, %d) AS UNSIGNED))
+               FROM `{$table}`
+              WHERE `{$column}` LIKE %s",
+            strlen( $prefix ) + 1,
+            $like
+        ) );
+
+        $ref = $prefix . str_pad( $max + 1 + $attempt, $pad, '0', STR_PAD_LEFT );
+
+        $data[ $column ] = $ref;
+        if ( false !== $wpdb->insert( $table, $data ) ) {
+            return array( 'id' => (int) $wpdb->insert_id, 'ref' => $ref );
+        }
+
+        // Anything other than a duplicate key is not worth retrying.
+        if ( false === stripos( (string) $wpdb->last_error, 'duplicate' ) ) {
+            return false;
+        }
+    }
+
+    return false;
+}

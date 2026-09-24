@@ -113,16 +113,10 @@ function gti_customer_submit_quotation() {
     }
 
     // ── Quotation ID ─────────────────────────────────────────────────────
+    // Generated inside gti_insert_with_reference() below, where a collision
+    // costs a retry instead of a lost submission.
     $table  = $wpdb->prefix . 'gti_quotations';
     $prefix = 'Q-' . date( 'Ym' ) . '-';
-
-    $last = $wpdb->get_var( $wpdb->prepare(
-        "SELECT quotation_id FROM {$table} WHERE quotation_id LIKE %s ORDER BY id DESC LIMIT 1",
-        $wpdb->esc_like( $prefix ) . '%'
-    ) );
-
-    $sequence     = $last ? ( (int) substr( $last, strrpos( $last, '-' ) + 1 ) ) + 1 : 1;
-    $quotation_id = $prefix . str_pad( $sequence, 4, '0', STR_PAD_LEFT );
 
     // ── Items JSON (§7.3 item 5) ─────────────────────────────────────────
     // The rental operator answer used to be appended to the message, which left
@@ -144,7 +138,6 @@ function gti_customer_submit_quotation() {
 
     // ── Insert ───────────────────────────────────────────────────────────
     $data = array(
-        'quotation_id'      => $quotation_id,
         'customer_name'     => $name,
         'customer_company'  => $company,
         'customer_email'    => $email,
@@ -189,12 +182,16 @@ function gti_customer_submit_quotation() {
     $columns = $wpdb->get_col( "SHOW COLUMNS FROM {$table}" );
     $data    = array_intersect_key( $data, array_flip( (array) $columns ) );
 
-    if ( false === $wpdb->insert( $table, $data ) ) {
+    $inserted = gti_insert_with_reference( $table, $data, 'quotation_id', $prefix );
+
+    if ( ! $inserted ) {
         gti_log( 'Quotation insert failed', $wpdb->last_error );
         wp_send_json_error( array( 'message' => 'Gagal menyimpan data. Silakan coba lagi.', 'code' => 'db_error' ) );
     }
 
-    $insert_id = (int) $wpdb->insert_id;
+    $insert_id            = $inserted['id'];
+    $quotation_id         = $inserted['ref'];
+    $data['quotation_id'] = $quotation_id;
 
     gti_increment_rate_limit( $rate_key, 10 * MINUTE_IN_SECONDS );
 

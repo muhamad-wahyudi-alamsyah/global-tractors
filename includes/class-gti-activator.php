@@ -404,6 +404,12 @@ class GTI_Activator {
             // can tell request 7 apart from quotation 7.
             self::create_v130_tables($charset_collate);
 
+            // quotation_id stays the system key; the number typed in Create
+            // Quotation is a separate document reference.
+            self::add_columns($table_quotations, array(
+                'quotation_number' => 'VARCHAR(50) NULL',
+            ));
+
             // Roles gained the core WordPress caps the dashboard gates on
             // (upload_files, edit_posts, list_users, ...). Existing installs only
             // ever ran create_roles() on the 1.3.0 migration, so re-run it here.

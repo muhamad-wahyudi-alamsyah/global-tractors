@@ -427,6 +427,7 @@ function gti_quotation_row_payload( array $row ) {
     return array(
         'id'                => (int) $row['id'],
         'ref'               => $row['quotation_id'],
+        'quotation_number'  => $row['quotation_number'] ?? '',
         'customer_name'     => $row['customer_name'],
         'customer_company'  => $row['customer_company'],
         'customer_email'    => $row['customer_email'],

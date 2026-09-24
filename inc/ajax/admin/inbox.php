@@ -178,7 +178,12 @@ function gti_ajax_create_quotation() {
     }
 
     gti_apply_status_change( 'quotation', $id, 'waiting_customer', array(
-        'quotation_id'      => $number,
+        // The document number the admin types goes in its own column.
+        // Overwriting quotation_id used to break the public generator: a row
+        // renumbered to e.g. QT/2026/IX/001 stops matching the 'Q-YYYYMM-%'
+        // pattern, so the next visitor's submission reused a taken sequence and
+        // died on the UNIQUE key.
+        'quotation_number'  => $number,
         'total'             => $total,
         'valid_until'       => date( 'Y-m-d', strtotime( $valid ) ),
         'payment_terms'     => $terms ?: null,
