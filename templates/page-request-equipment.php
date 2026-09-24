@@ -166,13 +166,14 @@ gti_dashboard_open( array(
                             <td class="col-pic"><?php echo esc_html( $req['sales_pic'] ?: 'Unassigned' ); ?></td>
                             <td class="col-actions">
                                 <?php
-                                $actions = array(
-                                    array( 'label' => 'View Details', 'icon' => 'fa-eye',        'class' => 'js-view' ),
-                                    array( 'label' => 'Assign PIC',   'icon' => 'fa-user-check', 'class' => 'js-assign' ),
-                                    array( 'label' => 'Reply',        'icon' => 'fa-envelope',   'class' => 'js-reply' ),
-                                    array( 'label' => 'Delete',       'icon' => 'fa-trash',      'class' => 'js-delete delete' ),
-                                );
-                                gti_render_action_menu( $actions );
+                                // Same actions as the drawer footer.
+                                gti_render_action_menu( array_filter( array(
+                                    array( 'label' => 'View Details',  'icon' => 'fa-eye',        'class' => 'js-view' ),
+                                    array( 'label' => 'Update Status', 'icon' => 'fa-sync-alt',   'class' => 'js-status' ),
+                                    array( 'label' => 'Reply',         'icon' => 'fa-envelope',   'class' => 'js-reply' ),
+                                    gti_can_view_all() ? array( 'label' => 'Assign PIC', 'icon' => 'fa-user-check', 'class' => 'js-assign' ) : null,
+                                    array( 'label' => 'Delete',        'icon' => 'fa-trash',      'class' => 'js-delete delete' ),
+                                ) ) );
                                 ?>
                             </td>
                         </tr>

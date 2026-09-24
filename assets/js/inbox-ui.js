@@ -478,11 +478,7 @@
                         GTI.ui.toast(data.message, 'success');
 
                         var row = document.querySelector('tr[data-id="' + id + '"]');
-                        if (row && data.row_removed) {
-                            // Handed to someone else and out of this user's scope.
-                            row.remove();
-                            GTI.ui.drawer.close();
-                        } else if (row) {
+                        if (row) {
                             var cell = row.querySelector('.col-pic');
                             if (cell) cell.textContent = data.sales_pic || 'Unassigned';
                             var payload = readRow(row);
@@ -572,7 +568,7 @@
         function initRows() {
             document.querySelectorAll('.gti-ue-table tbody tr[data-row]').forEach(function (tr) {
                 tr.addEventListener('click', function (e) {
-                    var action = e.target.closest('.js-view, .js-assign, .js-reply, .js-delete');
+                    var action = e.target.closest('.js-view, .js-status, .js-assign, .js-reply, .js-invoice, .js-delete');
                     if (action) {
                         e.stopPropagation();
                         document.querySelectorAll('.gti-ue-action-dropdown.show')
@@ -581,8 +577,11 @@
                         if (action.classList.contains('js-delete')) { deleteRow(tr); return; }
 
                         selectRow(tr, true);
+                        // Opens the drawer's own status menu, so both offer the same list.
+                        if (action.classList.contains('js-status')) field('status-menu').classList.add('show');
                         if (action.classList.contains('js-assign')) openAssign();
                         if (action.classList.contains('js-reply')) openEmail();
+                        if (action.classList.contains('js-invoice')) openInvoice();
                         return;
                     }
                     if (e.target.closest('.gti-ue-action-menu')) return;

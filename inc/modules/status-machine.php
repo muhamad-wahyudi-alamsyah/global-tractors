@@ -26,7 +26,8 @@ function gti_status_map( $entity_type ) {
             'processing'    => array( 'label' => 'Processing',    'class' => 'processing',    'next' => array( 'proposal_sent', 'on_hold', 'closed' ) ),
             'proposal_sent' => array( 'label' => 'Proposal Sent', 'class' => 'proposal-sent', 'next' => array( 'closed', 'processing' ), 'requires' => 'attachment' ),
             'on_hold'       => array( 'label' => 'On Hold',       'class' => 'on-hold',       'next' => array( 'processing', 'closed' ) ),
-            'closed'        => array( 'label' => 'Closed',        'class' => 'closed',        'next' => array( 'processing' ) ),
+            // Terminal, like 'completed' on the other two inboxes.
+            'closed'        => array( 'label' => 'Closed',        'class' => 'closed',        'next' => array() ),
         ),
         'quotation' => array(
             'new'              => array( 'label' => 'New',        'class' => 'new',        'next' => array( 'processing', 'rejected' ) ),

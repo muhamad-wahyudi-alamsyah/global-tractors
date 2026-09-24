@@ -141,14 +141,17 @@ gti_dashboard_open( array(
                             <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $sell['created_at'] ) ) ); ?></td>
                             <td class="col-pic"><?php echo esc_html( $sell['sales_pic'] ?: 'Unassigned' ); ?></td>
                             <td class="col-actions">
-                                <?php gti_render_action_menu( array(
-                                    array( 'label' => 'View Details',    'icon' => 'fa-eye',          'class' => 'js-view' ),
-                                    array( 'label' => 'Assign PIC',      'icon' => 'fa-user-check',   'class' => 'js-assign' ),
-                                    array( 'label' => 'Update Offered Price', 'icon' => 'fa-tag',     'class' => 'js-price' ),
-                                    array( 'label' => 'Contact on WhatsApp', 'icon' => 'fa-whatsapp', 'class' => 'js-whatsapp' ),
-                                    array( 'label' => 'Reply by Email',  'icon' => 'fa-envelope',     'class' => 'js-reply' ),
-                                    array( 'label' => 'Delete',          'icon' => 'fa-trash',        'class' => 'js-delete delete' ),
-                                ) ); ?>
+                                <?php // Same actions as the drawer footer.
+                                gti_render_action_menu( array_filter( array(
+                                    array( 'label' => 'View Details',         'icon' => 'fa-eye',          'class' => 'js-view' ),
+                                    array( 'label' => 'Update Status',        'icon' => 'fa-sync-alt',     'class' => 'js-status' ),
+                                    array( 'label' => 'Reply by Email',       'icon' => 'fa-envelope',     'class' => 'js-reply' ),
+                                    array( 'label' => 'Contact on WhatsApp',  'icon' => 'fa-whatsapp',     'class' => 'js-whatsapp' ),
+                                    gti_can_view_all() ? array( 'label' => 'Assign PIC', 'icon' => 'fa-user-check', 'class' => 'js-assign' ) : null,
+                                    array( 'label' => 'Update Offered Price', 'icon' => 'fa-tag',          'class' => 'js-price' ),
+                                    array( 'label' => 'Request Invoice',      'icon' => 'fa-file-invoice', 'class' => 'js-invoice' ),
+                                    array( 'label' => 'Delete',               'icon' => 'fa-trash',        'class' => 'js-delete delete' ),
+                                ) ) ); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

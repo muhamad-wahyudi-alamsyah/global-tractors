@@ -542,6 +542,8 @@
 .gti-ue-delete-warning i { margin-top: 2px; color: #f59e0b; flex-shrink: 0; }
 /* Optional numeric answer ("Jumlah terjual") shown by GTI.ui.confirm(). */
 .gti-ue-delete-input { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+/* display:flex above beats the hidden attribute, so every confirm showed it. */
+.gti-ue-delete-input[hidden] { display: none; }
 .gti-ue-delete-input label { font-size: 12px; font-weight: 600; color: #374151; }
 .gti-ue-delete-input input {
     width: 100%; box-sizing: border-box; padding: 10px 12px;

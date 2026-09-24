@@ -170,13 +170,15 @@ gti_dashboard_open( array(
                             <td class="col-status"><?php gti_render_status_badge( 'quotation', $quot['status'] ); ?></td>
                             <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $quot['request_date'] ?: $quot['created_at'] ) ) ); ?></td>
                             <td class="col-actions">
-                                <?php gti_render_action_menu( array(
+                                <?php // Same actions as the drawer footer.
+                                gti_render_action_menu( array_filter( array(
                                     array( 'label' => 'View Details',     'icon' => 'fa-eye',          'class' => 'js-view' ),
-                                    array( 'label' => 'Create Quotation', 'icon' => 'fa-file-invoice', 'class' => 'js-quotation' ),
-                                    array( 'label' => 'Assign PIC',       'icon' => 'fa-user-check',   'class' => 'js-assign' ),
+                                    array( 'label' => 'Update Status',    'icon' => 'fa-sync-alt',     'class' => 'js-status' ),
                                     array( 'label' => 'Reply',            'icon' => 'fa-envelope',     'class' => 'js-reply' ),
+                                    gti_can_view_all() ? array( 'label' => 'Assign PIC', 'icon' => 'fa-user-check', 'class' => 'js-assign' ) : null,
+                                    array( 'label' => 'Create Quotation', 'icon' => 'fa-file-invoice', 'class' => 'js-quotation' ),
                                     array( 'label' => 'Delete',           'icon' => 'fa-trash',        'class' => 'js-delete delete' ),
-                                ) ); ?>
+                                ) ) ); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

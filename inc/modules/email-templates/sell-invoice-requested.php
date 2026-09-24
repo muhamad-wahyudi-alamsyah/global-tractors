@@ -31,7 +31,8 @@ $documents = ! empty( $invoice_documents ) && is_array( $invoice_documents )
     ? $invoice_documents
     : array( 'Invoice', 'STNK / BPKB', 'Faktur', 'Form A' );
 
-$invoice_to = get_option( 'gti_invoice_email', get_option( 'admin_email' ) );
+// The address this email is sent from, so the seller replies to what they see.
+$invoice_to = gti_mail_from()['email'];
 ?>
 <p style="color: #374151; line-height: 1.6; margin: 0 0 15px 0;">
     Terkait penawaran unit Anda dengan nomor <strong><?php echo esc_html( $ref ); ?></strong>,

@@ -372,6 +372,11 @@ add_action( 'wp_ajax_gti_assign_entity', 'gti_ajax_assign_entity' );
 function gti_ajax_assign_entity() {
     gti_ajax_guard( array( 'gti_manage_requests', 'gti_manage_quotations' ) );
 
+    // Handing out work is a manager's call: Sales and Inventory may not assign.
+    if ( ! gti_can_view_all() ) {
+        gti_send_json_error( 'Anda tidak berhak mengatur PIC.', 'forbidden', 403 );
+    }
+
     $entity_type = sanitize_key( $_POST['entity_type'] ?? '' );
     $id          = (int) ( $_POST['id'] ?? 0 );
     $user_id     = (int) ( $_POST['user_id'] ?? 0 );
@@ -385,16 +390,12 @@ function gti_ajax_assign_entity() {
     if ( ! $row ) {
         gti_send_json_error( 'Data tidak ditemukan.', 'not_found', 404 );
     }
-    gti_guard_row_scope( $entity_type, $row );
 
     $result = gti_assign_entity( $entity_type, $id, $user_id, $notify );
 
     if ( ! $result['ok'] ) {
         gti_send_json_error( $result['message'], 'assign_failed' );
     }
-
-    // A sales user who hands a row to someone else loses sight of it.
-    $lost = ! gti_can_view_all( $entity_type ) && $user_id !== get_current_user_id();
 
     wp_send_json_success( array(
         'message'      => $user_id
@@ -403,7 +404,6 @@ function gti_ajax_assign_entity() {
         'assigned_to'  => $user_id,
         'sales_pic'    => $result['sales_pic'],
         'notified'     => $result['notified'],
-        'row_removed'  => $lost,
         'timeline'     => gti_timeline_payload( $entity_type, $id ),
     ) );
 }

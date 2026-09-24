@@ -135,9 +135,11 @@ $gti_hours     = $first['equipment_hours'] ?? '';
                 <a class="gti-drawer-dropdown-item" data-action="whatsapp" target="_blank" rel="noopener" href="#">
                     <i class="fab fa-whatsapp"></i> WhatsApp
                 </a>
+                <?php if ( gti_can_view_all() ) : ?>
                 <button type="button" class="gti-drawer-dropdown-item" data-action="assign">
                     <i class="fas fa-user-check"></i> Assign PIC
                 </button>
+                <?php endif; ?>
                 <button type="button" class="gti-drawer-dropdown-item" data-action="price">
                     <i class="fas fa-tag"></i> Update Offered Price
                 </button>

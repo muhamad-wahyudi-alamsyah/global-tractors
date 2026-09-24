@@ -99,9 +99,11 @@ $gti_status = $first ? $first['status'] : 'new';
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="gti-drawer-dropdown" data-field="more-menu">
+                <?php if ( gti_can_view_all() ) : ?>
                 <button type="button" class="gti-drawer-dropdown-item" data-action="assign">
                     <i class="fas fa-user-check"></i> Assign PIC
                 </button>
+                <?php endif; ?>
                 <button type="button" class="gti-drawer-dropdown-item danger" data-action="delete">
                     <i class="fas fa-trash"></i> Delete Request
                 </button>
