@@ -93,13 +93,15 @@ $gti_status = $first ? $first['status'] : 'new';
             <div class="gti-drawer-dropdown" data-field="status-menu"></div>
         </div>
         <button type="button" class="gti-drawer-btn" data-action="reply"><i class="fas fa-envelope"></i> Reply</button>
-        <button type="button" class="gti-drawer-btn" data-action="assign"><i class="fas fa-user-check"></i> PIC</button>
         <span class="gti-drawer-footer-spacer"></span>
         <div class="gti-drawer-btn-group">
             <button type="button" class="gti-drawer-btn gti-drawer-btn-icon" data-action="more" title="More actions">
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="gti-drawer-dropdown" data-field="more-menu">
+                <button type="button" class="gti-drawer-dropdown-item" data-action="assign">
+                    <i class="fas fa-user-check"></i> Assign PIC
+                </button>
                 <button type="button" class="gti-drawer-dropdown-item danger" data-action="delete">
                     <i class="fas fa-trash"></i> Delete Request
                 </button>

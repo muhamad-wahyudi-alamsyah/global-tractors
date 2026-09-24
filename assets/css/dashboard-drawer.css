@@ -131,6 +131,8 @@
 .gti-drawer-dropdown-item.danger { color: #dc2626; }
 .gti-drawer-dropdown-item.danger i { color: #dc2626; }
 .gti-drawer-dropdown-item.danger:hover { background: #fee2e2; }
+a.gti-drawer-dropdown-item { text-decoration: none; box-sizing: border-box; color: #374151; }
+.gti-drawer-dropdown-item.is-disabled { opacity: 0.5; pointer-events: none; }
 .gti-drawer-dropdown-empty { padding: 10px 14px; font-size: 12px; color: #9ca3af; }
 
 /* WhatsApp is a link styled as a button; a seller with no usable number gets

@@ -125,9 +125,6 @@ $gti_hours     = $first['equipment_hours'] ?? '';
             </button>
             <div class="gti-drawer-dropdown" data-field="status-menu"></div>
         </div>
-        <a class="gti-drawer-btn" data-action="whatsapp" target="_blank" rel="noopener" href="#">
-            <i class="fab fa-whatsapp"></i> WhatsApp
-        </a>
         <button type="button" class="gti-drawer-btn" data-action="reply"><i class="fas fa-envelope"></i> Email</button>
         <span class="gti-drawer-footer-spacer"></span>
         <div class="gti-drawer-btn-group">
@@ -135,6 +132,9 @@ $gti_hours     = $first['equipment_hours'] ?? '';
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="gti-drawer-dropdown" data-field="more-menu">
+                <a class="gti-drawer-dropdown-item" data-action="whatsapp" target="_blank" rel="noopener" href="#">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
                 <button type="button" class="gti-drawer-dropdown-item" data-action="assign">
                     <i class="fas fa-user-check"></i> Assign PIC
                 </button>
