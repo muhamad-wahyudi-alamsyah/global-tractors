@@ -135,6 +135,9 @@ $gti_hours     = $first['equipment_hours'] ?? '';
                 <i class="fas fa-ellipsis-v"></i>
             </button>
             <div class="gti-drawer-dropdown" data-field="more-menu">
+                <button type="button" class="gti-drawer-dropdown-item" data-action="assign">
+                    <i class="fas fa-user-check"></i> Assign PIC
+                </button>
                 <button type="button" class="gti-drawer-dropdown-item" data-action="price">
                     <i class="fas fa-tag"></i> Update Offered Price
                 </button>

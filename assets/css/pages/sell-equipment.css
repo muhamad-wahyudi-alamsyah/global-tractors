@@ -36,6 +36,7 @@
 .gti-ue-table .col-price { width: 130px; text-align: right; }
 .gti-ue-table .col-status { width: 110px; text-align: center; white-space: nowrap; }
 .gti-ue-table .col-date { width: 110px; white-space: nowrap; }
+.gti-ue-table .col-pic { width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-actions { width: 70px; text-align: center; }
 
 /* ====== Content Layout ====== */

@@ -503,6 +503,7 @@ function gti_sell_row_payload( array $row ) {
         'updated_text'       => ! empty( $row['updated_at'] ) ? gti_format_date( $row['updated_at'], 'd M Y' ) : '',
         'invoice_requested'  => ! empty( $row['invoice_requested_at'] ) ? gti_format_date( $row['invoice_requested_at'], 'd M Y' ) : '',
         'sales_pic'          => $row['sales_pic'] ?? '',
+        'assigned_to'        => (int) ( $row['assigned_to'] ?? 0 ),
         'status'             => $row['status'],
         'status_label'       => gti_status_label( 'sell', $row['status'] ),
         'status_class'       => gti_status_class( 'sell', $row['status'] ),

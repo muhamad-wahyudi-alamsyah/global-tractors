@@ -103,13 +103,14 @@ gti_dashboard_open( array(
                         <th class="col-price">Offered Price</th>
                         <th class="col-status">Status</th>
                         <th class="col-date">Date</th>
+                        <th class="col-pic">PIC</th>
                         <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php if ( ! $result['items'] ) : ?>
                     <tr>
-                        <td colspan="8" class="gti-ue-empty-cell">
+                        <td colspan="9" class="gti-ue-empty-cell">
                             <?php gti_render_empty_state( 'fa-inbox', 'No sell requests found',
                                 ( $search || array_filter( $filters ) )
                                     ? 'Try adjusting your filters'
@@ -140,9 +141,11 @@ gti_dashboard_open( array(
                             </td>
                             <td class="col-status"><?php gti_render_status_badge( 'sell', $sell['status'] ); ?></td>
                             <td class="col-date"><?php echo esc_html( date( 'M j, Y', strtotime( $sell['created_at'] ) ) ); ?></td>
+                            <td class="col-pic"><?php echo esc_html( $sell['sales_pic'] ?: 'Unassigned' ); ?></td>
                             <td class="col-actions">
                                 <?php gti_render_action_menu( array(
                                     array( 'label' => 'View Details',    'icon' => 'fa-eye',          'class' => 'js-view' ),
+                                    array( 'label' => 'Assign PIC',      'icon' => 'fa-user-check',   'class' => 'js-assign' ),
                                     array( 'label' => 'Update Offered Price', 'icon' => 'fa-tag',     'class' => 'js-price' ),
                                     array( 'label' => 'Contact on WhatsApp', 'icon' => 'fa-whatsapp', 'class' => 'js-whatsapp' ),
                                     array( 'label' => 'Reply by Email',  'icon' => 'fa-envelope',     'class' => 'js-reply' ),
