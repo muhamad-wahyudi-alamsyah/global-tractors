@@ -1101,3 +1101,8 @@
 .gti-ed-inquiry-card .gti-ed-form textarea {
     border-radius: 8px;
 }
+
+/* Unit already sold / rented — replaces the inquiry form (M-9). */
+.gti-ed-unavailable{border:1px solid #e5e7eb;border-radius:12px;padding:32px;background:#f9fafb;text-align:center}
+.gti-ed-unavailable h3{margin:0 0 8px;font-size:20px;color:#1a1f36}
+.gti-ed-unavailable p{margin:0 0 20px;color:#6b7280;font-size:14px;line-height:1.6}

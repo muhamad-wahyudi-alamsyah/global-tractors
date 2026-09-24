@@ -213,20 +213,31 @@
             if (entity === 'quotation' && status === 'waiting_customer') { return openUpload('quotation'); }
             if (entity === 'sell' && status === 'invoice_requested') { return openInvoice(); }
 
+            // Completing a spare-part quotation takes stock off the shelf. The
+            // quantity on the row is what the customer *asked* about, which is
+            // not always what was sold, so it is confirmed rather than assumed.
+            var asksQuantity = entity === 'quotation' && status === 'completed' &&
+                               current && current.equipment_type === 'spare_part';
+
             GTI.ui.confirm({
                 title: 'Ubah Status',
                 subtitle: 'Status baru akan tercatat di timeline.',
                 name: current ? current.ref : '',
                 code: label,
-                warning: 'Pelanggan akan menerima email pemberitahuan.',
+                warning: asksQuantity
+                    ? 'Stok spare part akan dikurangi sebanyak jumlah di bawah ini. Pelanggan menerima email pemberitahuan.'
+                    : 'Pelanggan akan menerima email pemberitahuan.',
                 confirmLabel: 'Ubah Status',
                 confirmIcon: 'fa-sync-alt',
-                tone: 'primary'
+                tone: 'primary',
+                input: asksQuantity
+                    ? { label: 'Jumlah terjual', value: current.quantity || 0, min: 0 }
+                    : null
             }).then(function (ok) {
                 if (!ok) return;
-                return GTI.api.post('gti_change_status', {
-                    entity_type: entity, id: drawer.dataset.id, status: status
-                }).then(applyResponse);
+                var body = { entity_type: entity, id: drawer.dataset.id, status: status };
+                if (asksQuantity) body.fulfilled_quantity = ok.value;
+                return GTI.api.post('gti_change_status', body).then(applyResponse);
             }).catch(function () {});
         }
 

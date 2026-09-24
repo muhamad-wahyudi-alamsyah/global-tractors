@@ -258,6 +258,11 @@ function gti_ajax_change_status() {
     if ( $entity_type === 'sell' && $status === 'completed' ) {
         $extra['invoice_received_at'] = current_time( 'mysql' );
     }
+    // How many actually left the warehouse, which is not necessarily the
+    // quantity the customer typed into the public inquiry form.
+    if ( $entity_type === 'quotation' && $status === 'completed' && isset( $_POST['fulfilled_quantity'] ) ) {
+        $extra['fulfilled_quantity'] = max( 0, (int) $_POST['fulfilled_quantity'] );
+    }
 
     gti_apply_status_change( $entity_type, $id, $status, $extra, array( 'note' => $note ) );
 

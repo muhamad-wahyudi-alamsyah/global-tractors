@@ -407,7 +407,9 @@ class GTI_Activator {
             // quotation_id stays the system key; the number typed in Create
             // Quotation is a separate document reference.
             self::add_columns($table_quotations, array(
-                'quotation_number' => 'VARCHAR(50) NULL',
+                'quotation_number'   => 'VARCHAR(50) NULL',
+                // What was really sold, as opposed to what the visitor asked about.
+                'fulfilled_quantity' => 'INT UNSIGNED NULL',
             ));
 
             // Roles gained the core WordPress caps the dashboard gates on

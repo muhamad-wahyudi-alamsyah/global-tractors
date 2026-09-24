@@ -268,6 +268,8 @@ function gti_rental_render_equipment_card( $item ) {
                 $status_class = 'coming-soon'; $status_label = 'COMING SOON'; break;
             case 'sold':
                 $status_class = 'sold'; $status_label = 'SOLD'; break;
+            case 'rented':
+                $status_class = 'sold'; $status_label = 'RENTED'; break;
             default:
                 $status_class = 'ready'; $status_label = 'READY STOCK';
         }
@@ -395,6 +397,8 @@ function gti_get_rental_equipment_data() {
         $status = $row->status ?: 'available';
         switch ( strtolower( $status ) ) {
             case 'sold':        $display_status = 'sold'; break;
+        case 'rented':      $display_status = 'rented'; break;
+            case 'rented':      $display_status = 'rented'; break;
             case 'coming_soon': $display_status = 'coming_soon'; break;
             default:            $display_status = 'ready_stock';
         }
@@ -506,6 +510,8 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 $status_class = 'coming-soon'; $status_label = 'COMING SOON'; break;
             case 'sold':
                 $status_class = 'sold'; $status_label = 'SOLD'; break;
+            case 'rented':
+                $status_class = 'sold'; $status_label = 'RENTED'; break;
             default:
                 $status_class = 'ready'; $status_label = 'READY STOCK';
         }
@@ -617,11 +623,24 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 </div>
 
                 <?php
+                // Asking for a quotation on a unit that is already gone wastes
+                // the visitor's time and the sales team's (M-9).
+                $gti_ed_unavailable = in_array( strtolower( $item['status'] ?? '' ), array( 'sold', 'rented' ), true );
+                if ( $gti_ed_unavailable ) :
+                    ?>
+                    <div class="gti-ed-unavailable">
+                        <h3>Unit ini sedang disewa</h3>
+                        <p>Hubungi kami untuk unit serupa — stok kami berubah setiap minggu.</p>
+                        <a href="https://wa.me/<?php echo esc_attr( $wa_number ); ?>?text=<?php echo urlencode( 'Halo GTI, saya mencari unit seperti ' . $title ); ?>" target="_blank" rel="noopener noreferrer" class="gti-ed-btn gti-ed-btn-whatsapp"><i class="fab fa-whatsapp"></i> TANYA UNIT SERUPA</a>
+                    </div>
+                    <?php
+                else :
                 gti_render_inquiry_form( array(
                     'type'           => 'rental',
                     'equipment_id'   => $equipment_id,
                     'equipment_name' => $title,
                 ) );
+                endif;
                 ?>
             </div>
         </section>
@@ -1656,6 +1675,8 @@ function gti_rental_render_related_card( $item ) {
                 $status_class = 'coming-soon'; $status_label = 'COMING SOON'; break;
             case 'sold':
                 $status_class = 'sold'; $status_label = 'SOLD'; break;
+            case 'rented':
+                $status_class = 'sold'; $status_label = 'RENTED'; break;
             default:
                 $status_class = 'ready'; $status_label = 'READY STOCK';
         }
@@ -1708,6 +1729,7 @@ function gti_rental_map_complete_row( $row ) {
     $status = $row->status ?: 'available';
     switch ( strtolower( $status ) ) {
         case 'sold':        $display_status = 'sold'; break;
+        case 'rented':      $display_status = 'rented'; break;
         case 'coming_soon': case 'coming-soon': $display_status = 'coming_soon'; break;
         default:            $display_status = 'ready_stock';
     }
@@ -1871,6 +1893,7 @@ function gti_rental_map_row( $row ) {
     $status = $row->status ?: 'available';
     switch ( strtolower( $status ) ) {
         case 'sold':        $display_status = 'sold'; break;
+        case 'rented':      $display_status = 'rented'; break;
         case 'coming_soon': case 'coming-soon': $display_status = 'coming_soon'; break;
         default:            $display_status = 'ready_stock';
     }

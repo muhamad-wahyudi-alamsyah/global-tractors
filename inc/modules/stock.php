@@ -32,15 +32,92 @@ function gti_stock_consume_on_quotation_completed( $entity_type, $id, $from, $to
     }
 
     $row = gti_entity_row( 'quotation', $id );
-    if ( ! $row || 'spare_part' !== ( $row['equipment_type'] ?? '' ) ) {
+    if ( ! $row ) {
         return;
     }
 
-    gti_stock_consume_spare_part(
-        (int) ( $row['equipment_id'] ?? 0 ),
-        (int) ( $row['quantity'] ?? 0 ),
-        gti_entity_ref( 'quotation', $row )
+    $type = $row['equipment_type'] ?? '';
+
+    if ( 'spare_part' === $type ) {
+        gti_stock_consume_spare_part(
+            (int) ( $row['equipment_id'] ?? 0 ),
+            gti_stock_sold_quantity( $row ),
+            gti_entity_ref( 'quotation', $row )
+        );
+        return;
+    }
+
+    gti_mark_equipment_unavailable( $row, $type );
+}
+
+/**
+ * How many units actually left the warehouse.
+ *
+ * quantity is what the visitor typed into the public inquiry form — someone
+ * asking the bulk price for 50 filters and then buying 5 used to take 50 off
+ * the shelf. Create Quotation / Completed now confirms the real figure and
+ * stores it in fulfilled_quantity; quantity is only the fallback for rows
+ * completed before that column existed.
+ */
+function gti_stock_sold_quantity( array $row ) {
+    $fulfilled = $row['fulfilled_quantity'] ?? null;
+
+    if ( $fulfilled !== null && $fulfilled !== '' ) {
+        return (int) $fulfilled;
+    }
+
+    return (int) ( $row['quantity'] ?? 0 );
+}
+
+/**
+ * A completed used/rental quotation takes the machine off the market.
+ *
+ * Without this the unit kept showing "READY STOCK" with a live inquiry form
+ * after it was sold, and sales had to turn new enquiries away one by one.
+ *
+ * @param string $type used|rental
+ * @return bool Whether a row was updated.
+ */
+function gti_mark_equipment_unavailable( array $row, $type ) {
+    global $wpdb;
+
+    $statuses = array( 'used' => 'sold', 'rental' => 'rented' );
+    if ( ! isset( $statuses[ $type ] ) ) {
+        return false;
+    }
+
+    $equipment_id = (int) ( $row['equipment_id'] ?? 0 );
+    if ( $equipment_id <= 0 ) {
+        // Inquiries sent from a listing page carry no unit id, so there is
+        // nothing to mark. Say so in the log rather than failing quietly.
+        gti_log_current_activity(
+            'stock_skipped',
+            sprintf( '%s selesai tanpa unit terkait — status unit harus diubah manual.',
+                gti_entity_ref( 'quotation', $row ) ),
+            'quotation',
+            (int) $row['id']
+        );
+        return false;
+    }
+
+    $table   = $wpdb->prefix . 'gti_equipment';
+    $updated = $wpdb->query( $wpdb->prepare(
+        "UPDATE {$table} SET status = %s WHERE id = %d AND deleted_at IS NULL AND status <> %s",
+        $statuses[ $type ], $equipment_id, $statuses[ $type ]
+    ) );
+
+    if ( ! $updated ) {
+        return false;
+    }
+
+    gti_log_current_activity(
+        'status_change',
+        sprintf( 'Unit #%d → %s (%s)', $equipment_id, $statuses[ $type ], gti_entity_ref( 'quotation', $row ) ),
+        'equipment',
+        $equipment_id
     );
+
+    return true;
 }
 
 /**

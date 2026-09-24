@@ -40,6 +40,12 @@ $gti_delete = array_merge( array(
                 <i class="fas fa-info-circle"></i>
                 <span id="gti-delete-warning"><?php echo esc_html( $gti_delete['warning'] ); ?></span>
             </div>
+            <!-- Optional numeric answer, shown only when GTI.ui.confirm() asks
+                 for one (e.g. "how many were actually sold?"). -->
+            <div class="gti-ue-delete-input" id="gti-confirm-input-wrap" hidden>
+                <label for="gti-confirm-input" id="gti-confirm-input-label">Jumlah</label>
+                <input type="number" id="gti-confirm-input" min="0" step="1">
+            </div>
         </div>
         <div class="gti-ue-delete-footer">
             <button type="button" class="gti-ue-delete-cancel" data-gti-close="gtiDeleteOverlay">Cancel</button>

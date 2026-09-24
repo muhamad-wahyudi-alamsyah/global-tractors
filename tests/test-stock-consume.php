@@ -36,3 +36,20 @@ foreach ( $levels as $l ) {
 }
 
 echo "gti_stock_should_consume + status derivation OK\n";
+
+// Which quantity leaves the warehouse: the confirmed figure when there is one,
+// otherwise what the customer asked about.
+$quantities = array(
+    array( array( 'quantity' => 50, 'fulfilled_quantity' => 5 ),    5  ),
+    array( array( 'quantity' => 50, 'fulfilled_quantity' => 0 ),    0  ),  // nothing shipped
+    array( array( 'quantity' => 50, 'fulfilled_quantity' => null ), 50 ),  // pre-migration row
+    array( array( 'quantity' => 50, 'fulfilled_quantity' => '' ),   50 ),
+    array( array( 'quantity' => 3 ),                                3  ),
+    array( array(),                                                 0  ),
+);
+foreach ( $quantities as $q ) {
+    $got = gti_stock_sold_quantity( $q[0] );
+    assert( $got === $q[1], 'sold qty ' . json_encode( $q[0] ) . " => $got" );
+}
+
+echo "gti_stock_sold_quantity OK\n";

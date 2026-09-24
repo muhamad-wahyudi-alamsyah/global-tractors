@@ -201,6 +201,19 @@
                 set('gti-delete-warning', opts.warning ||
                     'This record will be permanently removed and cannot be recovered.');
 
+                // opts.input = {label, value, min} turns the dialog into a
+                // one-question form; the answer rides along with the result.
+                var inputWrap = document.getElementById('gti-confirm-input-wrap');
+                var input = document.getElementById('gti-confirm-input');
+                if (inputWrap && input) {
+                    inputWrap.hidden = !opts.input;
+                    if (opts.input) {
+                        set('gti-confirm-input-label', opts.input.label || 'Jumlah');
+                        input.value = opts.input.value != null ? opts.input.value : '';
+                        input.min = opts.input.min != null ? opts.input.min : 0;
+                    }
+                }
+
                 var btn = document.getElementById('gti-delete-confirm-btn');
                 if (opts.confirmLabel && btn) {
                     btn.innerHTML = '<i class="fas ' + (opts.confirmIcon || 'fa-trash') + '"></i> ' + GTI.fmt.escape(opts.confirmLabel);
@@ -217,7 +230,9 @@
                 };
                 var onBackdrop = function (e) { if (e.target === overlay) done(false); };
 
-                fresh.addEventListener('click', function () { done(true); });
+                fresh.addEventListener('click', function () {
+                    done(opts.input ? { value: input ? input.value : '' } : true);
+                });
                 overlay.addEventListener('click', onBackdrop);
                 overlay.querySelectorAll('[data-gti-close]').forEach(function (el) {
                     el.addEventListener('click', function () { done(false); });
