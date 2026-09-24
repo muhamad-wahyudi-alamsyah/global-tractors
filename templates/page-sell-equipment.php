@@ -98,7 +98,6 @@ gti_dashboard_open( array(
                     <tr>
                         <th class="col-customer">Customer</th>
                         <th class="col-equipment">Equipment</th>
-                        <th class="col-year">Year</th>
                         <th class="col-condition">Condition</th>
                         <th class="col-price">Offered Price</th>
                         <th class="col-status">Status</th>
@@ -110,7 +109,7 @@ gti_dashboard_open( array(
                 <tbody>
                 <?php if ( ! $result['items'] ) : ?>
                     <tr>
-                        <td colspan="9" class="gti-ue-empty-cell">
+                        <td colspan="8" class="gti-ue-empty-cell">
                             <?php gti_render_empty_state( 'fa-inbox', 'No sell requests found',
                                 ( $search || array_filter( $filters ) )
                                     ? 'Try adjusting your filters'
@@ -132,7 +131,6 @@ gti_dashboard_open( array(
                                 <strong style="color: #1a1f36;"><?php echo esc_html( $sell['equipment_name'] ); ?></strong>
                                 <br><small style="color: #6b7280;"><?php echo esc_html( $sell['equipment_brand'] . ' ' . $sell['equipment_model'] ); ?></small>
                             </td>
-                            <td class="col-year"><?php echo esc_html( $sell['equipment_year'] ?: '-' ); ?></td>
                             <td class="col-condition">
                                 <span class="gti-condition-badge <?php echo esc_attr( $condition ); ?>"><?php echo esc_html( ucfirst( $condition ) ); ?></span>
                             </td>

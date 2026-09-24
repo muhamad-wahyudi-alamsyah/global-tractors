@@ -31,7 +31,6 @@
 .gti-ue-table { width: 100%; table-layout: fixed; }
 .gti-ue-table .col-customer { width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gti-ue-table .col-equipment { width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.gti-ue-table .col-year { width: 70px; color: #374151 !important; text-align: left !important; }
 .gti-ue-table .col-condition { width: 100px; }
 .gti-ue-table .col-price { width: 130px; text-align: right; }
 .gti-ue-table .col-status { width: 110px; text-align: center; white-space: nowrap; }
