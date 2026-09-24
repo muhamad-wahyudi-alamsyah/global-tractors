@@ -540,6 +540,24 @@
     font-size: 12px; color: #92400e; display: flex; align-items: flex-start; gap: 8px;
 }
 .gti-ue-delete-warning i { margin-top: 2px; color: #f59e0b; flex-shrink: 0; }
+/* Optional numeric answer ("Jumlah terjual") shown by GTI.ui.confirm(). */
+.gti-ue-delete-input { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.gti-ue-delete-input label { font-size: 12px; font-weight: 600; color: #374151; }
+.gti-ue-delete-input input {
+    width: 100%; box-sizing: border-box; padding: 10px 12px;
+    border: 1px solid #e5e7eb; border-radius: 8px;
+    font-size: 14px; font-family: inherit; color: #1a1f36; background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.gti-ue-delete-input input:focus {
+    outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+.gti-ue-delete-input input[type="number"] { -moz-appearance: textfield; }
+#gti-confirm-input { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+#gti-confirm-input:hover:not(:focus) { border-color: #d1d5db; }
+#gti-confirm-input::-webkit-outer-spin-button,
+#gti-confirm-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+#gti-confirm-input:disabled { background: #f9fafb; color: #9ca3af; cursor: not-allowed; }
 .gti-ue-delete-footer {
     display: flex; justify-content: flex-end; gap: 10px;
     padding: 16px 24px; border-top: 1px solid #f3f4f6;
