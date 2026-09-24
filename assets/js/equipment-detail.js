@@ -236,6 +236,18 @@
         return true;
       }
 
+      /** A nonce minted just now, or '' when the request fails (submit still tries). */
+      function freshNonce() {
+        var body = new FormData();
+        body.append('action', 'gti_public_nonce');
+        body.append('name', 'quotation');
+
+        return fetch(gtiAjaxUrl(), { method: 'POST', body: body, credentials: 'same-origin' })
+          .then(function (r) { return r.json(); })
+          .then(function (res) { return (res && res.success && res.data.nonce) || ''; })
+          .catch(function () { return ''; });
+      }
+
       // Validate on blur rather than only on submit (§7.4).
       ['ed_name', 'ed_phone', 'ed_email', 'ed_rental_end'].forEach(function (name) {
         var field = form.querySelector('[name="' + name + '"]');
@@ -273,7 +285,15 @@
 
         var email = form.querySelector('[name="ed_email"]');
 
-        fetch(gtiAjaxUrl(), { method: 'POST', body: fd, credentials: 'same-origin' })
+        // The nonce baked into this page may have been served from a page cache
+        // hours or days ago, and a WordPress nonce for an anonymous visitor
+        // lives 24 hours at most. Ask for a live one first; the POST below is
+        // never cached.
+        freshNonce()
+          .then(function (nonce) {
+            if (nonce) fd.set('gti_quot_nonce', nonce);
+            return fetch(gtiAjaxUrl(), { method: 'POST', body: fd, credentials: 'same-origin' });
+          })
           .then(function (response) {
             return response.text().then(function (text) {
               try { return JSON.parse(text); }
