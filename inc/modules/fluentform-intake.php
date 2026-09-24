@@ -183,6 +183,7 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'customer_company'    => ['company', 'customer_company', 'perusahaan', 'company_name', 'organisation'],
         'customer_email'      => ['email', 'customer_email', 'your_email', 'email_address'],
         'customer_phone'      => ['phone', 'customer_phone', 'telepon', 'phone_number', 'your_phone', 'no_hp', 'no_telp'],
+        'customer_whatsapp'   => ['whatsapp', 'customer_whatsapp', 'wa', 'no_wa', 'nomor_wa'],
         'equipment_name'      => ['equipment_name', 'equipment', 'alat', 'nama_alat', 'machine_name'],
         'equipment_brand'     => ['equipment_brand', 'brand', 'merek', 'merk', 'manufacturer'],
         'equipment_model'     => ['equipment_model', 'model', 'tipe', 'tipe_alat'],
@@ -204,6 +205,13 @@ function gti_fluentform_to_sell_request($insertId, $formData, $form) {
         'customer_company'    => sanitize_text_field($get($formData, $field_map['customer_company'])),
         'customer_email'      => sanitize_email($get($formData, $field_map['customer_email'])),
         'customer_phone'      => sanitize_text_field($get($formData, $field_map['customer_phone'])),
+        // Drawer has a WhatsApp row; without its own field it silently showed the
+        // phone number instead.
+        'customer_whatsapp'   => sanitize_text_field($get(
+            $formData,
+            $field_map['customer_whatsapp'],
+            $get($formData, $field_map['customer_phone'])
+        )),
         'equipment_name'      => sanitize_text_field($get($formData, $field_map['equipment_name'])),
         'equipment_brand'     => sanitize_text_field($get($formData, $field_map['equipment_brand'])),
         'equipment_model'     => sanitize_text_field($get($formData, $field_map['equipment_model'])),
