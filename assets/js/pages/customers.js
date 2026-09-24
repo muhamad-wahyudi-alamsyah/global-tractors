@@ -44,7 +44,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateDrawerContent(firstCust);
             } catch(e) {}
         }
+
+        // ── Add / Edit / Delete ──────────────────────────────────────────────
+        // Moved here from customer-detail.js: /dashboard/customer-detail has no
+        // link pointing at it any more, which left the customer table with no
+        // way at all to correct or remove a record.
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('.js-cust-add, .js-cust-edit, .js-cust-delete');
+            if (!trigger) return;
+            e.preventDefault();
+
+            var cust = rowCustomer(trigger);
+
+            if (trigger.classList.contains('js-cust-add')) {
+                openCustomerForm({});
+            } else if (trigger.classList.contains('js-cust-edit')) {
+                if (cust) openCustomerForm(cust);
+            } else if (cust) {
+                deleteCustomer(cust);
+            }
+        });
+
+        var form = document.getElementById('gti-customer-form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var submit = form.querySelector('button[type="submit"]');
+                var unlock = GTI.ui.lockButton(submit, 'Menyimpan…');
+
+                GTI.api.post('gti_save_customer', new FormData(form))
+                    .then(function (res) {
+                        GTI.ui.modal.close('gtiCustomerOverlay');
+                        GTI.ui.toast(res.message || 'Customer tersimpan.', 'success');
+                        setTimeout(function () { window.location.reload(); }, 600);
+                    })
+                    .catch(function () {})
+                    .then(unlock);
+            });
+        }
     });
+
+    /** The row a button sits in, or the drawer's current customer. */
+    function rowCustomer(el) {
+        var row = el.closest('tr[data-cust]');
+        if (!row) return _currentDrawerCust;
+        try { return JSON.parse(row.getAttribute('data-cust')); } catch (err) { return null; }
+    }
+
+    function openCustomerForm(cust) {
+        var form = document.getElementById('gti-customer-form');
+        if (!form) return;
+
+        form.reset();
+        document.getElementById('cf-id').value = cust.id || 0;
+        Object.keys(cust).forEach(function (key) {
+            var field = form.querySelector('[name="' + key + '"]');
+            if (field) field.value = cust[key] == null ? '' : cust[key];
+        });
+
+        var title = document.getElementById('gti-customer-title');
+        if (title) title.textContent = cust.id ? 'Edit Customer' : 'Add Customer';
+        GTI.ui.modal.open('gtiCustomerOverlay');
+    }
+
+    function deleteCustomer(cust) {
+        GTI.ui.confirm({
+            title: 'Delete Customer',
+            name: cust.name,
+            code: cust.customer_id,
+            warning: 'Customer akan dihapus permanen. Request dan quotation ' +
+                     'terkait TIDAK ikut terhapus.',
+            confirmLabel: 'Delete Customer'
+        }).then(function (ok) {
+            if (!ok) return;
+            return GTI.api.post('gti_delete_customer', { id: cust.id })
+                .then(function (res) {
+                    GTI.ui.toast(res.message || 'Customer dihapus.', 'success');
+                    setTimeout(function () { window.location.reload(); }, 900);
+                });
+        }).catch(function () {});
+    }
 
     var _currentDrawerCust = null;
 

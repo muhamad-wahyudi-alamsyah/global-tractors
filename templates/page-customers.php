@@ -115,6 +115,9 @@ gti_dashboard_open( array(
                             <i class="fas fa-rotate-right"></i> Reset
                         </a>
                     </div>
+                    <button type="button" class="gti-ue-btn-add js-cust-add">
+                        <i class="fas fa-plus"></i> Add Customer
+                    </button>
                 </form>
 
                 <!-- Table -->
@@ -179,6 +182,12 @@ gti_dashboard_open( array(
                                                     <a href="mailto:<?php echo esc_attr($c->email); ?>" class="gti-ue-action-item">
                                                         <i class="fas fa-envelope"></i> Send Email
                                                     </a>
+                                                    <button type="button" class="gti-ue-action-item js-cust-edit">
+                                                        <i class="fas fa-pen"></i> Edit
+                                                    </button>
+                                                    <button type="button" class="gti-ue-action-item danger js-cust-delete">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </button>
                                                 </div>
                                             </div>
                                         </td>
@@ -234,11 +243,13 @@ gti_dashboard_open( array(
                     </div>
                     <div class="gti-drawer-footer">
                         <a href="#" class="gti-drawer-btn" id="drawer-btn-email"><i class="fas fa-envelope"></i> Send Email</a>
+                        <button type="button" class="gti-drawer-btn js-cust-edit"><i class="fas fa-pen"></i> Edit</button>
+                        <button type="button" class="gti-drawer-btn js-cust-delete"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
             </div>
 
 <?php
 gti_dashboard_close( array(
-    'modals' => array( 'delete', 'email' ),
+    'modals' => array( 'customer', 'delete', 'email' ),
 ) );
