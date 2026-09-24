@@ -489,13 +489,14 @@
 
 /* ── Added in PRD v2 ─────────────────────────────────────────────────────── */
 
-/* gti_render_status_badge() prints .gti-ue-status-badge.status-{class}; these
-   repeat this page's .gti-badge-status rules above under the new class name. */
-.gti-ue-status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: capitalize; white-space: nowrap; }
-.gti-ue-status-badge.status-new { background: #dbeafe; color: #1d4ed8; }
-.gti-ue-status-badge.status-processing { background: #fef3c7; color: #b45309; }
-.gti-ue-status-badge.status-approved { background: #d1fae5; color: #047857; }
-.gti-ue-status-badge.status-rejected { background: #fee2e2; color: #dc2626; }
+/* gti_render_status_badge() prints .gti-ue-status-badge.status-{class}; kept
+   identical to request-quotation.css so both inboxes read the same. */
+.gti-ue-status-badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; text-transform: capitalize; }
+.gti-ue-status-badge.status-new,
+.gti-ue-status-badge.status-approved { background: #e6ffe3; color: #3daf00; }
+.gti-ue-status-badge.status-processing { background: #e8f0fe; color: #3b82f6; }
+.gti-ue-status-badge.status-waiting { background: #ffedd5; color: #c2410c; }
+.gti-ue-status-badge.status-rejected { background: #fff0e0; color: #F5A623; }
 .gti-ue-status-badge.status-completed { background: #ccfbf1; color: #0d9488; }
 
 /* Drawer images link to the full-size file now; the link must not add a line
