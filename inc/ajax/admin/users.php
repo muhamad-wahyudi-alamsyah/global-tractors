@@ -32,7 +32,7 @@ trait GTI_Ajax_Users {
 
         // Only roles this user is allowed to hand out.
         $role = sanitize_text_field($_POST['role'] ?? '');
-        if ($role && !array_key_exists($role, get_editable_roles())) {
+        if ($role && !array_key_exists($role, GTI_Roles::dashboard_roles())) {
             wp_send_json_error(array('message' => 'That role is not available.'));
             exit;
         }

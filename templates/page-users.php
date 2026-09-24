@@ -52,7 +52,9 @@ $editable_roles = array();
 if ($can_list_users) {
     // get_editable_roles() is admin-only; this template runs on the front end.
     require_once ABSPATH . 'wp-admin/includes/user.php';
-    $editable_roles = get_editable_roles();
+    // Only the four GTI roles + administrator; the rest of WordPress's roles
+    // (Subscriber, Editor, gti_customer, …) have no meaning in this dashboard.
+    $editable_roles = GTI_Roles::dashboard_roles(get_editable_roles());
 
     // §6.12 gaps 2-3: the directory used to fetch 200 rows with no search,
     // filter or paging, so a team of any size was simply truncated.

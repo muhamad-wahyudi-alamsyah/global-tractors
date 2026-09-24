@@ -158,6 +158,35 @@ class GTI_Roles {
     }
 
     /**
+     * Roles the dashboard is allowed to show and hand out.
+     *
+     * get_editable_roles() returns every role on the site, so a WordPress
+     * administrator opening the Users page saw Subscriber, Editor, Author,
+     * Contributor and gti_customer next to the four GTI roles — none of which
+     * mean anything in this dashboard. Only the GTI roles plus administrator
+     * belong here.
+     *
+     * @param array|null $roles get_editable_roles() output; fetched when omitted.
+     * @return array role slug => role array, in matrix order, administrator last.
+     */
+    public static function dashboard_roles($roles = null) {
+        if (null === $roles) {
+            require_once ABSPATH . 'wp-admin/includes/user.php';
+            $roles = get_editable_roles();
+        }
+
+        $allowed = array_merge(array_keys(self::capability_matrix()), array('administrator'));
+
+        $out = array();
+        foreach ($allowed as $slug) {
+            if (isset($roles[$slug])) {
+                $out[$slug] = $roles[$slug];
+            }
+        }
+        return $out;
+    }
+
+    /**
      * Remove custom roles
      */
     public static function remove_roles() {
