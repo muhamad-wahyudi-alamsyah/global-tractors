@@ -49,7 +49,10 @@ function gti_entity_schema( $entity = null ) {
         ),
         'quotations' => array(
             'table'   => $wpdb->prefix . 'gti_quotations',
-            'search'  => array( 'quotation_id', 'customer_name', 'customer_company', 'customer_email' ),
+            // 'items' is the JSON blob holding the unit names; without it a
+            // search for "PC200" returned nothing even though the Requested
+            // Items column showed PC200 (m-1).
+            'search'  => array( 'quotation_id', 'quotation_number', 'customer_name', 'customer_company', 'customer_email', 'items' ),
             'filters' => array( 'status', 'sales_pic', 'assigned_to', 'equipment_type', 'payment_terms' ),
             'soft'    => null,
             'order'   => 'created_at',

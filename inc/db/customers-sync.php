@@ -280,7 +280,18 @@ function gti_customer_stats($customer) {
     $clauses = array();
     $params  = array();
     if ($email) { $clauses[] = 'customer_email = %s'; $params[] = $email; }
-    if ($phone) { $clauses[] = 'customer_phone = %s'; $params[] = $phone; }
+    // Phone is matched the same loose way gti_find_customer() matches it — last
+    // nine digits, punctuation ignored. An exact compare meant a customer whose
+    // number was typed "0812-3456-7890" here and "+62 812 3456 7890" there
+    // counted zero requests on /dashboard/customers (m-3).
+    $digits = preg_replace('/[^0-9]/', '', (string) $phone);
+    if (strlen($digits) >= 8) {
+        $clauses[] = "customer_phone <> '' AND REPLACE(REPLACE(REPLACE(REPLACE(customer_phone,' ',''),'-',''),'(',''),')','') LIKE %s";
+        $params[]  = '%' . $wpdb->esc_like(substr($digits, -9));
+    } elseif ($phone) {
+        $clauses[] = 'customer_phone = %s';
+        $params[]  = $phone;
+    }
     $where = '(' . implode(' OR ', $clauses) . ')';
 
     $requests_table   = $wpdb->prefix . 'gti_requests';
@@ -419,6 +430,33 @@ function gti_sync_customers_from_sources($force = false) {
                 'company'  => $row->customer_company,
                 'location' => $row->customer_address,
                 'source'   => 'request-quotation',
+                'date'     => $row->first_seen,
+            ), false);
+            if ($customer_id) $touched[$customer_id] = true;
+        }
+    }
+
+    // Sell submissions are customers too. New ones arrive through the
+    // gti_submission_received hook, but a historic backfill used to miss them
+    // entirely, so a seller whose row was ever removed never came back (m-4).
+    $sell_table = $wpdb->prefix . 'gti_sell_requests';
+    if (gti_table_exists($sell_table)) {
+        $rows = $wpdb->get_results(
+            "SELECT customer_name, customer_company, customer_email, customer_phone,
+                    equipment_location, MIN(created_at) AS first_seen
+             FROM {$sell_table}
+             WHERE customer_email <> '' OR customer_phone <> ''
+             GROUP BY customer_email, customer_phone,
+                      customer_name, customer_company, equipment_location"
+        );
+        foreach ($rows as $row) {
+            $customer_id = gti_sync_customer(array(
+                'name'     => $row->customer_name,
+                'email'    => $row->customer_email,
+                'phone'    => $row->customer_phone,
+                'company'  => $row->customer_company,
+                'location' => $row->equipment_location,
+                'source'   => 'sell-equipment',
                 'date'     => $row->first_seen,
             ), false);
             if ($customer_id) $touched[$customer_id] = true;
