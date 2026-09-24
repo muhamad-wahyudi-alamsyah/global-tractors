@@ -17,7 +17,10 @@ function gti_is_dashboard_only_user() {
     return current_user_can( 'gti_access' ) || in_array( GTI_ROLE_CUSTOMER, (array) wp_get_current_user()->roles, true );
 }
 
-add_action( 'admin_init', 'gti_block_admin_for_dashboard_users' );
+// Priority 1: WooCommerce's prevent_admin_access() also runs on admin_init (10)
+// and, since plugins hook before the theme, would send Sales — who lacks
+// edit_posts — to /my-account/ first.
+add_action( 'admin_init', 'gti_block_admin_for_dashboard_users', 1 );
 function gti_block_admin_for_dashboard_users() {
     // admin-ajax.php also fires admin_init; the dashboard and public forms live on it.
     if ( wp_doing_ajax() ) return;

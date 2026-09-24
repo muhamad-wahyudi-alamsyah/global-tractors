@@ -28,7 +28,8 @@
 | m-10 | ✅ Drawer quotation menampilkan *Source Page*; `industry`/`status` aman karena save hanya menyentuh kolom yang dikirim (B-5) |
 | m-11 | ✅ Activator memanggil `gti_ensure_customers_table()` — satu skema saja |
 | m-12 | ✅ Didokumentasikan di definisi kolom (`class-gti-activator.php`) |
-| m-13 | ✅ `block-admin.php` ditulis ulang untuk role GTI & di-load; `ajax-login.php`, `ajax-register.php`, `filters.php` dihapus. `inc/auth/register.php` + `page-register.php` menunggu keputusan Fase 4 |
+| m-13 | ✅ `block-admin.php` ditulis ulang untuk role GTI & di-load (prioritas 1, mendahului redirect WooCommerce ke `/my-account/`); `ajax-login.php`, `ajax-register.php`, `filters.php` dihapus |
+| Fase 4: self-registration | ✅ Diputuskan **tidak diperlukan** — `inc/auth/register.php`, `templates/page-register.php`, validator & konstanta rate limit yang hanya dipakai register dihapus. Akun dibuat admin lewat `/dashboard/users` |
 
 ---
 

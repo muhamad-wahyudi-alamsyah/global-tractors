@@ -33,7 +33,3 @@ define( 'GTI_FLUENTFORM_SELL_FORM_ID', 4 );
 // Rate limit
 define( 'GTI_RL_LOGIN_MAX',       5 );
 define( 'GTI_RL_LOGIN_WINDOW',    900 );   // 15 menit
-define( 'GTI_RL_REGISTER_MAX',    3 );
-define( 'GTI_RL_REGISTER_WINDOW', 3600 );  // 1 jam
-define( 'GTI_RL_RESEND_VERIFY_MAX',    3 );
-define( 'GTI_RL_RESEND_VERIFY_WINDOW', 3600 );  // 1 jam
