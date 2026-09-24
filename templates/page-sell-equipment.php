@@ -146,7 +146,7 @@ gti_dashboard_open( array(
                                     array( 'label' => 'View Details',         'icon' => 'fa-eye',          'class' => 'js-view' ),
                                     array( 'label' => 'Update Status',        'icon' => 'fa-sync-alt',     'class' => 'js-status' ),
                                     array( 'label' => 'Reply by Email',       'icon' => 'fa-envelope',     'class' => 'js-reply' ),
-                                    array( 'label' => 'Contact on WhatsApp',  'icon' => 'fa-whatsapp',     'class' => 'js-whatsapp' ),
+                                    array( 'label' => 'Contact on WhatsApp',  'icon' => 'fab fa-whatsapp',     'class' => 'js-whatsapp' ),
                                     gti_can_view_all() ? array( 'label' => 'Assign PIC', 'icon' => 'fa-user-check', 'class' => 'js-assign' ) : null,
                                     array( 'label' => 'Update Offered Price', 'icon' => 'fa-tag',          'class' => 'js-price' ),
                                     array( 'label' => 'Request Invoice',      'icon' => 'fa-file-invoice', 'class' => 'js-invoice' ),

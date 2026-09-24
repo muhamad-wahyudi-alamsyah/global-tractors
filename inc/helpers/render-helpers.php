@@ -160,14 +160,16 @@ function gti_render_action_menu( array $items ) {
         <div class="gti-ue-action-dropdown">
             <?php foreach ( $items as $item ) :
                 $item = array_merge( array( 'label' => '', 'icon' => '', 'onclick' => '', 'href' => '', 'class' => '' ), $item );
+                // Brand icons (fab) must keep their own style prefix; plain names default to fas.
+                $icon_class = preg_match( '/^fa[bsrl] /', $item['icon'] ) ? $item['icon'] : 'fas ' . $item['icon'];
                 if ( $item['href'] ) : ?>
                     <a href="<?php echo esc_url( $item['href'] ); ?>" class="gti-ue-action-item <?php echo esc_attr( $item['class'] ); ?>">
-                        <i class="fas <?php echo esc_attr( $item['icon'] ); ?>"></i> <?php echo esc_html( $item['label'] ); ?>
+                        <i class="<?php echo esc_attr( $icon_class ); ?>"></i> <?php echo esc_html( $item['label'] ); ?>
                     </a>
                 <?php else : ?>
                     <button type="button" class="gti-ue-action-item <?php echo esc_attr( $item['class'] ); ?>"
                             <?php if ( $item['onclick'] ) : ?>onclick="<?php echo esc_attr( $item['onclick'] ); ?>"<?php endif; ?>>
-                        <i class="fas <?php echo esc_attr( $item['icon'] ); ?>"></i> <?php echo esc_html( $item['label'] ); ?>
+                        <i class="<?php echo esc_attr( $icon_class ); ?>"></i> <?php echo esc_html( $item['label'] ); ?>
                     </button>
                 <?php endif;
             endforeach; ?>
