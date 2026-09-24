@@ -67,7 +67,7 @@ function gti_entity_schema( $entity = null ) {
             'table'   => $wpdb->prefix . 'gti_customers',
             'search'  => array( 'name', 'company', 'email', 'phone', 'customer_id' ),
             'filters' => array( 'status', 'industry', 'city', 'province', 'source' ),
-            'soft'    => null,
+            'soft'    => 'deleted_at',
             'order'   => 'registered_date',
             'scope'   => null,
         ),

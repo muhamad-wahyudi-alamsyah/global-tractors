@@ -48,7 +48,7 @@ $offset      = $result['offset'];
 // Unfiltered on purpose: the cards describe the whole book, not the search.
 $customer_counts = gti_count_by_status( 'customers', array( 'ignore_scope' => true ) );
 $total_customers = $customer_counts['all'];
-$total_requests  = (int) $wpdb->get_var( "SELECT COALESCE(SUM(total_transactions), 0) FROM {$table_name}" );
+$total_requests  = (int) $wpdb->get_var( "SELECT COALESCE(SUM(total_transactions), 0) FROM {$table_name} WHERE deleted_at IS NULL" );
 
 // Where customers came from, for the filter dropdown
 $sources = gti_distinct_values( 'customers', 'source' );

@@ -11,7 +11,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('GTI_CUSTOMERS_SCHEMA', '1.1.0');
+define('GTI_CUSTOMERS_SCHEMA', '1.2.0');
 
 function gti_customers_table() {
     global $wpdb;
@@ -67,6 +67,7 @@ function gti_ensure_customers_table($force = false) {
             last_contact DATETIME NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME NULL,
+            deleted_at DATETIME NULL,
             PRIMARY KEY (id),
             UNIQUE KEY customer_id (customer_id),
             KEY status (status),
@@ -100,6 +101,7 @@ function gti_ensure_customers_table($force = false) {
             'registered_date'  => "DATETIME NULL",
             'last_contact'     => "DATETIME NULL",
             'updated_at'       => "DATETIME NULL",
+            'deleted_at'       => "DATETIME NULL",
         );
         foreach ($wanted as $column => $definition) {
             if (!in_array($column, $existing, true)) {
@@ -192,6 +194,13 @@ function gti_sync_customer($args, $refresh_stats = true) {
     if (!$when || $when === '0000-00-00 00:00:00') $when = current_time('mysql');
 
     $existing = gti_find_customer($email, $phone);
+
+    // Deleting a customer is a decision, not a hiccup: the request and quotation
+    // rows it was derived from are kept on purpose, so without this check the
+    // 5-minute backfill rebuilds the record a few minutes later.
+    if ($existing && !empty($existing->deleted_at)) {
+        return $existing->customer_id;
+    }
 
     if ($existing) {
         $update = array(

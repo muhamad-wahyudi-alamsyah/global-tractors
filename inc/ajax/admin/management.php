@@ -26,7 +26,18 @@ function gti_ajax_delete_customer() {
         gti_send_json_error( 'Customer tidak ditemukan.', 'not_found', 404 );
     }
 
-    if ( false === $wpdb->delete( $wpdb->prefix . 'gti_customers', array( 'id' => $id ), array( '%d' ) ) ) {
+    // Soft delete. A hard DELETE does not stick: customers are derived rows, and
+    // gti_sync_customers_from_sources() re-creates them from the still-present
+    // request/quotation rows within five minutes, with a fresh customer_id.
+    $deleted = $wpdb->update(
+        $wpdb->prefix . 'gti_customers',
+        array( 'deleted_at' => current_time( 'mysql' ) ),
+        array( 'id' => $id ),
+        array( '%s' ),
+        array( '%d' )
+    );
+
+    if ( false === $deleted ) {
         gti_send_json_error( 'Gagal menghapus customer.', 'db_error' );
     }
 
