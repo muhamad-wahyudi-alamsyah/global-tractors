@@ -27,7 +27,7 @@
 | Login | ✅ Siap | |
 | Register / Lupa Password | ❌ Belum | Halaman tidak punya URL, handler tidak di-load |
 | Email (status + manual) | ⚠️ Sebagian | Riwayat email bisa tercampur antar modul |
-| Contact Messages / Website Settings | ❌ Belum | "Coming Soon" |
+| Contact Messages / Website Settings | ❌ Belum | "Coming Soon" JANGAN BUAT FITUR INI |
 
 **Blocker sebelum go-live: 6 item** (§1). **Major: 11 item** (§2). **Minor: 13 item** (§3).
 
