@@ -35,6 +35,7 @@ require_once GTI_CHILD_DIR . '/inc/security/ajax-guard.php';
 
 // ── Schema, roles & migrations ───────────────────────────────────────────────
 require_once GTI_CHILD_DIR . '/includes/class-gti-roles.php';
+GTI_Roles::register_guards();
 require_once GTI_CHILD_DIR . '/includes/class-gti-activator.php';
 require_once GTI_CHILD_DIR . '/inc/db/migrations.php';
 

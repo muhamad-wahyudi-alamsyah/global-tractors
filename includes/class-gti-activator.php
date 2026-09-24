@@ -399,8 +399,18 @@ class GTI_Activator {
             self::backfill_appended_extras();
         }
 
-        // Store table version
-        update_option('gti_db_version', '1.4.1');
+        if (version_compare($db_version, '1.5.0', '<')) {
+            // Roles gained the core WordPress caps the dashboard gates on
+            // (upload_files, edit_posts, list_users, ...). Existing installs only
+            // ever ran create_roles() on the 1.3.0 migration, so re-run it here.
+            if (class_exists('GTI_Roles')) {
+                GTI_Roles::create_roles();
+            }
+        }
+
+        // Store table version. Must track the constant — a hardcoded value here
+        // leaves gti_maybe_upgrade() re-running every request after a bump.
+        update_option('gti_db_version', GTI_DB_VERSION);
     }
 
     /**
