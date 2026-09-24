@@ -271,6 +271,14 @@ function gti_render_documents( $entity_type, $entity_id, $kind = null ) {
                         <i class="fas fa-download"></i>
                     </a>
                 <?php endif; ?>
+                <?php if ( gti_can_delete_attachment( $document ) ) : ?>
+                    <button type="button" class="gti-doc-del js-doc-delete"
+                            data-doc-id="<?php echo (int) $document['id']; ?>"
+                            data-doc-name="<?php echo esc_attr( $document['original_name'] ); ?>"
+                            aria-label="Hapus dokumen">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                <?php endif; ?>
             </div>
         <?php endforeach; ?>
     </div>

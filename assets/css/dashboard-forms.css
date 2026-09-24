@@ -191,6 +191,12 @@ body.gti-modal-open { overflow: hidden; }
 }
 .gti-doc-dl:hover { background: var(--gti-line-soft); color: var(--gti-ink); }
 
+.gti-doc-del {
+    color: var(--gti-text-muted); background: none; border: 0; cursor: pointer;
+    padding: 6px; border-radius: 6px; flex-shrink: 0; font-size: 13px;
+}
+.gti-doc-del:hover { background: #fef2f2; color: #dc2626; }
+
 /* ── Sidebar badge (B-06) ────────────────────────────────────────────────── */
 .gti-nav-badge {
     margin-left: auto; background: var(--gti-accent); color: var(--gti-ink);

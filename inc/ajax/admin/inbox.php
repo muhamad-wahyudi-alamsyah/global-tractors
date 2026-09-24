@@ -419,17 +419,7 @@ function gti_ajax_get_timeline() {
     $entity_type = sanitize_key( $_POST['entity_type'] ?? '' );
     $id          = (int) ( $_POST['id'] ?? 0 );
 
-    $documents = array();
-    foreach ( gti_get_attachments( $entity_type, $id ) as $document ) {
-        $documents[] = array(
-            'id'   => (int) $document['id'],
-            'name' => $document['original_name'],
-            'url'  => $document['url'],
-            'size' => $document['size_text'],
-            'date' => $document['created_at'],
-            'kind' => $document['kind'],
-        );
-    }
+    $documents = gti_documents_payload( $entity_type, $id );
 
     wp_send_json_success( array(
         'items'       => gti_timeline_payload( $entity_type, $id ),
@@ -464,6 +454,14 @@ function gti_ajax_delete_attachment() {
         gti_guard_row_scope( $row['entity_type'], $entity );
     }
 
+    if ( ! gti_can_delete_attachment( $row ) ) {
+        gti_send_json_error(
+            'Dokumen yang sudah dikirim ke pelanggan tidak bisa dihapus.',
+            'already_emailed',
+            403
+        );
+    }
+
     if ( ! gti_delete_attachment( $id ) ) {
         gti_send_json_error( 'Gagal menghapus dokumen.', 'db_error' );
     }
@@ -477,6 +475,37 @@ function gti_ajax_delete_attachment() {
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared response builders
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Documents as plain data for the client.
+ *
+ * `deletable` is decided here rather than in the browser: a document that has
+ * already gone out by email is part of the record and stays (M-11).
+ */
+function gti_documents_payload( $entity_type, $id ) {
+    $documents = array();
+
+    foreach ( gti_get_attachments( $entity_type, $id ) as $document ) {
+        $documents[] = array(
+            'id'        => (int) $document['id'],
+            'name'      => $document['original_name'],
+            'url'       => $document['url'],
+            'size'      => $document['size_text'],
+            'date'      => $document['created_at'],
+            'kind'      => $document['kind'],
+            'deletable' => gti_can_delete_attachment( $document ),
+        );
+    }
+
+    return $documents;
+}
+
+/**
+ * May the current user remove this document?
+ */
+function gti_can_delete_attachment( array $document ) {
+    return current_user_can( 'gti_upload_documents' ) && empty( $document['emailed_at'] );
+}
 
 /**
  * Timeline as plain data for the client.
@@ -505,17 +534,7 @@ function gti_timeline_payload( $entity_type, $id ) {
 function gti_send_inbox_response( $entity_type, $id, $status, array $attachment_ids = array() ) {
     $sent = gti_last_email_result( $entity_type, $id );
 
-    $documents = array();
-    foreach ( gti_get_attachments( $entity_type, $id ) as $document ) {
-        $documents[] = array(
-            'id'   => (int) $document['id'],
-            'name' => $document['original_name'],
-            'url'  => $document['url'],
-            'size' => $document['size_text'],
-            'date' => $document['created_at'],
-            'kind' => $document['kind'],
-        );
-    }
+    $documents = gti_documents_payload( $entity_type, $id );
 
     $message = sprintf( 'Status diubah menjadi %s.', gti_status_label( $entity_type, $status ) );
     if ( $sent['exists'] ) {

@@ -106,9 +106,36 @@
                         '<span>' + GTI.fmt.escape(doc.size) + ' · ' + GTI.fmt.dateID(doc.date) + '</span>' +
                     '</div>' +
                     (doc.url ? '<a href="' + GTI.fmt.escape(doc.url) + '" class="gti-doc-dl" download target="_blank" rel="noopener"><i class="fas fa-download"></i></a>' : '') +
+                    // Wrong file attached happens; without this the only trace of
+                    // it was permanent (M-11). Already-emailed documents have
+                    // deletable = false from the server.
+                    (doc.deletable ? '<button type="button" class="gti-doc-del js-doc-delete" data-doc-id="' + doc.id +
+                        '" data-doc-name="' + GTI.fmt.escape(doc.name) + '" aria-label="Hapus dokumen"><i class="fas fa-trash"></i></button>' : '') +
                 '</div>';
             }).join('') + '</div>';
         }
+
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest('.js-doc-delete');
+            if (!btn) return;
+            e.preventDefault();
+
+            GTI.ui.confirm({
+                title: 'Hapus Dokumen',
+                name: btn.dataset.docName,
+                code: '',
+                warning: 'Dokumen dihapus permanen dari server.',
+                confirmLabel: 'Hapus Dokumen'
+            }).then(function (ok) {
+                if (!ok) return;
+                return GTI.api.post('gti_delete_attachment', { id: btn.dataset.docId })
+                    .then(function (res) {
+                        GTI.ui.toast(res.message || 'Dokumen dihapus.', 'success');
+                        var item = btn.closest('.gti-doc-item');
+                        if (item) item.remove();
+                    });
+            }).catch(function () {});
+        });
 
         function renderTimeline(items) {
             var host = field('timeline');
