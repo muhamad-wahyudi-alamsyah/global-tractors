@@ -47,6 +47,13 @@ require_once GTI_CHILD_DIR . '/inc/db/activity-log.php';
 require_once GTI_CHILD_DIR . '/inc/db/customers-sync.php';
 require_once GTI_CHILD_DIR . '/inc/db/repository.php';
 
+// ── Auth ─────────────────────────────────────────────────────────────────────
+// gti_ajax_login() lives here and nowhere else; ajax-helpers.php used to carry a
+// second, weaker copy of it (no rate limit, no phone login).
+require_once GTI_CHILD_DIR . '/inc/user/user-validation.php';
+require_once GTI_CHILD_DIR . '/inc/auth/login.php';
+require_once GTI_CHILD_DIR . '/inc/auth/reset-password.php';
+
 // ── Domain modules ───────────────────────────────────────────────────────────
 require_once GTI_CHILD_DIR . '/inc/modules/status-machine.php';
 require_once GTI_CHILD_DIR . '/inc/modules/attachments.php';

@@ -30,24 +30,3 @@ function gti_ajax_get_dashboard_stats() {
 
     wp_send_json_success($stats);
 }
-
-// Login AJAX
-add_action('wp_ajax_nopriv_gti_ajax_login', 'gti_ajax_login');
-add_action('wp_ajax_gti_ajax_login', 'gti_ajax_login');
-function gti_ajax_login() {
-    check_ajax_referer('gti_nonce', 'nonce');
-
-    $creds = [
-        'user_login'    => sanitize_user($_POST['log'] ?? ''),
-        'user_password' => $_POST['pwd'] ?? '',
-        'remember'      => true
-    ];
-
-    $user = wp_signon($creds, is_ssl());
-
-    if (is_wp_error($user)) {
-        wp_send_json_error('Username atau password salah.');
-    }
-
-    wp_send_json_success(['redirect' => gti_dashboard_url()]);
-}

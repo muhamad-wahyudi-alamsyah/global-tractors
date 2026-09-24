@@ -28,12 +28,17 @@ gti_redirect_if_logged_in();
         <p>Masuk ke dashboard admin</p>
         <div class="login-error" id="login-error"></div>
         <form id="gti-login-form">
-            <label for="username">Username atau Email</label>
-            <input type="text" id="username" name="log" required>
+            <?php wp_nonce_field( 'gti_login_action', 'gti_login_nonce' ); ?>
+            <label for="username">Email atau No. HP</label>
+            <input type="text" id="username" name="username" required>
             <label for="password">Password</label>
-            <input type="password" id="password" name="pwd" required>
+            <input type="password" id="password" name="password" required>
+            <label class="login-remember"><input type="checkbox" name="remember" value="1"> Ingat saya</label>
             <button type="submit">Masuk</button>
         </form>
+        <p class="login-links">
+            <a href="<?php echo esc_url( gti_dashboard_url( 'forgot-password' ) ); ?>">Lupa password?</a>
+        </p>
     </div>
     <script>
     document.getElementById('gti-login-form').addEventListener('submit', function(e) {
@@ -42,13 +47,12 @@ gti_redirect_if_logged_in();
         var err = document.getElementById('login-error');
         err.style.display = 'none';
         var data = new FormData(form);
-        data.append('action', 'gti_ajax_login');
-        data.append('nonce', '<?php echo wp_create_nonce('gti_nonce'); ?>');
+        data.append('action', 'gti_login');
         fetch('<?php echo admin_url("admin-ajax.php"); ?>', { method: 'POST', body: data })
         .then(function(r){return r.json()})
         .then(function(res){
             if(res.success){window.location.href=res.data.redirect}
-            else{err.textContent=res.data||'Login gagal';err.style.display='block'}
+            else{err.textContent=(res.data&&res.data.message)||'Login gagal';err.style.display='block'}
         });
     });
     </script>

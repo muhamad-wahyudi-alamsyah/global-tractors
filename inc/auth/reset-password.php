@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * Process forgot password via AJAX.
  */
 function gti_ajax_forgot_password() {
-    if ( ! gti_verify_nonce( 'gti_forgot_password_action', 'gti_forgot_password_nonce' ) ) {
+    if ( ! gti_verify_nonce( 'gti_forgot_password_action', $_POST['gti_forgot_password_nonce'] ?? '' ) ) {
         wp_send_json_error( [ 'message' => 'Security check failed' ] );
     }
     

@@ -59,15 +59,15 @@ gti_redirect_if_logged_in();
             alert.style.display = 'none';
             var data = new FormData(form);
             data.append('action', 'gti_forgot_password');
-            fetch(gtiAjax.ajaxurl, { method: 'POST', body: data })
+            fetch('<?php echo esc_url( admin_url( "admin-ajax.php" ) ); ?>', { method: 'POST', body: data })
                 .then(function(r) { return r.json(); })
                 .then(function(res) {
                     btn.classList.remove('loading');
                     btn.disabled = false;
-                    alert.className = 'gti-alert gti-alert--success';
-                    alert.textContent = res.data.message;
+                    alert.className = res.success ? 'gti-alert gti-alert--success' : 'gti-alert gti-alert--error';
+                    alert.textContent = (res.data && res.data.message) || 'Terjadi kesalahan.';
                     alert.style.display = 'block';
-                    form.reset();
+                    if (res.success) form.reset();
                 })
                 .catch(function() {
                     btn.classList.remove('loading');

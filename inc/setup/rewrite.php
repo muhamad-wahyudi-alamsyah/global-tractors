@@ -8,6 +8,7 @@ if (!defined('ABSPATH')) exit;
 add_action('init', 'gti_add_rewrite_rules');
 function gti_add_rewrite_rules() {
     add_rewrite_rule('^dashboard/login/?$', 'index.php?gti_page=login', 'top');
+    add_rewrite_rule('^dashboard/forgot-password/?$', 'index.php?gti_page=forgot-password', 'top');
     add_rewrite_rule('^dashboard/used-equipment/?$', 'index.php?gti_page=used-equipment', 'top');
     add_rewrite_rule('^dashboard/used-equipment/add/?$', 'index.php?gti_page=add-equipment', 'top');
     add_rewrite_rule('^dashboard/rental-equipment/?$', 'index.php?gti_page=rental-equipment', 'top');
@@ -46,6 +47,7 @@ function gti_handle_dashboard_routing() {
 
     $map = [
         'login' => 'page-login',
+        'forgot-password' => 'page-forgot-password',
         'dashboard' => 'page-dashboard',
         'used-equipment' => 'page-used-equipment',
         'add-equipment' => 'page-add-used-equipment',
@@ -69,7 +71,7 @@ function gti_handle_dashboard_routing() {
 
     if (!isset($map[$page])) return;
 
-    $public_pages = ['login'];
+    $public_pages = ['login', 'forgot-password'];
 
     if (!in_array($page, $public_pages, true)) {
         gti_require_login();

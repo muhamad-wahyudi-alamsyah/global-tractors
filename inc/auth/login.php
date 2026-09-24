@@ -42,7 +42,7 @@ function gti_do_login( $username, $password, $remember = false ) {
  */
 function gti_ajax_login() {
     // Verify nonce
-    if ( ! gti_verify_nonce( 'gti_login_action', 'gti_login_nonce' ) ) {
+    if ( ! gti_verify_nonce( 'gti_login_action', $_POST['gti_login_nonce'] ?? '' ) ) {
         wp_send_json_error( [ 'message' => 'Security check failed' ] );
     }
     

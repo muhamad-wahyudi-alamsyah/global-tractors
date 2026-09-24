@@ -12,7 +12,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function gti_ajax_register() {
     // Verify nonce
-    if ( ! gti_verify_nonce( 'gti_register_action', 'gti_register_nonce' ) ) {
+    if ( ! gti_verify_nonce( 'gti_register_action', $_POST['gti_register_nonce'] ?? '' ) ) {
         wp_send_json_error( [ 'message' => 'Security check failed' ] );
     }
     
