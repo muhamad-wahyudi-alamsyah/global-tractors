@@ -77,7 +77,10 @@ function gti_render_spare_parts_filter( $atts = [] ) {
                         </div>
                     </div>
 
-                    <!-- BRAND -->
+                    <!-- BRAND — hidden when nothing in stock carries a brand;
+                         offering a filter that can only return nothing reads as
+                         a broken site (M-5). -->
+                    <?php if ( ! empty( $brands ) ) : ?>
                     <div class="gti-ef-filter-group">
                         <div class="gti-ef-filter-header" data-filter="brand">
                             <h4>BRAND</h4>
@@ -94,6 +97,8 @@ function gti_render_spare_parts_filter( $atts = [] ) {
                             </div>
                         </div>
                     </div>
+
+                    <?php endif; ?>
 
                     <!-- SUPPLIER -->
                     <div class="gti-ef-filter-group">
@@ -153,6 +158,7 @@ function gti_render_spare_parts_filter( $atts = [] ) {
                     </div>
 
                     <!-- LOCATION -->
+                    <?php if ( ! empty( $locations ) ) : ?>
                     <div class="gti-ef-filter-group">
                         <div class="gti-ef-filter-header" data-filter="location">
                             <h4>LOCATION</h4>
@@ -169,6 +175,7 @@ function gti_render_spare_parts_filter( $atts = [] ) {
                             </div>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <!-- Filter Actions -->
@@ -460,9 +467,6 @@ function gti_get_spare_parts_categories( $data = [] ) {
 
 function gti_get_spare_parts_brands( $data = [] ) {
     $brands = array_unique( array_filter( array_column( $data, 'brand' ) ) );
-    if ( empty( $brands ) ) {
-        $brands = [ 'CAT', 'Komatsu', 'Hitachi', 'Volvo', 'Doosan', 'Hino', 'Kato', 'SANY', 'SDLG', 'XCMG', 'Kobelco', 'Hyundai' ];
-    }
     sort( $brands );
     return $brands;
 }
@@ -475,9 +479,6 @@ function gti_get_spare_parts_suppliers( $data = [] ) {
 
 function gti_get_spare_parts_locations( $data = [] ) {
     $locs = array_unique( array_filter( array_column( $data, 'location' ) ) );
-    if ( empty( $locs ) ) {
-        $locs = [ 'Balikpapan', 'Samarinda', 'Banjarmasin', 'Palangkaraya', 'Pontianak', 'Banjarbaru' ];
-    }
     sort( $locs );
     return $locs;
 }
