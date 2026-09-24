@@ -82,7 +82,9 @@ function gti_ajax_filter_equipment() {
 
     // Build WHERE — drafts belong to the dashboard, never to the public catalog
     // Expired prices are hidden from the public catalog too.
-    $where   = [ 'deleted_at IS NULL', "status != 'draft'", 'NOT (' . gti_price_expired_sql() . ')' ];
+    // No price-expiry filter: an expired "valid until" date hides the price on
+    // the card, it does not take the unit off the website (M-4).
+    $where   = [ 'deleted_at IS NULL', "status != 'draft'" ];
     $params  = [];
 
     // Filter by equipment type (used / rental)

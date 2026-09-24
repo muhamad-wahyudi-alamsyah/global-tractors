@@ -174,10 +174,35 @@ if ( ! function_exists( 'gti_is_price_valid' ) ) {
 
 if ( ! function_exists( 'gti_price_expired_sql' ) ) {
     /**
-     * SQL twin of ! gti_is_price_valid(), for list filters and public queries.
+     * SQL twin of ! gti_is_price_valid(), for list filters.
+     *
+     * Only the dashboard filters on this now. It used to gate the public
+     * catalogue too, which meant "Harga berlaku sampai" quietly deleted the
+     * unit from the website — including links already shared with buyers —
+     * while the dashboard still listed it as Available. An expired date hides
+     * the price, not the machine (M-4).
      */
     function gti_price_expired_sql( $column = 'price_valid_until' ) {
         return "{$column} IS NOT NULL AND {$column} <> '0000-00-00' AND {$column} < '" . esc_sql( current_time( 'Y-m-d' ) ) . "'";
+    }
+}
+
+if ( ! function_exists( 'gti_price_or_contact' ) ) {
+    /**
+     * A price the visitor may act on, or an invitation to ask for a fresh one.
+     *
+     * @param mixed  $amount            Price, may be empty.
+     * @param string $price_valid_until Date the quoted price stops being valid.
+     * @param string $suffix            Appended to a valid amount, e.g. '/Month'.
+     */
+    function gti_price_or_contact( $amount, $price_valid_until, $suffix = '' ) {
+        if ( ! gti_is_price_valid( $price_valid_until ) ) {
+            return 'Hubungi kami untuk harga';
+        }
+        if ( ! $amount ) {
+            return '—';
+        }
+        return 'Rp ' . number_format( (float) $amount, 0, ',', '.' ) . $suffix;
     }
 }
 

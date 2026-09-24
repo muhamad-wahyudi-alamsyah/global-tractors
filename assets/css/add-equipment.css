@@ -992,3 +992,6 @@
         padding: 16px;
     }
 }
+
+/* Field hint — explains a setting whose effect is not visible on this page. */
+.gti-ae-hint{display:block;margin-top:6px;font-size:12px;line-height:1.5;color:#6b7280}

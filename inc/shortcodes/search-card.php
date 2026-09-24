@@ -107,7 +107,7 @@ function gti_search_card_options() {
     }
 
     // Same visibility rules as gti_get_used_equipment_data() / gti_get_rental_equipment_data().
-    $where = "type IN ('used','rental') AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ")";
+    $where = "type IN ('used','rental') AND deleted_at IS NULL AND status != 'draft'";
 
     $columns = [ 'brands' => 'brand ASC', 'types' => 'category ASC', 'years' => 'year DESC' ];
     foreach ( $columns as $key => $order ) {

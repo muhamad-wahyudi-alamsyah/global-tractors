@@ -378,7 +378,7 @@ function gti_get_used_equipment_data() {
     }
 
     $rows = $wpdb->get_results(
-        "SELECT * FROM {$table} WHERE type = 'used' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ") ORDER BY created_at DESC"
+        "SELECT * FROM {$table} WHERE type = 'used' AND deleted_at IS NULL AND status != 'draft' ORDER BY created_at DESC"
     );
 
     if ( empty( $rows ) ) {
@@ -961,7 +961,7 @@ function gti_used_render_equipment_detail( $equipment_id ) {
                                 </span>
 
                                 <span class="gti-ed-spec-value-quick">
-                                    <?php echo $fmt_rupiah( $item['selling_price'] ); ?>
+                                    <?php echo esc_html( gti_price_or_contact( $item['selling_price'], $item['price_valid_until'] ) ); ?>
                                 </span>
                             </div>
 
@@ -973,9 +973,7 @@ function gti_used_render_equipment_detail( $equipment_id ) {
 
                                 <span class="gti-ed-spec-value-quick">
                                     <?php
-                                    echo $item['rental_price']
-                                        ? $fmt_rupiah( $item['rental_price'] ) . '/Month'
-                                        : '—';
+                                    echo esc_html( gti_price_or_contact( $item['rental_price'], $item['price_valid_until'], '/Month' ) );
                                     ?>
                                 </span>
                             </div>
@@ -1546,7 +1544,7 @@ function gti_used_get_equipment_by_id( $id ) {
 
     $table_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) );
     if ( $table_exists ) {
-        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND type = 'used' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ")", $id ) );
+        $row = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table} WHERE id = %d AND type = 'used' AND deleted_at IS NULL AND status != 'draft'", $id ) );
         if ( $row ) {
             return gti_used_map_complete_row( $row );
         }
@@ -1662,7 +1660,7 @@ function gti_used_get_related_equipment( $current, $limit = 8 ) {
         if ( $category ) {
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE type = 'used' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ") AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
+                    "SELECT * FROM {$table} WHERE type = 'used' AND deleted_at IS NULL AND status != 'draft' AND LOWER(category) = LOWER(%s) AND id != %d ORDER BY created_at DESC LIMIT %d",
                     $category, $current_id, $limit
                 )
             );
@@ -1677,7 +1675,7 @@ function gti_used_get_related_equipment( $current, $limit = 8 ) {
             $placeholders = implode( ',', array_fill( 0, count( $existing_ids ), '%d' ) );
             $rows = $wpdb->get_results(
                 $wpdb->prepare(
-                    "SELECT * FROM {$table} WHERE type = 'used' AND deleted_at IS NULL AND status != 'draft' AND NOT (" . gti_price_expired_sql() . ") AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
+                    "SELECT * FROM {$table} WHERE type = 'used' AND deleted_at IS NULL AND status != 'draft' AND id NOT IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
                     array_merge( $existing_ids, [ $limit - count( $items ) ] )
                 )
             );

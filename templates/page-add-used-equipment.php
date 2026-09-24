@@ -433,6 +433,7 @@ gti_dashboard_open( array(
                                     <div class="gti-ae-field">
                                         <label>Price Valid Until</label>
                                         <input type="date" name="price_valid_until">
+                                        <small class="gti-ae-hint">Setelah tanggal ini harga disembunyikan di website dan diganti "Hubungi kami untuk harga". Unitnya tetap tampil.</small>
                                     </div>
                                 </div>
                                 <div class="gti-ae-form-grid">
