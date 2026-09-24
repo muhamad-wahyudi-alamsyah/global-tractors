@@ -252,6 +252,10 @@ class GTI_Mailer {
 
         $log = array(
             'type'            => $args['type'],
+            // related_id alone is ambiguous — request 7, quotation 7 and customer 7
+            // all log under the same number. Manual mail has type='manual', so
+            // without this column the drawer shows every module's manual mail.
+            'entity_type'     => isset( $args['entity_type'] ) ? $args['entity_type'] : $args['type'],
             'related_id'      => (int) $args['related_id'],
             'status'          => $args['status'],
             'recipient_email' => $args['to'],
@@ -378,10 +382,13 @@ class GTI_Mailer {
         $rows = $wpdb->get_results( $wpdb->prepare(
             "SELECT id, type, status, recipient_email, subject, send_result, sent_at
                FROM {$wpdb->prefix}gti_email_logs
-              WHERE related_id = %d AND (type = %s OR type = 'manual')
+              WHERE related_id = %d
+                AND ( type = %s
+                      OR ( type = 'manual'
+                           AND ( entity_type = %s OR entity_type IS NULL ) ) )
            ORDER BY sent_at DESC, id DESC
               LIMIT %d",
-            (int) $entity_id, $entity_type, (int) $limit
+            (int) $entity_id, $entity_type, $entity_type, (int) $limit
         ), ARRAY_A );
 
         return $rows ?: array();

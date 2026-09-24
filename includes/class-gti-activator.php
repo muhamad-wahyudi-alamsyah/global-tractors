@@ -400,6 +400,10 @@ class GTI_Activator {
         }
 
         if (version_compare($db_version, '1.5.0', '<')) {
+            // gti_email_logs.entity_type — added so the drawer's Email History
+            // can tell request 7 apart from quotation 7.
+            self::create_v130_tables($charset_collate);
+
             // Roles gained the core WordPress caps the dashboard gates on
             // (upload_files, edit_posts, list_users, ...). Existing installs only
             // ever ran create_roles() on the 1.3.0 migration, so re-run it here.
@@ -556,6 +560,7 @@ class GTI_Activator {
         $sql_email_logs = "CREATE TABLE {$email_logs} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             type VARCHAR(50) NOT NULL,
+            entity_type VARCHAR(20) NULL,
             related_id BIGINT UNSIGNED NOT NULL,
             status VARCHAR(50) NOT NULL,
             recipient_email VARCHAR(190) NOT NULL,
@@ -578,6 +583,7 @@ class GTI_Activator {
 
         // The lazily-created email log predates body_html/cc/attachment_ids.
         self::add_columns($email_logs, array(
+            'entity_type'    => 'VARCHAR(20) NULL',
             'cc'             => 'VARCHAR(500) NULL',
             'body_html'      => 'LONGTEXT NULL',
             'attachment_ids' => 'VARCHAR(255) NULL',
