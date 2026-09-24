@@ -11,6 +11,27 @@
 
 ---
 
+## Status implementasi (24 September 2026)
+
+| Item | Status |
+|---|---|
+| B-1 … B-6 | ✅ Selesai (`d82d699`, `33b1921`, `b253d30`, `87baa28`) |
+| M-1 … M-6, M-8 … M-11 | ✅ Selesai |
+| M-7 | ✅ Terverifikasi aman di Fase 0 — tidak perlu kode |
+| m-1, m-3, m-4 | ✅ Selesai (`080a092`) |
+| m-2 | ✅ `inbox-ui.js` membaca `?highlight=` sama seperti `?open=` → drawer langsung terbuka |
+| m-5 | ✅ Tidak perlu kode — quotation hanya bisa `approved`/`completed` lewat *Create Quotation*, yang mewajibkan total > 0. IDR 0 berarti belum ada quotation yang disetujui |
+| m-6 | ⏭️ Dilewati — keputusan produk: jangan dibangun |
+| m-7 | ✅ Search card memakai `/used-equipment/` & `/rental-equipment/` (bisa di-override lewat atribut shortcode) |
+| m-8 | ✅ Terverifikasi di Fase 0 (ID 3 & 4 benar) |
+| m-9 | ✅ Stub angka hardcode `gti_get_dashboard_stats` dihapus dari `ajax-helpers.php` |
+| m-10 | ✅ Drawer quotation menampilkan *Source Page*; `industry`/`status` aman karena save hanya menyentuh kolom yang dikirim (B-5) |
+| m-11 | ✅ Activator memanggil `gti_ensure_customers_table()` — satu skema saja |
+| m-12 | ✅ Didokumentasikan di definisi kolom (`class-gti-activator.php`) |
+| m-13 | ✅ `block-admin.php` ditulis ulang untuk role GTI & di-load; `ajax-login.php`, `ajax-register.php`, `filters.php` dihapus. `inc/auth/register.php` + `page-register.php` menunggu keputusan Fase 4 |
+
+---
+
 ## 0. Ringkasan Eksekutif
 
 | Modul | Siap? | Catatan |

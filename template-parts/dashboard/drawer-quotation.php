@@ -48,6 +48,8 @@ $gti_payload = $first ? gti_quotation_row_payload( $first ) : array();
             gti_render_drawer_row( 'Payment Terms',     $gti_payload['payment_terms'] ?? '' );
             gti_render_drawer_row( 'Delivery Location', $gti_payload['delivery_location'] ?? '' );
             gti_render_drawer_row( 'Budget',            $gti_payload['budget_text'] ?? '' );
+            // The catalogue page the inquiry was sent from (m-10).
+            gti_render_drawer_row( 'Source Page',       $gti_payload['source_url'] ?? '' );
             ?>
             <?php
             // Each of these only exists for one equipment type, so the rest are

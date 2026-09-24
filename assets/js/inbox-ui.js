@@ -590,8 +590,9 @@
                 });
             });
 
-            // ?open=ID (from the header notification popup) highlights that row and opens its drawer.
-            var openId = new URLSearchParams(window.location.search).get('open');
+            // ?open=ID (header notification) or ?highlight=ID (email / Needs Attention links) opens that row's drawer.
+            var params = new URLSearchParams(window.location.search);
+            var openId = params.get('open') || params.get('highlight');
             var target = openId && document.querySelector('.gti-ue-table tbody tr[data-id="' + parseInt(openId, 10) + '"]');
             if (target) {
                 selectRow(target, true);

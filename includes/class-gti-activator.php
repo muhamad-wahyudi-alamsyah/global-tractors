@@ -149,24 +149,11 @@ class GTI_Activator {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) {$charset_collate};";
         
-        // Customers table
-        $table_customers = $wpdb->prefix . 'gti_customers';
-        $sql_customers = "CREATE TABLE {$table_customers} (
-            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            customer_id VARCHAR(20) UNIQUE NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            company VARCHAR(255),
-            email VARCHAR(255),
-            phone VARCHAR(50),
-            address TEXT,
-            industry VARCHAR(100),
-            location VARCHAR(255),
-            status VARCHAR(50) DEFAULT 'active',
-            registered_date DATE,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) {$charset_collate};";
-        
+        // Customers table: defined once, in gti_ensure_customers_table()
+        // (inc/db/customers-sync.php). A second, narrower CREATE here made
+        // dbDelta() try to shrink customer_id from VARCHAR(30) to VARCHAR(20)
+        // on every upgrade (m-11).
+
         // Sell Equipment Requests table
         $table_sell_requests = $wpdb->prefix . 'gti_sell_requests';
         $sql_sell_requests = "CREATE TABLE {$table_sell_requests} (
@@ -220,7 +207,7 @@ class GTI_Activator {
         dbDelta($sql_spare_parts);
         dbDelta($sql_requests);
         dbDelta($sql_quotations);
-        dbDelta($sql_customers);
+        gti_ensure_customers_table(true);
         dbDelta($sql_sell_requests);
         dbDelta($sql_messages);
         dbDelta($sql_activity);
@@ -347,6 +334,9 @@ class GTI_Activator {
             ));
 
             self::add_columns($table_quotations, array(
+                // Polymorphic (m-12): gti_spare_parts.id when equipment_type is
+                // 'spare_part', gti_equipment.id otherwise. Always branch on
+                // equipment_type before joining — see inc/modules/stock.php.
                 'equipment_id'      => 'BIGINT UNSIGNED NULL',
                 'equipment_type'    => 'VARCHAR(20) NULL',
                 'quantity'          => 'INT DEFAULT 1',

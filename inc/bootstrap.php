@@ -54,6 +54,7 @@ require_once GTI_CHILD_DIR . '/inc/db/repository.php';
 require_once GTI_CHILD_DIR . '/inc/user/user-validation.php';
 require_once GTI_CHILD_DIR . '/inc/auth/login.php';
 require_once GTI_CHILD_DIR . '/inc/auth/reset-password.php';
+require_once GTI_CHILD_DIR . '/inc/auth/block-admin.php';
 
 // ── Domain modules ───────────────────────────────────────────────────────────
 require_once GTI_CHILD_DIR . '/inc/modules/status-machine.php';

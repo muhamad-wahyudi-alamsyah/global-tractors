@@ -17,6 +17,8 @@
                 'Email': row.customer_email,
                 'Phone': row.customer_phone,
                 'Address': row.customer_address,
+                'Quotation Number': row.quotation_number,
+                'Source Page': row.source_url,
                 'Equipment Type': row.equipment_type_label,
                 'Requested Date': row.request_date_text,
                 'Needed Date': row.needed_date,
