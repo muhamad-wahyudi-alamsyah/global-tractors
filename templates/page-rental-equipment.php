@@ -259,7 +259,7 @@ gti_dashboard_open( array(
                                         <td class="col-condition">
                                             <?php
                                             $cond_lower = strtolower($eq->condition_status ?? '');
-                                            $cond_class = $cond_lower === 'excellent' ? 'excellent' : ($cond_lower === 'good' ? 'good' : 'fair');
+                                            $cond_class = in_array($cond_lower, array('excellent','good','fair','poor'), true) ? $cond_lower : 'fair';
                                             ?>
                                             <span class="gti-condition <?php echo esc_attr($cond_class); ?>"><?php echo esc_html($eq->condition_status); ?></span>
                                         </td>

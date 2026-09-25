@@ -284,18 +284,18 @@
 }
 
 /* ====== Condition Badge ====== */
+/* Samakan dengan .gti-condition di dashboard.css (used-equipment) */
 .gti-condition-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 3px 10px;
+    display: inline-block;
+    padding: 3px 8px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 10px;
     font-weight: 600;
 }
-.gti-condition-badge.excellent { background: #d1fae5; color: #047857; }
-.gti-condition-badge.good { background: #dbeafe; color: #1d4ed8; }
-.gti-condition-badge.fair { background: #fef3c7; color: #b45309; }
-.gti-condition-badge.poor { background: #fee2e2; color: #dc2626; }
+.gti-condition-badge.excellent { background: #e6ffe3; color: #3daf00; }
+.gti-condition-badge.good { background: #e8f0fe; color: #3b82f6; }
+.gti-condition-badge.fair { background: #fff0e0; color: #F5A623; }
+.gti-condition-badge.poor { background: #ffe8e8; color: #e5484d; }
 
 /* ====== Drawer Footer ====== */
 .gti-drawer-footer {

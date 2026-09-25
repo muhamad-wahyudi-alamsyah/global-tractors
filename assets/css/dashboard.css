@@ -247,6 +247,7 @@
 .gti-condition.excellent{background:#e6ffe3;color:#3daf00}
 .gti-condition.good{background:#e8f0fe;color:#3b82f6}
 .gti-condition.fair{background:#fff0e0;color:#F5A623}
+.gti-condition.poor{background:#ffe8e8;color:#e5484d}
 
 /* Action Dropdown */
 .gti-ue-action-menu{position:relative;display:inline-block}
