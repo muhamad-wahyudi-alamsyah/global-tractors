@@ -252,11 +252,10 @@ $gti_next_sp_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['nex
                                     </label>
 
                                     <input
-                                        type="number"
+                                        type="text"
+                                        inputmode="numeric"
                                         name="unit_price"
                                         id="edit-field-unit-price"
-                                        min="0"
-                                        step="1000"
                                         required
                                     >
 

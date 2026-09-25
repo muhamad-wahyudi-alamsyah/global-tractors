@@ -264,7 +264,7 @@ gti_dashboard_open( array(
                                             <span class="gti-condition <?php echo esc_attr($cond_class); ?>"><?php echo esc_html($eq->condition_status); ?></span>
                                         </td>
                                         <td class="col-year"><?php echo esc_html($eq->year); ?></td>
-                                        <td class="col-price"><?php echo esc_html($_gti_re_fmt($eq->price)); ?>/bln</td>
+                                        <td class="col-price" title="<?php echo esc_attr($_gti_re_fmt($eq->price)); ?>/bln"><?php echo esc_html($_gti_re_fmt($eq->price)); ?>/bln</td>
                                         <td class="col-status"><?php echo $_gti_re_status_badge($eq->status, $eq->price_valid_until); ?></td>
                                         <td class="col-actions">
                                             <div class="gti-ue-action-menu">

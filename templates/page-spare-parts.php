@@ -283,8 +283,8 @@ gti_dashboard_open( array(
                                             <strong><?php echo esc_html(number_format((int) $part->stock, 0, ',', '.')); ?></strong><br>
                                             <small>min. <?php echo esc_html(number_format((int) $part->minimum_stock, 0, ',', '.')); ?></small>
                                         </td>
-                                        <td class="col-price"><?php echo esc_html($_gti_sp_fmt($part->unit_price)); ?></td>
-                                        <td class="col-totalval"><strong><?php echo esc_html($_gti_sp_fmt($part->stock * $part->unit_price)); ?></strong></td>
+                                        <td class="col-price" title="<?php echo esc_attr($_gti_sp_fmt($part->unit_price)); ?>"><?php echo esc_html($_gti_sp_fmt($part->unit_price)); ?></td>
+                                        <td class="col-totalval" title="<?php echo esc_attr($_gti_sp_fmt($part->stock * $part->unit_price)); ?>"><strong><?php echo esc_html($_gti_sp_fmt($part->stock * $part->unit_price)); ?></strong></td>
                                         <td class="col-status"><?php echo $_gti_sp_status_badge($part->status); ?></td>
                                         <td class="col-actions">
                                             <div class="gti-ue-action-menu">

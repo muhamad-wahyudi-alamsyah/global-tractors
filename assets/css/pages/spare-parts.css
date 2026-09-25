@@ -38,8 +38,8 @@
 .gti-ue-table .col-brand { width: 90px; }
 .gti-ue-table .col-stock { width: 72px; text-align: center; }
 .gti-ue-table td small { display: block; font-size: 11px; color: #9ca3af; margin-top: 2px; font-weight: 500; }
-.gti-ue-table .col-price { width: 95px; text-align: right; white-space: nowrap; }
-.gti-ue-table .col-totalval { width: 105px; text-align: right; white-space: nowrap; }
+.gti-ue-table .col-price { width: 95px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gti-ue-table .col-totalval { width: 105px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gti-ue-table .col-status { width: 120px; text-align: center; white-space: nowrap; }
 .gti-ue-table .col-actions { width: 80px; text-align: center; }
 
