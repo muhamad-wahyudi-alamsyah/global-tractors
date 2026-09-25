@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Panduan Dashboard Global Tractors Indonesia</title>
+<style>
+@page { size: A4; margin: 20mm 24mm 22mm 24mm; }
+* { box-sizing: border-box; }
+body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10.5pt; line-height: 1.6; color: #1f2937; margin: 0; }
+h1 { font-size: 20pt; color: #1a1f36; margin: 0 0 6px; }
+h2 { font-size: 15pt; color: #1a1f36; margin: 26px 0 8px; padding-bottom: 6px; border-bottom: 3px solid #F9B204; page-break-after: avoid; }
+h3 { font-size: 12pt; color: #1a1f36; margin: 18px 0 6px; page-break-after: avoid; }
+h4 { font-size: 10.5pt; color: #374151; margin: 12px 0 4px; page-break-after: avoid; }
+p { margin: 0 0 8px; }
+ul, ol { margin: 0 0 10px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 9.5pt; page-break-inside: avoid; }
+th { background: #F9B204; color: #1a1f36; text-align: left; padding: 7px 8px; font-weight: 600; }
+td { border-bottom: 1px solid #e5e7eb; padding: 6px 8px; vertical-align: top; }
+tr:nth-child(even) td { background: #fafafa; }
+.cover { height: 247mm; display: flex; flex-direction: column; justify-content: center; text-align: center; page-break-after: always; }
+.cover .kicker { letter-spacing: 3px; font-size: 10pt; color: #1a1f36; font-weight: 700; margin-bottom: 14px; }
+.cover h1 { font-size: 30pt; line-height: 1.25; margin-bottom: 10px; }
+.cover .sub { font-size: 13pt; color: #4b5563; margin-bottom: 40px; }
+.cover .meta { font-size: 10pt; color: #6b7280; }
+.cover .rule { width: 90px; height: 5px; background: #F9B204; margin: 0 auto 26px; }
+.page-break { page-break-before: always; }
+.box { border-left: 4px solid #F9B204; background: #fffbeb; padding: 10px 12px; margin: 10px 0 14px; page-break-inside: avoid; }
+.box.tip { border-left-color: #059669; background: #ecfdf5; }
+.box.note { border-left-color: #2563eb; background: #eff6ff; }
+.box p:last-child { margin-bottom: 0; }
+.box .t { font-weight: 700; display: block; margin-bottom: 3px; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 8.5pt; font-weight: 600; white-space: nowrap; }
+.b-new { background:#dbeafe; color:#1d4ed8; } .b-proc { background:#fef3c7; color:#b45309; }
+.b-ok { background:#d1fae5; color:#047857; } .b-no { background:#fee2e2; color:#b91c1c; }
+.b-wait { background:#ede9fe; color:#6d28d9; } .b-done { background:#e5e7eb; color:#374151; }
+.toc ol { list-style: none; padding-left: 0; counter-reset: s; }
+.toc ol li { counter-increment: s; padding: 5px 0; border-bottom: 1px dotted #d1d5db; }
+.toc ol li::before { content: counter(s) ". "; font-weight: 700; color: #1a1f36; }
+.flow { font-size: 9.5pt; background:#f9fafb; border:1px solid #e5e7eb; padding:8px 10px; margin:6px 0 12px; }
+code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; }
+.small { font-size: 9pt; color: #6b7280; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">PANDUAN PENGGUNA</div>
+  <div class="rule"></div>
+  <h1>Dashboard<br>Global Tractors Indonesia</h1>
+  <div class="sub">Panduan lengkap dengan bahasa sederhana<br>untuk seluruh staf dan manajemen perusahaan</div>
+  <div class="meta">
+    PT Global Tractors Indonesia<br>
+    Versi 1.0 &middot; September 2026
+  </div>
+</div>
+
+<h2>Daftar Isi</h2>
+<div class="toc">
+<ol>
+<li>Apa Itu Dashboard Ini?</li>
+<li>Dari Website ke Dashboard: Dari Mana Data Datang</li>
+<li>Cara Masuk (Login) dan Lupa Password</li>
+<li>Mengenal Tampilan Dashboard</li>
+<li>Siapa Boleh Mengakses Apa (Hak Akses)</li>
+<li>Halaman Dashboard (Halaman Depan)</li>
+<li>Menu Equipment: Used &amp; Rental Equipment</li>
+<li>Menu Spare Parts</li>
+<li>Menu Request Equipment (Permintaan Alat)</li>
+<li>Menu Request Quotation (Permintaan Penawaran)</li>
+<li>Menu Sell Equipment (Penawaran Jual dari Pelanggan)</li>
+<li>Menu Customers (Data Pelanggan)</li>
+<li>Menu News &amp; Articles (Berita)</li>
+<li>Menu Media Library (Galeri File)</li>
+<li>Menu Users (Akun Pengguna)</li>
+<li>Menu Activity Log (Catatan Aktivitas)</li>
+<li>Email Otomatis ke Pelanggan</li>
+<li>Kamus Istilah</li>
+<li>Pertanyaan yang Sering Muncul</li>
+</ol>
+</div>
+
+<div class="page-break"></div>
+<h2>1. Apa Itu Dashboard Ini?</h2>
+
+<p>Dashboard Global Tractors Indonesia (selanjutnya disebut <strong>Dashboard GTI</strong>) adalah <strong>ruang kerja online</strong> tempat seluruh staf perusahaan mengelola bisnis alat berat dari satu layar, tanpa perlu membuka WordPress atau menyentuh sisi teknis website.</p>
+
+<p>Bayangkan Dashboard GTI sebagai kantor digital dengan beberapa ruangan:</p>
+
+<table>
+<tr><th style="width:32%">Ruangan (Menu)</th><th>Isinya apa</th></tr>
+<tr><td><strong>Equipment</strong></td><td>Katalog alat berat bekas (Used) dan alat berat sewa (Rental) yang tampil di website.</td></tr>
+<tr><td><strong>Spare Parts</strong></td><td>Daftar suku cadang beserta stoknya.</td></tr>
+<tr><td><strong>Request &amp; Inquiry</strong></td><td>Kotak masuk berisi permintaan yang dikirim calon pelanggan lewat website: minta alat, minta penawaran harga, dan tawaran menjual alat mereka ke GTI.</td></tr>
+<tr><td><strong>Management</strong></td><td>Data pelanggan, berita/artikel website, dan galeri foto/dokumen.</td></tr>
+<tr><td><strong>System</strong></td><td>Akun pengguna internal dan catatan seluruh aktivitas.</td></tr>
+</table>
+
+<h3>Kenapa dashboard ini penting bagi perusahaan?</h3>
+<ul>
+<li><strong>Tidak ada permintaan yang hilang.</strong> Setiap formulir yang diisi calon pelanggan di website langsung masuk ke kotak masuk dan diberi tanda angka merah sampai dibuka.</li>
+<li><strong>Jelas siapa yang bertanggung jawab.</strong> Setiap permintaan bisa ditugaskan ke satu orang sales (disebut <strong>PIC</strong>). Sales hanya melihat pekerjaannya sendiri sehingga tidak saling tumpang tindih.</li>
+<li><strong>Pelanggan otomatis dikabari.</strong> Setiap kali status permintaan diubah, sistem mengirim email pemberitahuan ke pelanggan. Staf tidak perlu mengetik email satu per satu.</li>
+<li><strong>Semua tercatat.</strong> Siapa mengubah apa dan kapan tersimpan di Activity Log, termasuk alamat IP. Ini penting untuk audit dan penelusuran masalah.</li>
+</ul>
+
+<div class="box tip">
+<span class="t">Catatan penting untuk manajemen</span>
+<p>Dashboard ini <strong>bukan</strong> aplikasi terpisah. Ia menempel pada website resmi GTI, sehingga data yang Anda ubah di sini langsung berubah di website yang dilihat publik. Menghapus satu unit alat di dashboard berarti unit itu juga hilang dari halaman katalog website.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>2. Dari Website ke Dashboard: Dari Mana Data Datang</h2>
+
+<p>Sebelum membahas menu satu per satu, penting dipahami bahwa <strong>staf GTI hampir tidak pernah mengetik data pelanggan secara manual</strong>. Hampir semua isi kotak masuk datang sendiri dari website publik. Bab ini menjelaskan jalurnya.</p>
+
+<div class="flow">
+<strong>Alur lengkapnya:</strong> Pengunjung membuka website &rarr; mengisi formulir &rarr; baris baru muncul di kotak masuk dashboard &rarr; angka merah menyala di sidebar &rarr; staf menindaklanjuti.
+</div>
+
+<h3>Komponen di website yang mengirim data ke dashboard</h3>
+<table>
+<tr><th style="width:36%">Komponen di website</th><th>Perannya</th></tr>
+<tr><td><strong>Kartu Pencarian Alat</strong><br><span class="small">di beranda / halaman pencarian</span></td><td>Kotak pencarian dengan penyaring Brand, Type, dan Year. Pilihan di ketiga penyaring itu <strong>diambil dari unit yang benar-benar ada di katalog</strong>, sehingga pengunjung tidak pernah memilih kombinasi yang hasilnya kosong.</td></tr>
+<tr><td><strong>Katalog Used Equipment</strong></td><td>Daftar alat berat bekas lengkap dengan penyaring dan halaman berikutnya. Isinya diambil langsung dari menu Used Equipment di dashboard.</td></tr>
+<tr><td><strong>Katalog Rental Equipment</strong></td><td>Sama, untuk alat berat sewa.</td></tr>
+<tr><td><strong>Katalog Spare Parts</strong></td><td>Sama, untuk suku cadang.</td></tr>
+<tr><td><strong>Formulir Inquiry</strong><br><span class="small">menempel pada ketiga katalog di atas</span></td><td>Formulir yang muncul ketika pengunjung menanyakan sebuah unit atau suku cadang. Hasilnya masuk ke menu <strong>Request Quotation</strong>.</td></tr>
+<tr><td><strong>Formulir Request Equipment</strong> dan <strong>Formulir Sell Equipment</strong><br><span class="small">berturut-turut ada di halaman <code>/used-equipment/</code> dan <code>/sell-equipments/</code></span></td><td>Dua formulir terpisah yang dibuat memakai FluentForms. Hasilnya masuk ke menu <strong>Request Equipment</strong> dan <strong>Sell Equipment</strong>.</td></tr>
+</table>
+
+<h3>Formulir mana masuk ke menu mana</h3>
+<table>
+<tr><th style="width:44%">Pengunjung mengisi</th><th>Muncul di menu dashboard</th></tr>
+<tr><td>Formulir Inquiry di halaman katalog</td><td>Request Quotation</td></tr>
+<tr><td>Formulir Request Equipment</td><td>Request Equipment</td></tr>
+<tr><td>Formulir Sell Equipment</td><td>Sell Equipment</td></tr>
+</table>
+
+<h3>Apa saja yang ditanyakan Formulir Inquiry</h3>
+<p>Formulir ini sengaja dibuat dua lapis: pengunjung melihat formulir pendek dulu, dan bagian lanjutannya tersembunyi di balik tombol agar tidak terlihat memberatkan.</p>
+<table>
+<tr><th style="width:26%">Bagian</th><th>Kolom yang diisi</th></tr>
+<tr><td><strong>Wajib (tampil awal)</strong></td><td>Nama, nama perusahaan, telepon/WhatsApp, email, jumlah unit atau jumlah part yang dibutuhkan, dan nomor part (khusus suku cadang).</td></tr>
+<tr><td><strong>Lanjutan (opsional)</strong></td><td>Tanggal dibutuhkan, durasi sewa, tanggal mulai &amp; selesai sewa, butuh operator atau tidak, model unit terpasang, tingkat urgensi, lokasi pengiriman, metode pembayaran, estimasi budget, dan alamat.</td></tr>
+</table>
+
+<div class="box">
+<span class="t">Kenapa sebagian kolom di panel detail terlihat kosong?</span>
+<p>Formulir versi lama hanya menanyakan lima kolom, sehingga permintaan lama memang tidak punya isian untuk kolom-kolom lanjutan. Ini bukan kerusakan sistem. Pada permintaan yang masuk sejak formulir diperbarui, kolom tersebut akan terisi — <strong>sepanjang pengunjung membuka bagian lanjutan dan mengisinya</strong>, karena bagian itu memang tidak wajib.</p>
+</div>
+
+<div class="box tip">
+<span class="t">Data pelanggan tercatat otomatis</span>
+<p>Setiap kali ada yang mengirim permintaan, sistem langsung membuat atau memperbarui catatan pelanggan di menu <strong>Customers</strong>. Jadi menu Customers terisi sendiri, dan orang yang sama tidak akan tercatat dua kali meskipun ia mengirim beberapa permintaan.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>3. Cara Masuk (Login) dan Lupa Password</h2>
+
+<h3>Langkah masuk</h3>
+<ol>
+<li>Buka browser (Chrome disarankan), ketik alamat website GTI lalu tambahkan <code>/login</code> di belakangnya. Contoh: <code>www.globaltractors.co.id/login</code></li>
+<li>Masukkan <strong>email</strong> dan <strong>password</strong> yang diberikan oleh admin perusahaan.</li>
+<li>Klik tombol masuk. Anda akan langsung diarahkan ke halaman Dashboard.</li>
+</ol>
+
+<div class="box">
+<span class="t">Tidak ada pendaftaran mandiri</span>
+<p>Halaman "daftar akun" sengaja <strong>ditiadakan</strong>. Staf tidak bisa membuat akun sendiri. Semua akun dibuat oleh Super Admin melalui menu <strong>Users</strong>. Ini adalah keputusan keamanan: hanya orang yang memang karyawan GTI yang punya akses.</p>
+</div>
+
+<h3>Lupa password</h3>
+<ol>
+<li>Di halaman login, klik tautan <em>Forgot Password</em>.</li>
+<li>Masukkan alamat email akun Anda, lalu kirim.</li>
+<li>Cek kotak masuk email Anda (termasuk folder Spam/Promosi). Ikuti tautan di email tersebut untuk membuat password baru.</li>
+</ol>
+
+<h3>Kalau muncul pesan "Too many failed login attempts"</h3>
+<p>Artinya sistem keamanan mengunci sementara karena percobaan login gagal berkali-kali. Ini melindungi akun dari upaya pembobolan. Tunggu beberapa menit, atau hubungi Super Admin / tim IT untuk membuka kunci lebih cepat.</p>
+
+<h3>Kalau diarahkan ke halaman yang salah</h3>
+<p>Staf GTI <strong>tidak diizinkan</strong> masuk ke halaman admin WordPress (<code>/wp-admin</code>). Jika Anda mencoba membukanya, sistem otomatis memindahkan Anda kembali ke Dashboard GTI. Ini normal dan bukan kerusakan.</p>
+
+<div class="page-break"></div>
+<h2>4. Mengenal Tampilan Dashboard</h2>
+
+<p>Setiap halaman dashboard memiliki tiga bagian tetap.</p>
+
+<h3>A. Sidebar (kolom menu di kiri)</h3>
+<p>Berisi daftar menu yang dikelompokkan: EQUIPMENT, REQUEST &amp; INQUIRY, MANAGEMENT, dan SYSTEM.</p>
+<div class="box note">
+<span class="t">Menu Anda mungkin lebih sedikit dari rekan kerja</span>
+<p>Itu disengaja. Sistem hanya menampilkan menu yang boleh Anda akses. Jika seorang staf Inventory tidak melihat menu "Request Quotation", bukan berarti menunya rusak — memang tidak diberikan untuk perannya.</p>
+</div>
+
+<h3>B. Angka merah (badge) di sebelah menu</h3>
+<p>Angka merah kecil muncul di samping tiga menu kotak masuk: Request Equipment, Request Quotation, dan Sell Equipment. Angka itu menunjukkan <strong>berapa permintaan baru yang belum pernah Anda buka</strong>.</p>
+<ul>
+<li>Angka ini <strong>per orang</strong>, bukan per perusahaan. Rekan Anda bisa melihat angka berbeda.</li>
+<li>Begitu Anda membuka halaman tersebut, angka hilang, dan hanya muncul lagi ketika ada permintaan yang lebih baru masuk.</li>
+</ul>
+
+<h3>C. Header (bar atas) dan lonceng notifikasi</h3>
+<p>Di bagian atas ada judul halaman dan ikon <strong>lonceng</strong>. Klik lonceng untuk melihat daftar permintaan terbaru yang belum dibuka, lengkap dengan nomor referensi, nama pelanggan, dan waktu masuk. Klik salah satu baris untuk langsung meloncat ke detail permintaan itu.</p>
+
+<h3>D. Pola kerja yang sama di semua halaman daftar</h3>
+<p>Hampir semua halaman memakai susunan yang sama, jadi begitu Anda paham satu halaman, Anda paham semuanya:</p>
+<ol>
+<li><strong>Kartu ringkasan</strong> di atas — jumlah data per status.</li>
+<li><strong>Baris filter</strong> — kotak pencarian dan beberapa pilihan penyaring (status, merek, kategori, PIC). Klik <em>Apply</em> untuk menyaring, <em>Reset</em> untuk kembali ke semua data.</li>
+<li><strong>Tabel data</strong> — satu baris untuk satu data.</li>
+<li><strong>Tombol titik tiga</strong> (⋮) di kolom Actions paling kanan — berisi semua tindakan untuk baris tersebut.</li>
+<li><strong>Drawer</strong> — panel yang meluncur dari kanan saat Anda klik "View Details", berisi informasi lengkap dan tombol aksi yang sama.</li>
+</ol>
+
+<div class="box tip">
+<span class="t">Tips</span>
+<p>Tindakan lewat tombol titik tiga di tabel dan tindakan lewat drawer <strong>hasilnya identik</strong>. Pilih mana saja yang lebih nyaman. Drawer lebih disarankan karena Anda bisa membaca detail dulu sebelum mengambil keputusan.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>5. Siapa Boleh Mengakses Apa (Hak Akses)</h2>
+
+<p>Ada empat peran internal. Satu akun memiliki satu peran.</p>
+
+<table>
+<tr><th style="width:22%">Peran</th><th>Untuk siapa dan boleh apa</th></tr>
+<tr><td><strong>GTI Super Admin</strong></td><td>Pimpinan sistem / IT. Akses penuh ke semua menu, termasuk membuat akun pengguna dan membuka Activity Log.</td></tr>
+<tr><td><strong>GTI Admin</strong></td><td>Admin operasional. Bisa mengelola alat, suku cadang, seluruh permintaan, pelanggan, dan berita. Tidak bisa membuat akun pengguna dan tidak bisa membuka Activity Log.</td></tr>
+<tr><td><strong>GTI Sales</strong></td><td>Tim penjualan. Fokus pada kotak masuk permintaan, penawaran, dan data pelanggan. <strong>Hanya melihat permintaan yang ditugaskan kepadanya.</strong> Tidak bisa mengelola katalog alat/suku cadang.</td></tr>
+<tr><td><strong>GTI Inventory</strong></td><td>Tim gudang/stok. Mengelola katalog alat berat dan suku cadang. Tidak melihat kotak masuk permintaan pelanggan.</td></tr>
+</table>
+
+<h3>Tabel akses per menu</h3>
+<table>
+<tr><th style="width:34%">Menu</th><th>Super Admin</th><th>Admin</th><th>Sales</th><th>Inventory</th></tr>
+<tr><td>Dashboard (depan)</td><td>Ya</td><td>Ya</td><td>Ya</td><td>Ya</td></tr>
+<tr><td>Used &amp; Rental Equipment</td><td>Ya</td><td>Ya</td><td>—</td><td>Ya</td></tr>
+<tr><td>Spare Parts</td><td>Ya</td><td>Ya</td><td>—</td><td>Ya</td></tr>
+<tr><td>Request Equipment</td><td>Ya</td><td>Ya</td><td>Ya <span class="small">(terbatas)</span></td><td>—</td></tr>
+<tr><td>Request Quotation</td><td>Ya</td><td>Ya</td><td>Ya <span class="small">(terbatas)</span></td><td>—</td></tr>
+<tr><td>Sell Equipment</td><td>Ya</td><td>Ya</td><td>Ya <span class="small">(terbatas)</span></td><td>—</td></tr>
+<tr><td>Customers</td><td>Ya</td><td>Ya</td><td>Ya</td><td>—</td></tr>
+<tr><td>News &amp; Articles</td><td>Ya</td><td>Ya</td><td>—</td><td>—</td></tr>
+<tr><td>Media Library</td><td>Ya</td><td>Ya</td><td>Ya</td><td>Ya</td></tr>
+<tr><td>Users</td><td>Ya</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Activity Log</td><td>Ya</td><td>—</td><td>—</td><td>—</td></tr>
+</table>
+
+<div class="box">
+<span class="t">Arti "terbatas" pada peran Sales</span>
+<p>Sales hanya melihat baris permintaan yang <strong>PIC-nya adalah dirinya sendiri</strong>. Permintaan yang belum ditugaskan atau milik sales lain tidak muncul di layarnya — termasuk pada kartu ringkasan dan angka merah di menu. Ini disengaja agar setiap sales fokus pada tanggung jawabnya.</p>
+<p>Konsekuensinya: <strong>menugaskan PIC (Assign PIC) hanya bisa dilakukan oleh Super Admin dan Admin</strong>, bukan oleh Sales. Kalau permintaan baru tidak kunjung ditangani, cek apakah PIC-nya sudah ditunjuk.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>6. Halaman Dashboard (Halaman Depan)</h2>
+
+<p>Ini halaman pertama setelah login. Isinya ringkasan kondisi bisnis hari ini.</p>
+
+<h3>Baris kartu angka</h3>
+<table>
+<tr><th style="width:34%">Kartu</th><th>Artinya</th></tr>
+<tr><td>Used Equipment</td><td>Jumlah unit alat berat bekas yang terdaftar.</td></tr>
+<tr><td>Rental Equipment</td><td>Jumlah unit alat berat sewa yang terdaftar.</td></tr>
+<tr><td>Spare Parts</td><td>Jumlah jenis suku cadang yang terdaftar.</td></tr>
+<tr><td>Customers</td><td>Jumlah pelanggan yang tercatat.</td></tr>
+<tr><td>Request Equipment / Request Quotation / Sell Equipment</td><td>Total permintaan yang masuk, dengan keterangan kecil berapa yang berstatus baru.</td></tr>
+<tr><td>Needs Attention</td><td>Jumlah permintaan yang <strong>terlalu lama didiamkan</strong>. Ini angka yang paling perlu diperhatikan manajemen.</td></tr>
+<tr><td>Awaiting Response</td><td>Jumlah permintaan berstatus New yang belum ditanggapi sama sekali.</td></tr>
+</table>
+
+<h3>Kotak "Needs Attention" — definisi resminya</h3>
+<p>Sebuah permintaan masuk daftar ini jika:</p>
+<ul>
+<li>Statusnya masih <span class="badge b-new">New</span> dan sudah lewat <strong>lebih dari 24 jam</strong> sejak masuk; atau</li>
+<li>Permintaan penawaran (quotation) yang sudah dikirim ke pelanggan tetapi <strong>masa berlaku penawaran sudah lewat</strong> tanpa jawaban.</li>
+</ul>
+<p>Klik salah satu baris untuk langsung membuka detail permintaan tersebut.</p>
+
+<h3>Kotak "Recent Activity" dan "Inbox Summary"</h3>
+<p><strong>Recent Activity</strong> menampilkan 10 tindakan terakhir yang dilakukan staf di dashboard. <strong>Inbox Summary</strong> merangkum isi tiga kotak masuk dalam satu tempat.</p>
+
+<div class="box note">
+<span class="t">Angka yang Anda lihat menyesuaikan peran Anda</span>
+<p>Seorang Sales melihat angka beban kerjanya sendiri, bukan angka seluruh perusahaan. Jadi kalau Direktur dan Sales membandingkan layar, angkanya wajar berbeda.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>7. Menu Equipment: Used &amp; Rental Equipment</h2>
+
+<p>Menu <strong>Equipment</strong> punya dua sub-menu: <strong>Used Equipment</strong> (alat berat bekas untuk dijual) dan <strong>Rental Equipment</strong> (alat berat untuk disewakan). Cara kerjanya sama persis, yang berbeda hanya daftar status dan jenis harganya.</p>
+
+<h3>Kolom pada tabel</h3>
+<p>Image (foto), Equipment Name, Category, Brand, Condition, Year, Price / Rental Price, Status, dan Actions.</p>
+
+<h3>Menyaring data</h3>
+<p>Tersedia pencarian teks bebas, plus penyaring Category, Brand, Status, dan Condition.</p>
+
+<h3>Arti status unit</h3>
+<table>
+<tr><th style="width:26%">Status</th><th>Artinya</th></tr>
+<tr><td><span class="badge b-ok">Available</span></td><td>Unit siap ditawarkan dan tampil di website.</td></tr>
+<tr><td><span class="badge b-no">Sold</span></td><td>Unit sudah terjual (khusus Used Equipment).</td></tr>
+<tr><td><span class="badge b-proc">Rented</span></td><td>Unit sedang disewa pelanggan (khusus Rental Equipment).</td></tr>
+<tr><td><span class="badge b-proc">Reserved</span></td><td>Unit sudah dipesan/di-booking, belum lunas.</td></tr>
+<tr><td><span class="badge b-wait">Maintenance</span></td><td>Unit sedang diperbaiki, tidak bisa ditawarkan (khusus Rental).</td></tr>
+<tr><td><span class="badge b-done">Draft</span></td><td>Data belum selesai diisi, belum tampil di website.</td></tr>
+<tr><td><span class="badge b-done">Expired</span></td><td>Masa berlaku penawaran/harga sudah lewat.</td></tr>
+</table>
+
+<h3>Arti kondisi unit</h3>
+<p><strong>Excellent</strong> (sangat baik) — <strong>Good</strong> (baik) — <strong>Fair</strong> (cukup) — <strong>Poor</strong> (kurang, ditandai merah). Kondisi ini yang dilihat calon pembeli di website, jadi pastikan diisi jujur.</p>
+
+<h3>Menambah unit baru</h3>
+<p>Klik tombol <strong>Add Equipment</strong>. Formulirnya panjang dan terbagi dalam beberapa bagian:</p>
+<table>
+<tr><th style="width:32%">Bagian formulir</th><th>Isinya</th></tr>
+<tr><td>General Information</td><td>Nama unit, kode unit, kategori, merek, model, tahun, jam operasi, nomor seri, kondisi, mesin, tenaga mesin, negara asal.</td></tr>
+<tr><td>Basic Information</td><td>Tipe alat, lokasi unit, status ketersediaan, nomor stok internal, dan deskripsi.</td></tr>
+<tr><td>Technical Specifications</td><td>Spesifikasi teknis: berat operasi, kapasitas bucket, model mesin, sistem hidrolik, kedalaman &amp; tinggi gali, kecepatan jalan, kapasitas tangki, lebar track, dan lainnya.</td></tr>
+<tr><td>Features &amp; Configurations</td><td>Centang fitur tambahan yang dimiliki unit.</td></tr>
+<tr><td>Pricing Information</td><td>Harga jual, harga sewa per bulan, tipe harga, mata uang, termasuk PPN atau tidak, masa berlaku harga, dan apakah harga bisa dinegosiasi.</td></tr>
+<tr><td>Status &amp; Availability</td><td>Status ketersediaan, siap pakai atau tidak, riwayat servis, dan garansi.</td></tr>
+<tr><td>Foto</td><td>Unggah foto unit. Foto pertama menjadi foto utama di website.</td></tr>
+</table>
+
+<div class="box">
+<span class="t">Kolom bertanda bintang merah (*) wajib diisi</span>
+<p>Jika ada yang kosong, sistem akan menolak menyimpan dan menandai kolomnya. Kalau data belum lengkap, simpan sebagai <strong>Draft</strong> dulu — draft tidak muncul di website sampai statusnya diubah menjadi Available.</p>
+</div>
+
+<h3>Mengubah dan menghapus unit</h3>
+<p>Lewat tombol titik tiga di kolom Actions: <strong>View</strong> (lihat detail), <strong>Edit</strong> (ubah data), <strong>Delete</strong> (hapus). Penghapusan selalu meminta konfirmasi terlebih dahulu.</p>
+
+<div class="page-break"></div>
+<h2>8. Menu Spare Parts</h2>
+
+<p>Berisi daftar suku cadang beserta stoknya.</p>
+
+<h3>Kolom pada tabel</h3>
+<p>Image, Part Number, Part Name, Category, Brand, Stock, Unit Price, Status, Actions.</p>
+
+<h3>Arti status stok</h3>
+<table>
+<tr><th style="width:28%">Status</th><th>Artinya</th></tr>
+<tr><td><span class="badge b-ok">In Stock</span></td><td>Stok aman, tersedia untuk dijual.</td></tr>
+<tr><td><span class="badge b-proc">Low Stock</span></td><td>Stok menipis — saatnya melakukan pemesanan ulang ke supplier.</td></tr>
+<tr><td><span class="badge b-no">Out of Stock</span></td><td>Stok habis.</td></tr>
+<tr><td><span class="badge b-done">Draft</span></td><td>Data belum lengkap, belum tampil di website.</td></tr>
+</table>
+
+<h3>Penyaring yang tersedia</h3>
+<p>Pencarian teks, Category, Brand, Status, dan <strong>Supplier</strong>. Penyaring Supplier berguna untuk melihat semua barang dari satu pemasok sekaligus saat akan melakukan pemesanan.</p>
+
+<h3>Tindakan</h3>
+<p>Tombol <strong>Add Spare Part</strong> untuk menambah, serta View / Edit / Delete lewat tombol titik tiga.</p>
+
+<h3>Stok berkurang otomatis</h3>
+<p>Ketika sebuah permintaan penawaran suku cadang di menu <strong>Request Quotation</strong> diubah statusnya menjadi <span class="badge b-done">Completed</span>, sistem <strong>otomatis mengurangi stok</strong> part tersebut sebanyak jumlah yang dipesan. Staf tidak perlu mengurangi angka stok secara manual.</p>
+<div class="box">
+<span class="t">Konsekuensi yang perlu diingat</span>
+<p>Karena Completed adalah status akhir yang tidak bisa dibatalkan, <strong>pengurangan stok juga tidak otomatis dikembalikan</strong>. Jika sebuah transaksi ditandai Completed padahal barang batal dikirim, stok harus diperbaiki manual lewat tombol Edit pada part tersebut.</p>
+</div>
+
+<div class="box tip">
+<span class="t">Saran operasional</span>
+<p>Biasakan menyaring dengan status <em>Low Stock</em> setiap awal minggu. Ini cara tercepat menyusun daftar pembelian tanpa harus mengecek satu per satu.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>9. Menu Request Equipment (Permintaan Alat)</h2>
+
+<p>Isi menu ini adalah <strong>permintaan dari calon pelanggan yang mencari alat berat tertentu</strong>, dikirim melalui formulir di website. Contoh: sebuah kontraktor mencari excavator 20 ton untuk proyek di Kalimantan.</p>
+
+<h3>Kolom pada tabel</h3>
+<p>Request ID, Customer, Category, Location, Budget, Status, Request Date, PIC, Actions.</p>
+
+<h3>Penyaring</h3>
+<p>Pencarian teks, Status, Brand, Category, dan PIC (hanya terlihat oleh Super Admin/Admin).</p>
+
+<h3>Alur status — dari masuk sampai selesai</h3>
+<table>
+<tr><th style="width:26%">Status</th><th>Artinya</th><th style="width:34%">Boleh diubah menjadi</th></tr>
+<tr><td><span class="badge b-new">New</span></td><td>Permintaan baru masuk, belum disentuh.</td><td>Processing, Closed</td></tr>
+<tr><td><span class="badge b-proc">Processing</span></td><td>Sedang dikerjakan: alat sedang dicari, harga sedang disiapkan.</td><td>Proposal Sent, On Hold, Closed</td></tr>
+<tr><td><span class="badge b-ok">Proposal Sent</span></td><td>Proposal sudah dikirim ke pelanggan. <strong>Wajib melampirkan dokumen proposal.</strong></td><td>Closed, Processing</td></tr>
+<tr><td><span class="badge b-wait">On Hold</span></td><td>Ditunda sementara (misalnya pelanggan minta waktu).</td><td>Processing, Closed</td></tr>
+<tr><td><span class="badge b-done">Closed</span></td><td>Selesai. <strong>Status akhir — tidak bisa diubah lagi.</strong></td><td>— (tidak ada)</td></tr>
+</table>
+
+<div class="flow">
+<strong>Alur normal:</strong> New &rarr; Processing &rarr; Proposal Sent &rarr; Closed
+</div>
+
+<div class="box">
+<span class="t">Closed bersifat final</span>
+<p>Setelah sebuah permintaan berstatus Closed, tidak ada tombol untuk mengembalikannya ke Processing. Pastikan pekerjaan memang benar-benar selesai sebelum menutupnya. Jika pelanggan menghubungi lagi, buat penanganan baru.</p>
+</div>
+
+<h3>Tindakan yang tersedia</h3>
+<table>
+<tr><th style="width:30%">Tindakan</th><th>Fungsinya</th></tr>
+<tr><td>View Details</td><td>Membuka panel detail di sebelah kanan berisi seluruh isi formulir pelanggan.</td></tr>
+<tr><td>Update Status</td><td>Mengubah status. Sistem hanya menampilkan status yang sah dari posisi saat ini, jadi tidak mungkin salah loncat.</td></tr>
+<tr><td>Reply</td><td>Mengirim balasan email ke pelanggan langsung dari dashboard.</td></tr>
+<tr><td>Assign PIC</td><td>Menunjuk sales penanggung jawab. <strong>Hanya Super Admin dan Admin.</strong></td></tr>
+<tr><td>Delete</td><td>Menghapus permintaan. Perlu konfirmasi.</td></tr>
+</table>
+
+<div class="page-break"></div>
+<h2>10. Menu Request Quotation (Permintaan Penawaran)</h2>
+
+<p>Isi menu ini adalah <strong>permintaan penawaran harga resmi</strong> dari pelanggan atas barang tertentu yang sudah ada di katalog — bisa alat bekas, alat sewa, atau suku cadang.</p>
+
+<h3>Kolom pada tabel</h3>
+<p>Quotation ID, Customer, Requested Items, Type, Sales PIC, Status, Request Date, Actions.</p>
+
+<h3>Penyaring</h3>
+<p>Pencarian teks, Status, Type (Used Equipment / Rental Equipment / Spare Parts), dan PIC.</p>
+
+<h3>Alur status</h3>
+<table>
+<tr><th style="width:30%">Status</th><th>Artinya</th><th style="width:32%">Boleh diubah menjadi</th></tr>
+<tr><td><span class="badge b-new">New</span></td><td>Permintaan penawaran baru masuk.</td><td>Processing, Rejected</td></tr>
+<tr><td><span class="badge b-proc">Processing</span></td><td>Penawaran sedang disusun tim sales.</td><td>Waiting Quotation Approval, Rejected</td></tr>
+<tr><td><span class="badge b-wait">Waiting Quotation Approval</span></td><td>Dokumen penawaran sudah dikirim, menunggu jawaban pelanggan. <strong>Wajib melampirkan dokumen penawaran.</strong></td><td>Approved, Rejected, Processing</td></tr>
+<tr><td><span class="badge b-ok">Approved</span></td><td>Pelanggan menyetujui penawaran.</td><td>Completed, Rejected</td></tr>
+<tr><td><span class="badge b-no">Rejected</span></td><td>Penawaran ditolak atau tidak bisa diproses.</td><td>Processing <span class="small">(bisa dibuka kembali)</span></td></tr>
+<tr><td><span class="badge b-done">Completed</span></td><td>Transaksi selesai. <strong>Status akhir.</strong></td><td>— (tidak ada)</td></tr>
+</table>
+
+<div class="flow">
+<strong>Alur normal:</strong> New &rarr; Processing &rarr; Waiting Quotation Approval &rarr; Approved &rarr; Completed
+</div>
+
+<h3>Tindakan yang tersedia</h3>
+<table>
+<tr><th style="width:30%">Tindakan</th><th>Fungsinya</th></tr>
+<tr><td>View Details</td><td>Melihat detail lengkap, termasuk <strong>nomor penawaran</strong> dan <strong>halaman website asal</strong> permintaan itu dikirim.</td></tr>
+<tr><td>Update Status</td><td>Memajukan status sesuai alur di atas.</td></tr>
+<tr><td>Reply</td><td>Mengirim email balasan ke pelanggan.</td></tr>
+<tr><td>Assign PIC</td><td>Menunjuk sales penanggung jawab (Super Admin / Admin saja).</td></tr>
+<tr><td>Create Quotation</td><td>Menyiapkan dan mengunggah dokumen penawaran untuk dikirim ke pelanggan.</td></tr>
+<tr><td>Delete</td><td>Menghapus data. Perlu konfirmasi.</td></tr>
+</table>
+
+<div class="box note">
+<span class="t">Tentang "masa berlaku penawaran"</span>
+<p>Saat mengirim penawaran, isi tanggal masa berlaku. Jika tanggal itu lewat dan pelanggan belum menjawab, permintaan tersebut otomatis muncul di kotak <strong>Needs Attention</strong> pada halaman Dashboard sebagai pengingat untuk difollow-up.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>11. Menu Sell Equipment (Penawaran Jual dari Pelanggan)</h2>
+
+<p>Arah menu ini <strong>kebalikan</strong> dari dua menu sebelumnya. Di sini <strong>pelanggan yang menawarkan alat berat miliknya untuk dibeli oleh GTI</strong>. Menu ini dipakai tim yang menangani pembelian unit bekas.</p>
+
+<h3>Kolom pada tabel</h3>
+<p>Customer, Equipment, Condition, Offered Price, Status, Date, PIC, Actions.</p>
+
+<h3>Alur status</h3>
+<table>
+<tr><th style="width:28%">Status</th><th>Artinya</th><th style="width:34%">Boleh diubah menjadi</th></tr>
+<tr><td><span class="badge b-new">New</span></td><td>Tawaran baru masuk dari pelanggan.</td><td>Processing, Rejected</td></tr>
+<tr><td><span class="badge b-proc">Processing</span></td><td>Tawaran sedang ditinjau: unit dicek, harga dinilai.</td><td>Approved, Rejected</td></tr>
+<tr><td><span class="badge b-ok">Approved</span></td><td>GTI setuju membeli unit tersebut.</td><td>Invoice Requested, Completed, Rejected</td></tr>
+<tr><td><span class="badge b-wait">Invoice Requested</span></td><td>GTI sudah meminta pelanggan mengirimkan invoice/tagihan.</td><td>Completed, Rejected</td></tr>
+<tr><td><span class="badge b-no">Rejected</span></td><td>Tawaran tidak diterima.</td><td>Processing <span class="small">(bisa dibuka kembali)</span></td></tr>
+<tr><td><span class="badge b-done">Completed</span></td><td>Pembelian selesai. <strong>Status akhir.</strong></td><td>— (tidak ada)</td></tr>
+</table>
+
+<div class="flow">
+<strong>Alur normal:</strong> New &rarr; Processing &rarr; Approved &rarr; Invoice Requested &rarr; Completed
+</div>
+
+<h3>Tindakan yang tersedia</h3>
+<table>
+<tr><th style="width:32%">Tindakan</th><th>Fungsinya</th></tr>
+<tr><td>View Details</td><td>Melihat detail unit yang ditawarkan berikut foto dan data pemiliknya.</td></tr>
+<tr><td>Update Status</td><td>Memajukan status sesuai alur di atas.</td></tr>
+<tr><td>Reply by Email</td><td>Mengirim balasan email ke penawar.</td></tr>
+<tr><td>Contact on WhatsApp</td><td>Membuka WhatsApp ke nomor penawar di tab baru — cara tercepat menghubungi.</td></tr>
+<tr><td>Assign PIC</td><td>Menunjuk penanggung jawab (Super Admin / Admin saja).</td></tr>
+<tr><td>Update Offered Price</td><td>Mencatat harga hasil negosiasi, berbeda dari harga awal yang diajukan pelanggan.</td></tr>
+<tr><td>Request Invoice</td><td>Mengirim permintaan resmi agar pelanggan mengirimkan invoice. Email dikirim ke alamat penawar.</td></tr>
+<tr><td>Delete</td><td>Menghapus data. Perlu konfirmasi.</td></tr>
+</table>
+
+<div class="page-break"></div>
+<h2>12. Menu Customers (Data Pelanggan)</h2>
+
+<p>Kumpulan seluruh pelanggan dan calon pelanggan yang pernah menghubungi GTI.</p>
+
+<div class="box tip">
+<span class="t">Daftar ini mengisi dirinya sendiri</span>
+<p>Catatan pelanggan <strong>tidak pernah diketik manual</strong>. Begitu seseorang mengirim permintaan lewat website (lihat Bab 2), datanya langsung tercatat di sini. Kalau orang yang sama mengirim permintaan lagi, catatannya diperbarui — bukan dibuat baru. Jadi jika ada pelanggan yang belum muncul di daftar ini, artinya ia memang belum pernah mengirim formulir apa pun.</p>
+</div>
+
+<h3>Kolom pada tabel</h3>
+<p>Customer, Company, Email, Phone, Request &amp; Sell (jumlah interaksi), Actions.</p>
+
+<h3>Isi panel detail pelanggan</h3>
+<table>
+<tr><th style="width:32%">Bagian</th><th>Isinya</th></tr>
+<tr><td>Profile Summary</td><td>Customer ID, email, nomor telepon, dan sejak kapan menjadi pelanggan.</td></tr>
+<tr><td>Company Information</td><td>Nama perusahaan dan lokasi.</td></tr>
+<tr><td>Statistics</td><td>Jumlah transaksi, total nilai transaksi, dan kapan terakhir dihubungi.</td></tr>
+</table>
+
+<h3>Tindakan yang tersedia</h3>
+<p><strong>View Details</strong> (lihat profil), <strong>Send Email</strong> (membuka aplikasi email ke alamat pelanggan), <strong>Edit</strong> (ubah data termasuk nomor WhatsApp kontak), dan <strong>Delete</strong>.</p>
+
+<div class="box tip">
+<span class="t">Manfaat untuk tim sales</span>
+<p>Sebelum menelepon calon pelanggan, buka dulu profilnya di sini. Anda akan tahu berapa kali ia pernah menghubungi GTI dan apa saja yang pernah ia minta — pembicaraan jadi jauh lebih siap.</p>
+</div>
+
+<h2>13. Menu News &amp; Articles (Berita)</h2>
+
+<p>Untuk menulis dan mengelola artikel/berita yang tampil di halaman berita website GTI. Cocok untuk pengumuman unit baru, liputan kegiatan, atau artikel edukasi.</p>
+
+<h3>Cara kerjanya</h3>
+<ul>
+<li>Klik tombol <strong>Add Article</strong> untuk menulis artikel baru.</li>
+<li>Pada daftar artikel, tombol titik tiga berisi: <strong>View Detail</strong>, <strong>Edit</strong>, <strong>ubah status terbit</strong>, dan <strong>Delete</strong>.</li>
+<li>Mengubah status terbit berarti memunculkan atau menyembunyikan artikel dari website publik. Artikel yang belum siap sebaiknya disimpan sebagai draft.</li>
+</ul>
+
+<div class="page-break"></div>
+<h2>14. Menu Media Library (Galeri File)</h2>
+
+<p>Gudang penyimpanan semua foto dan dokumen yang dipakai di website — foto alat berat, foto suku cadang, gambar artikel, dan lampiran dokumen.</p>
+
+<h3>Yang bisa dilakukan</h3>
+<table>
+<tr><th style="width:34%">Fitur</th><th>Fungsinya</th></tr>
+<tr><td>Upload Media</td><td>Mengunggah file baru dari komputer.</td></tr>
+<tr><td>Tampilan Grid / List</td><td>Beralih antara tampilan kotak foto (mudah melihat gambar) dan tampilan daftar (mudah membaca nama file).</td></tr>
+<tr><td>Pilih banyak &amp; Bulk Delete</td><td>Mencentang beberapa file sekaligus lalu menghapusnya dalam satu langkah.</td></tr>
+<tr><td>Panel detail file</td><td>Mengisi <strong>Title</strong>, <strong>Alt Text</strong>, <strong>Caption</strong>, dan <strong>Description</strong>, lalu klik Save Details.</td></tr>
+<tr><td>Copy URL</td><td>Menyalin alamat file untuk ditempel di tempat lain.</td></tr>
+<tr><td>Delete</td><td>Menghapus satu file.</td></tr>
+</table>
+
+<div class="box">
+<span class="t">Hati-hati saat menghapus file</span>
+<p>File yang dihapus di sini akan hilang dari semua tempat yang memakainya. Jika sebuah foto sedang dipakai pada halaman unit alat berat, halaman tersebut akan kehilangan gambarnya. Periksa dulu sebelum menghapus, terutama saat menggunakan Bulk Delete.</p>
+</div>
+
+<div class="box tip">
+<span class="t">Kenapa Alt Text perlu diisi?</span>
+<p>Alt Text adalah keterangan singkat isi gambar. Ini membantu pencarian Google menemukan halaman GTI dan membantu pembaca dengan keterbatasan penglihatan. Contoh yang baik: "Excavator Komatsu PC200 tampak samping".</p>
+</div>
+
+<h2>15. Menu Users (Akun Pengguna)</h2>
+<p class="small">Hanya dapat diakses oleh GTI Super Admin.</p>
+
+<p>Halaman ini punya dua bagian.</p>
+
+<h3>A. Profil Anda sendiri</h3>
+<p><strong>Profile Information</strong> untuk mengubah nama, email, dan nomor telepon Anda. <strong>Change Password</strong> untuk mengganti password akun Anda sendiri.</p>
+
+<h3>B. System Users — daftar akun internal</h3>
+<p>Kolom tabelnya: User, Role, Phone, <strong>Assigned Orders</strong> (jumlah permintaan yang sedang ditanganinya), <strong>Activities</strong> (jumlah aktivitas yang tercatat), <strong>Last Login</strong>, dan Actions. Tersedia pencarian nama dan penyaring berdasarkan peran.</p>
+
+<h3>Membuat akun untuk karyawan baru</h3>
+<ol>
+<li>Klik tombol tambah pengguna.</li>
+<li>Isi nama, email, nomor telepon, dan password awal.</li>
+<li>Pilih <strong>Role</strong> sesuai pekerjaannya (lihat Bab 5).</li>
+<li>Simpan, lalu sampaikan email dan password awal ke karyawan tersebut, dan minta ia segera menggantinya.</li>
+</ol>
+
+<div class="box">
+<span class="t">Saat karyawan keluar dari perusahaan</span>
+<p>Segera hapus atau nonaktifkan akunnya di halaman ini. Selama akun masih aktif, orang tersebut masih dapat masuk dan melihat data pelanggan GTI. Sebelum menghapus, cek kolom <strong>Assigned Orders</strong> — jika masih ada permintaan yang menjadi tanggung jawabnya, pindahkan dulu PIC-nya ke staf lain agar pekerjaan tidak menggantung.</p>
+</div>
+
+<div class="box note">
+<span class="t">Batas pengamanan</span>
+<p>Super Admin GTI hanya bisa mengelola akun-akun GTI. Akun administrator teknis WordPress berada di luar jangkauannya. Ini disengaja agar tidak ada satu akun pun yang bisa mengunci seluruh sistem.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>16. Menu Activity Log (Catatan Aktivitas)</h2>
+<p class="small">Hanya dapat diakses oleh GTI Super Admin.</p>
+
+<p>Buku catatan otomatis yang merekam setiap tindakan penting di dashboard. Tidak bisa diubah atau dihapus oleh siapa pun.</p>
+
+<h3>Kolom pada tabel</h3>
+<table>
+<tr><th style="width:26%">Kolom</th><th>Isinya</th></tr>
+<tr><td>User</td><td>Siapa yang melakukan.</td></tr>
+<tr><td>Action</td><td>Jenis tindakan (menambah, mengubah, menghapus, mengubah status, dan sebagainya).</td></tr>
+<tr><td>Description</td><td>Penjelasan rinci tindakan tersebut.</td></tr>
+<tr><td>Entity</td><td>Data apa yang terkena tindakan.</td></tr>
+<tr><td>IP Address</td><td>Alamat jaringan dari mana tindakan dilakukan.</td></tr>
+<tr><td>Date &amp; Time</td><td>Tanggal dan jam kejadian.</td></tr>
+</table>
+
+<p>Tersedia pencarian teks, penyaring jenis tindakan, dan penyaring per pengguna. Klik satu baris untuk melihat rincian lengkapnya.</p>
+
+<div class="box tip">
+<span class="t">Kapan halaman ini menyelamatkan Anda</span>
+<p>Ketika ada data yang hilang atau berubah tanpa penjelasan, halaman ini menjawab pertanyaan "siapa, kapan, dari mana" dalam hitungan detik — tanpa perlu saling menuduh. Gunakan sebagai alat penelusuran, bukan alat pengawasan harian.</p>
+</div>
+
+<h2>17. Email Otomatis ke Pelanggan</h2>
+
+<p>Inilah fitur yang paling menghemat waktu tim. <strong>Setiap kali status sebuah permintaan berhasil diubah, sistem otomatis mengirim email ke pelanggan.</strong> Staf tidak perlu mengetik apa pun.</p>
+
+<h3>Daftar email yang dikirim</h3>
+<table>
+<tr><th style="width:26%">Menu</th><th style="width:30%">Status baru</th><th>Judul email ke pelanggan</th></tr>
+<tr><td rowspan="5">Request Equipment</td><td>New</td><td>Pesanan Anda Telah Diterima</td></tr>
+<tr><td>Processing</td><td>Pesanan Anda Sedang Diproses</td></tr>
+<tr><td>Proposal Sent</td><td>Proposal Telah Dikirim</td></tr>
+<tr><td>On Hold</td><td>Pesanan Anda Ditunda Sementara</td></tr>
+<tr><td>Closed</td><td>Pesanan Selesai</td></tr>
+<tr><td rowspan="6">Request Quotation</td><td>New</td><td>Quotation Request Diterima</td></tr>
+<tr><td>Processing</td><td>Quotation Sedang Disusun</td></tr>
+<tr><td>Waiting Quotation Approval</td><td>Quotation Anda Sudah Siap</td></tr>
+<tr><td>Approved</td><td>Quotation Disetujui</td></tr>
+<tr><td>Rejected</td><td>Quotation Belum Dapat Diproses</td></tr>
+<tr><td>Completed</td><td>Transaksi Selesai</td></tr>
+<tr><td rowspan="6">Sell Equipment</td><td>New</td><td>Tawaran Equipment Diterima</td></tr>
+<tr><td>Processing</td><td>Tawaran Sedang Direview</td></tr>
+<tr><td>Approved</td><td>Tawaran Diterima</td></tr>
+<tr><td>Invoice Requested</td><td>Mohon Kirimkan Invoice Anda</td></tr>
+<tr><td>Rejected</td><td>Tawaran Belum Dapat Diterima</td></tr>
+<tr><td>Completed</td><td>Transaksi Selesai</td></tr>
+</table>
+
+<h3>Tiga hal yang perlu diketahui</h3>
+<ul>
+<li><strong>Email hanya terkirim jika perubahan status benar-benar tersimpan.</strong> Kalau perubahan gagal, tidak ada email palsu yang terlanjur dikirim ke pelanggan.</li>
+<li><strong>Semua email tercatat</strong> — termasuk isinya dan apakah pengirimannya berhasil. Kalau pelanggan mengaku tidak menerima email, riwayat ini bisa diperiksa.</li>
+<li><strong>Dokumen ikut terkirim.</strong> Lampiran yang Anda unggah saat mengubah status (misalnya file proposal atau penawaran) otomatis disertakan dalam email.</li>
+</ul>
+
+<h3>Aturan lampiran dokumen</h3>
+<p>Dokumen yang Anda unggah saat mengubah status (proposal, penawaran, invoice) mengikuti aturan berikut:</p>
+<ul>
+<li><strong>Ukuran maksimal 10 MB</strong> per file. File yang lebih besar akan ditolak — kompres atau kecilkan resolusinya lebih dulu.</li>
+<li><strong>Format yang diterima:</strong> PDF, DOC, DOCX, XLS, XLSX, JPG, dan PNG. Format lain ditolak demi keamanan.</li>
+<li>Setiap dokumen yang diunggah <strong>juga otomatis tersimpan di Media Library</strong> dan tetap menempel pada permintaan yang bersangkutan, sehingga bisa dibuka kembali kapan saja.</li>
+</ul>
+
+<div class="box">
+<span class="t">Karena itu, ubah status dengan hati-hati</span>
+<p>Mengubah status bukan sekadar mengubah warna label di layar — pelanggan langsung menerima email. Salah menandai "Rejected" berarti pelanggan menerima kabar penolakan yang tidak seharusnya. Pastikan dulu sebelum menekan simpan.</p>
+</div>
+
+<div class="page-break"></div>
+<h2>18. Kamus Istilah</h2>
+
+<table>
+<tr><th style="width:28%">Istilah</th><th>Artinya dalam bahasa sehari-hari</th></tr>
+<tr><td>Dashboard</td><td>Halaman ruang kerja utama tempat semua menu berada.</td></tr>
+<tr><td>Sidebar</td><td>Kolom menu di sisi kiri layar.</td></tr>
+<tr><td>Drawer</td><td>Panel detail yang meluncur dari sisi kanan saat Anda membuka sebuah data.</td></tr>
+<tr><td>Badge</td><td>Label kecil berwarna; bisa berupa status, atau angka merah penanda data baru.</td></tr>
+<tr><td>Filter</td><td>Penyaring untuk mempersempit daftar agar lebih mudah dicari.</td></tr>
+<tr><td>PIC</td><td><em>Person In Charge</em> — staf yang ditunjuk sebagai penanggung jawab satu permintaan.</td></tr>
+<tr><td>Status</td><td>Tahap sebuah permintaan berada saat ini, misalnya New atau Processing.</td></tr>
+<tr><td>Quotation</td><td>Surat penawaran harga resmi dari GTI kepada pelanggan.</td></tr>
+<tr><td>Proposal</td><td>Dokumen penawaran solusi/unit yang dikirim ke pelanggan.</td></tr>
+<tr><td>Invoice</td><td>Tagihan pembayaran.</td></tr>
+<tr><td>Draft</td><td>Data yang belum selesai/belum diterbitkan; belum tampil di website publik.</td></tr>
+<tr><td>Role</td><td>Peran pengguna yang menentukan menu apa saja yang boleh dibuka.</td></tr>
+<tr><td>Activity Log</td><td>Catatan otomatis seluruh tindakan staf di dashboard.</td></tr>
+<tr><td>Media Library</td><td>Gudang penyimpanan foto dan dokumen website.</td></tr>
+</table>
+
+<h2>19. Pertanyaan yang Sering Muncul</h2>
+
+<h4>Menu yang saya cari tidak ada di sidebar. Rusak?</h4>
+<p>Tidak. Sistem menyembunyikan menu yang tidak menjadi hak peran Anda. Jika Anda memang memerlukannya untuk bekerja, mintalah Super Admin meninjau peran akun Anda.</p>
+
+<h4>Rekan saya melihat 12 permintaan, saya hanya 3. Kenapa?</h4>
+<p>Jika Anda berperan Sales, Anda hanya melihat permintaan yang PIC-nya Anda. Rekan Anda kemungkinan berperan Admin yang melihat seluruh data perusahaan.</p>
+
+<h4>Saya ingin mengembalikan status dari Closed ke Processing.</h4>
+<p>Tidak bisa. Closed (dan Completed) adalah status akhir yang sengaja dikunci agar riwayat transaksi tidak berubah-ubah. Jika pelanggan menghubungi kembali, tangani sebagai permintaan baru.</p>
+
+<h4>Kenapa saya tidak bisa menyimpan status "Proposal Sent"?</h4>
+<p>Status tersebut mewajibkan lampiran dokumen. Unggah dulu file proposalnya, baru status bisa disimpan. Hal yang sama berlaku untuk "Waiting Quotation Approval" di menu Request Quotation.</p>
+
+<h4>Tombol Assign PIC tidak muncul di layar saya.</h4>
+<p>Penugasan PIC hanya boleh dilakukan Super Admin dan Admin. Jika Anda Sales, mintalah atasan Anda yang menugaskan.</p>
+
+<h4>Pelanggan bilang belum menerima email dari kami.</h4>
+<p>Pertama, minta ia memeriksa folder Spam/Promosi. Kedua, pastikan alamat email pada data permintaan sudah benar. Ketiga, Super Admin dapat memeriksa catatan pengiriman email untuk memastikan email memang terkirim.</p>
+
+<h4>Saya salah menghapus data. Bisa dikembalikan?</h4>
+<p>Segera hubungi Super Admin atau tim IT dan sebutkan nama data serta waktu kejadiannya. Sebagian data disimpan dengan penanda hapus sehingga masih bisa dipulihkan, tetapi jangan mengandalkan hal ini — selalu baca kotak konfirmasi sebelum menekan Delete.</p>
+
+<h4>Angka merah di menu tidak hilang padahal sudah saya buka.</h4>
+<p>Angka akan muncul kembali jika ada permintaan <strong>yang lebih baru</strong> masuk setelah kunjungan terakhir Anda. Muat ulang halaman; jika angka tetap ada, memang ada data baru yang masuk.</p>
+
+<h4>Saya menemukan alamat "contact-messages" dan "website-settings" tapi halamannya kosong.</h4>
+<p>Dua halaman itu sudah disiapkan alamatnya tetapi <strong>fiturnya belum dibangun</strong>, sehingga yang muncul adalah halaman "coming soon". Keduanya tidak ada di sidebar dan memang belum perlu dipakai.</p>
+
+<h4>Apakah dashboard bisa dibuka dari HP?</h4>
+<p>Bisa, tetapi tampilannya dirancang untuk layar laptop/komputer. Untuk pekerjaan mengisi formulir unit alat berat yang panjang, gunakan komputer.</p>
+
+<div class="box tip" style="margin-top:26px">
+<span class="t">Penutup</span>
+<p>Aturan praktis untuk seluruh staf: <strong>satu permintaan masuk, satu PIC, status selalu diperbarui.</strong> Selama tiga hal itu dijaga, pelanggan selalu mendapat kabar, manajemen selalu melihat angka yang benar, dan tidak ada peluang bisnis yang terlewat.</p>
+</div>
+
+</body>
+</html>
