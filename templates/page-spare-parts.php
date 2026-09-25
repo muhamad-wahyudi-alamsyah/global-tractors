@@ -136,35 +136,35 @@ gti_dashboard_open( array(
                         <div class="gti-ue-stat-icon"><i class="fas fa-cogs"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Total Parts</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($total_parts); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($total_parts)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon available"><i class="fas fa-check-circle"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">In Stock</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($in_stock); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($in_stock)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon reserved"><i class="fas fa-exclamation-triangle"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Low Stock</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($low_stock); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($low_stock)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon sold"><i class="fas fa-times-circle"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Out of Stock</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($out_of_stock); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($out_of_stock)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon draft"><i class="fas fa-file-pen"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Draft</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($draft_count); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($draft_count)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">

@@ -256,6 +256,7 @@ $gti_next_sp_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['nex
                                         inputmode="numeric"
                                         name="unit_price"
                                         id="edit-field-unit-price"
+                                        data-gti-money
                                         required
                                     >
 

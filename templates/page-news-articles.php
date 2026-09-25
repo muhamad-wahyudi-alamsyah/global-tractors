@@ -66,21 +66,21 @@ gti_dashboard_open( array(
                         <div class="gti-ue-stat-icon"><i class="fas fa-newspaper"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Total Articles</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($total_count); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($total_count)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon available"><i class="fas fa-check-circle"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Published</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($published_count); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($published_count)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon reserved"><i class="fas fa-file-alt"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Draft</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($draft_count); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($draft_count)); ?></p>
                         </div>
                     </div>
                 </div>

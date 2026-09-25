@@ -48,7 +48,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
                         </div>
                         <div class="gti-field">
                             <label for="gti-upload-total">Total Nilai (IDR) <span class="required">*</span></label>
-                            <input type="number" id="gti-upload-total" name="total" min="0" step="1000">
+                            <input type="text" id="gti-upload-total" name="total" inputmode="numeric" data-gti-money>
                         </div>
                     </div>
                     <div class="gti-field-grid">

@@ -123,9 +123,9 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                         </div>
                         <div class="gti-ef-filter-body" data-filter-body="price">
                             <div class="gti-ef-range-inputs">
-                                <input type="text" name="ef-price-min" placeholder="Min (Rp/month)">
+                                <input type="text" name="ef-price-min" placeholder="Min (Rp/month)" inputmode="numeric" data-gti-money>
                                 <span class="gti-ef-range-separator">—</span>
-                                <input type="text" name="ef-price-max" placeholder="Max (Rp/month)">
+                                <input type="text" name="ef-price-max" placeholder="Max (Rp/month)" inputmode="numeric" data-gti-money>
                             </div>
                         </div>
                     </div>

@@ -59,7 +59,7 @@ trait GTI_Ajax_Spare_Parts {
             'description'   => wp_kses_post($_POST['description'] ?? ''),
             'stock'         => $stock,
             'minimum_stock' => $minimum_stock,
-            'unit_price'    => floatval($_POST['unit_price'] ?? 0),
+            'unit_price'    => gti_parse_amount($_POST['unit_price'] ?? 0),
             'supplier'      => sanitize_text_field($_POST['supplier'] ?? ''),
             'location'      => sanitize_text_field($_POST['location'] ?? ''),
             'status'        => $status,

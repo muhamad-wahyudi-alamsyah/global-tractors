@@ -18,3 +18,13 @@ foreach ( $cases as $c ) {
     assert( $got === $c[1], var_export( $c[0], true ) . " => $got, expected {$c[1]}" );
 }
 echo "gti_parse_amount OK\n";
+
+// Round-trip: whatever the money inputs mask into must survive the save handlers.
+// Guards the regression where floatval("850.000.000") stored 850.
+foreach ( array( 850000000, 25000000, 350000, 1500, 0 ) as $n ) {
+    $masked = number_format( $n, 0, ',', '.' );
+    assert( gti_parse_amount( $masked ) === (float) $n, "masked $masked => expected $n" );
+    // Unmasked input (pre-existing behaviour) must stay identical.
+    assert( gti_parse_amount( (string) $n ) === (float) $n, "raw $n round-trip" );
+}
+echo "mask round-trip OK\n";

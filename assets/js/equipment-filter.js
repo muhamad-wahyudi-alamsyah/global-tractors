@@ -11,6 +11,16 @@
     var wrapper = document.getElementById('gti-equipment-filter');
     if (!wrapper) return;
 
+    // Money inputs: keep an id-ID thousand separator while typing.
+    // Public pages don't load dashboard-ui.js, so this mirrors the delegated
+    // mask defined there. readFilters() already strips separators before use.
+    document.addEventListener('input', function (e) {
+      var el = e.target;
+      if (!el || !el.matches || !el.matches('[data-gti-money]')) return;
+      var digits = el.value.replace(/\D/g, '');
+      el.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+    });
+
     // ── Config ─────────────────────────────────────────────────────────────
     var config = {
       ajaxUrl:  wrapper.dataset.ajaxUrl  || '/wp-admin/admin-ajax.php',
@@ -387,12 +397,14 @@
       });
     }
 
+    function fmt(n) { return Number(n || 0).toLocaleString('id-ID'); }
+
     function updateResultCount(from, to, total) {
       if (!resultCountEl) return;
       if (total === 0) {
         resultCountEl.innerHTML = 'No results found';
       } else {
-        resultCountEl.innerHTML = 'Showing <strong>' + from + ' - ' + to + '</strong> of <strong>' + total + '</strong> ' + config.itemLabel;
+        resultCountEl.innerHTML = 'Showing <strong>' + fmt(from) + ' - ' + fmt(to) + '</strong> of <strong>' + fmt(total) + '</strong> ' + config.itemLabel;
       }
     }
 

@@ -395,11 +395,11 @@ gti_dashboard_open( array(
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field">
                                         <label>Selling Price (IDR)</label>
-                                        <input type="text" name="selling_price" placeholder="e.g., 850.000.000" inputmode="numeric">
+                                        <input type="text" name="selling_price" placeholder="e.g., 850.000.000" inputmode="numeric" data-gti-money>
                                     </div>
                                     <div class="gti-ae-field">
                                         <label>Rental Price (IDR/Month)</label>
-                                        <input type="text" name="rental_price" placeholder="e.g., 25.000.000" inputmode="numeric">
+                                        <input type="text" name="rental_price" placeholder="e.g., 25.000.000" inputmode="numeric" data-gti-money>
                                     </div>
                                     <div class="gti-ae-field">
                                         <label>Price Type <span class="required">*</span></label>

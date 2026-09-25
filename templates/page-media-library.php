@@ -59,21 +59,21 @@ gti_dashboard_open( array(
                             <div class="gti-ml-stat-icon blue"><i class="fas fa-photo-video"></i></div>
                             <div class="gti-ml-stat-info">
                                 <p class="gti-ml-stat-label">Total Media</p>
-                                <p class="gti-ml-stat-value"><?php echo esc_html($total_media); ?></p>
+                                <p class="gti-ml-stat-value"><?php echo esc_html(gti_format_number($total_media)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ml-stat">
                             <div class="gti-ml-stat-icon green"><i class="fas fa-image"></i></div>
                             <div class="gti-ml-stat-info">
                                 <p class="gti-ml-stat-label">Images</p>
-                                <p class="gti-ml-stat-value"><?php echo esc_html($total_images); ?></p>
+                                <p class="gti-ml-stat-value"><?php echo esc_html(gti_format_number($total_images)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ml-stat">
                             <div class="gti-ml-stat-icon orange"><i class="fas fa-file-alt"></i></div>
                             <div class="gti-ml-stat-info">
                                 <p class="gti-ml-stat-label">Documents</p>
-                                <p class="gti-ml-stat-value"><?php echo esc_html($total_documents); ?></p>
+                                <p class="gti-ml-stat-value"><?php echo esc_html(gti_format_number($total_documents)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ml-stat">
@@ -188,7 +188,7 @@ gti_dashboard_open( array(
                     <?php if ($total_pages > 1): ?>
                         <div class="gti-ml-pagination">
                             <div class="gti-ml-page-info">
-                                Showing <?php echo esc_html(($paged - 1) * $per_page + 1); ?>-<?php echo esc_html(min($paged * $per_page, $total_items)); ?> of <?php echo esc_html($total_items); ?> files
+                                Showing <?php echo esc_html(gti_format_number(($paged - 1) * $per_page + 1)); ?>-<?php echo esc_html(gti_format_number(min($paged * $per_page, $total_items))); ?> of <?php echo esc_html(gti_format_number($total_items)); ?> files
                             </div>
                             <div class="gti-ml-page-controls">
                                 <?php

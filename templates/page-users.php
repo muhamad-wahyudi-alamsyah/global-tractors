@@ -182,7 +182,7 @@ gti_dashboard_open( array(
                             <div class="gti-ue-stat-icon success"><i class="fas fa-history"></i></div>
                             <div class="gti-ue-stat-info">
                                 <p class="gti-ue-stat-label">Activities</p>
-                                <p class="gti-ue-stat-value"><?php echo esc_html($activity_count); ?></p>
+                                <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($activity_count)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ue-stat-card">
@@ -288,7 +288,7 @@ gti_dashboard_open( array(
                     <div class="gti-cd-tab-content" id="tab-team" style="display:none">
                     <div class="gti-profile-card">
                         <div class="gti-profile-card-header">
-                            <h3><i class="fas fa-user-shield"></i> System Users <span style="font-weight:500;color:#9ca3af;font-size:13px;">(<?php echo (int) $users_total; ?>)</span></h3>
+                            <h3><i class="fas fa-user-shield"></i> System Users <span style="font-weight:500;color:#9ca3af;font-size:13px;">(<?php echo esc_html(gti_format_number((int) $users_total)); ?>)</span></h3>
                             <?php if ($can_create_users): ?>
                                 <button type="button" class="gti-btn-primary" id="gti-add-user-btn">
                                     <i class="fas fa-plus"></i> <span>Add User</span>

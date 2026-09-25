@@ -139,7 +139,7 @@ function gti_ajax_create_quotation() {
 
     $id     = (int) ( $_POST['id'] ?? 0 );
     $number = sanitize_text_field( wp_unslash( $_POST['quotation_number'] ?? '' ) );
-    $total  = (float) ( $_POST['total'] ?? 0 );
+    $total  = gti_parse_amount( $_POST['total'] ?? 0 );
     $valid  = sanitize_text_field( wp_unslash( $_POST['valid_until'] ?? '' ) );
     $terms  = sanitize_text_field( wp_unslash( $_POST['payment_terms'] ?? '' ) );
     $where  = sanitize_text_field( wp_unslash( $_POST['delivery_location'] ?? '' ) );

@@ -160,14 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (firstRow) { try { updateDrawerContent(JSON.parse(firstRow.getAttribute('data-sp'))); } catch(e) {} }
         // Edit modal image upload
         initEditImageUploads();
-        // Unit price — keep a thousand separator while typing
-        var priceInput = document.querySelector('#gti-edit-form input[name="unit_price"]');
-        if (priceInput) {
-            priceInput.addEventListener('input', function() {
-                var digits = this.value.replace(/\D/g, '');
-                this.value = digits ? Number(digits).toLocaleString('id-ID') : '';
-            });
-        }
+        // Unit price separator is handled by the shared [data-gti-money] mask in dashboard-ui.js
         // Edit modal submit
         var editSubmitBtn = document.getElementById('gti-edit-submit');
         if (editSubmitBtn) editSubmitBtn.addEventListener('click', handleEditSubmit);

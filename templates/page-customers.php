@@ -79,14 +79,14 @@ gti_dashboard_open( array(
                         <div class="gti-ue-stat-icon"><i class="fas fa-users"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Total Customers</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($total_customers); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($total_customers)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon reserved"><i class="fas fa-file-signature"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Request &amp; Sell</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($total_requests); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($total_requests)); ?></p>
                         </div>
                     </div>
                 </div>
@@ -171,7 +171,7 @@ gti_dashboard_open( array(
                                             <a href="mailto:<?php echo esc_attr($c->email); ?>" style="color:#2563eb;text-decoration:none;font-size:13px"><?php echo esc_html($c->email); ?></a>
                                         </td>
                                         <td class="col-phone"><?php echo esc_html($c->phone ?: '—'); ?></td>
-                                        <td class="col-transactions"><?php echo (int) $c->total_transactions; ?></td>
+                                        <td class="col-transactions"><?php echo esc_html(gti_format_number((int) $c->total_transactions)); ?></td>
                                         <td class="col-actions">
                                             <div class="gti-ue-action-menu">
                                                 <button class="gti-ue-action-toggle" title="Actions"><i class="fas fa-ellipsis-v"></i></button>

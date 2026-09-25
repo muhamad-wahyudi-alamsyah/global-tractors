@@ -61,8 +61,8 @@ function gti_render_pagination( array $args ) {
     <div class="gti-ue-pagination">
         <div class="gti-ue-pagination-info">
             <?php if ( $total > 0 ) : ?>
-                Showing <?php echo esc_html( $offset + 1 ); ?>-<?php echo esc_html( min( $offset + $per_page, $total ) ); ?>
-                of <?php echo esc_html( $total ); ?> entries
+                Showing <?php echo esc_html( gti_format_number( $offset + 1 ) ); ?>-<?php echo esc_html( gti_format_number( min( $offset + $per_page, $total ) ) ); ?>
+                of <?php echo esc_html( gti_format_number( $total ) ); ?> entries
             <?php else : ?>
                 No entries
             <?php endif; ?>
@@ -139,7 +139,7 @@ function gti_render_stat_cards( array $cards ) {
             <div class="<?php echo esc_attr( trim( 'gti-ue-stat-icon ' . $card['tone'] ) ); ?>"><i class="fas <?php echo esc_attr( $card['icon'] ); ?>"></i></div>
             <div class="gti-ue-stat-info">
                 <p class="gti-ue-stat-label"><?php echo esc_html( $card['label'] ); ?></p>
-                <p class="gti-ue-stat-value"><?php echo esc_html( $card['value'] ); ?></p>
+                <p class="gti-ue-stat-value"><?php echo esc_html( is_numeric( $card['value'] ) ? gti_format_number( $card['value'] ) : $card['value'] ); ?></p>
             </div>
         </div>
         <?php

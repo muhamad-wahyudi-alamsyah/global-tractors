@@ -318,8 +318,8 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                             <div class="gti-ae-card-header"><h3><i class="fas fa-tag"></i> Pricing & Status</h3></div>
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Selling Price (IDR)</label><input type="text" name="selling_price"></div>
-                                    <div class="gti-ae-field"><label>Rental Price (IDR/Month)</label><input type="text" name="rental_price"></div>
+                                    <div class="gti-ae-field"><label>Selling Price (IDR)</label><input type="text" name="selling_price" inputmode="numeric" data-gti-money></div>
+                                    <div class="gti-ae-field"><label>Rental Price (IDR/Month)</label><input type="text" name="rental_price" inputmode="numeric" data-gti-money></div>
                                     <div class="gti-ae-field"><label>Price Type</label><select name="price_type"><option value="">Select Price Type</option><option value="sale">Sale</option><option value="rental">Rental</option><option value="sale_and_rental">Sale & Rental</option><option value="price_on_ask">Price on Ask</option></select></div>
                                 </div>
                                 <div class="gti-ae-form-grid">

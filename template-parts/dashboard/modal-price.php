@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
                 <div class="gti-field">
                     <label for="gti-price-value">Harga penawaran baru (IDR)</label>
-                    <input type="text" id="gti-price-value" name="price" inputmode="numeric"
+                    <input type="text" id="gti-price-value" name="price" inputmode="numeric" data-gti-money
                            placeholder="mis. 750.000.000" required>
                 </div>
 

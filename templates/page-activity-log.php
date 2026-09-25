@@ -126,28 +126,28 @@ gti_dashboard_open( array(
                             <div class="gti-ue-stat-icon primary"><i class="fas fa-list"></i></div>
                             <div class="gti-ue-stat-info">
                                 <p class="gti-ue-stat-label">All Activities</p>
-                                <p class="gti-ue-stat-value"><?php echo esc_html($total_activities); ?></p>
+                                <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($total_activities)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ue-stat-card">
                             <div class="gti-ue-stat-icon success"><i class="fas fa-calendar-day"></i></div>
                             <div class="gti-ue-stat-info">
                                 <p class="gti-ue-stat-label">Today</p>
-                                <p class="gti-ue-stat-value"><?php echo esc_html($today_count); ?></p>
+                                <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($today_count)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ue-stat-card">
                             <div class="gti-ue-stat-icon info"><i class="fas fa-calendar-week"></i></div>
                             <div class="gti-ue-stat-info">
                                 <p class="gti-ue-stat-label">Last 7 Days</p>
-                                <p class="gti-ue-stat-value"><?php echo esc_html($week_count); ?></p>
+                                <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($week_count)); ?></p>
                             </div>
                         </div>
                         <div class="gti-ue-stat-card">
                             <div class="gti-ue-stat-icon warning"><i class="fas fa-user"></i></div>
                             <div class="gti-ue-stat-info">
                                 <p class="gti-ue-stat-label">My Activities</p>
-                                <p class="gti-ue-stat-value"><?php echo esc_html($my_count); ?></p>
+                                <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($my_count)); ?></p>
                             </div>
                         </div>
                     </div>

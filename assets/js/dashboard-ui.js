@@ -59,6 +59,21 @@
         }
     };
 
+    // ── Money inputs ────────────────────────────────────────────────────────
+    // Keep an id-ID thousand separator while typing on any [data-gti-money]
+    // field. Delegated on document so inputs inside modals that page scripts
+    // populate later are covered without per-page wiring.
+    //
+    // Submitting the formatted string is safe: every money handler parses with
+    // gti_parse_amount() (inc/helpers/format-helpers.php), so no strip-before-
+    // submit is needed here.
+    document.addEventListener('input', function (e) {
+        var el = e.target;
+        if (!el || !el.matches || !el.matches('[data-gti-money]')) return;
+        var digits = el.value.replace(/\D/g, '');
+        el.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+    });
+
     // ── Toast ───────────────────────────────────────────────────────────────
     var TOAST_ICONS = {
         success: 'fa-check-circle',

@@ -132,28 +132,28 @@ gti_dashboard_open( array(
                         <div class="gti-ue-stat-icon"><i class="fas fa-truck"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Total Equipment</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($total_equipment); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($total_equipment)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon available"><i class="fas fa-check-circle"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Available</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($status_count_map['available'] ?? 0); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($status_count_map['available'] ?? 0)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon sold"><i class="fas fa-handshake"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Sold</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($status_count_map['sold'] ?? 0); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($status_count_map['sold'] ?? 0)); ?></p>
                         </div>
                     </div>
                     <div class="gti-ue-stat-card">
                         <div class="gti-ue-stat-icon reserved"><i class="fas fa-clock"></i></div>
                         <div class="gti-ue-stat-info">
                             <p class="gti-ue-stat-label">Reserved</p>
-                            <p class="gti-ue-stat-value"><?php echo esc_html($status_count_map['reserved'] ?? 0); ?></p>
+                            <p class="gti-ue-stat-value"><?php echo esc_html(gti_format_number($status_count_map['reserved'] ?? 0)); ?></p>
                         </div>
                     </div>
                 </div>

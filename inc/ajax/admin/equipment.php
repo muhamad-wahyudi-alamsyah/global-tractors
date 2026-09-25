@@ -125,8 +125,10 @@ trait GTI_Ajax_Equipment {
         ];
 
         // ── Determine price from selling_price or rental_price ─────────────
-        $selling_price = floatval( $_POST['selling_price'] ?? 0 );
-        $rental_price  = floatval( $_POST['rental_price'] ?? 0 );
+        // The edit modals post the price already formatted ("850.000.000"), so
+        // floatval() read that as 850 and silently destroyed the price on save.
+        $selling_price = gti_parse_amount( $_POST['selling_price'] ?? 0 );
+        $rental_price  = gti_parse_amount( $_POST['rental_price'] ?? 0 );
         $price         = $selling_price > 0 ? $selling_price : $rental_price;
 
         // ── Operating hours ────────────────────────────────────────────────

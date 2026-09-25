@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['gti_sp_nonce']) && w
     $description = sanitize_textarea_field($_POST['description'] ?? '');
     $stock = intval($_POST['stock'] ?? 0);
     $minimum_stock = intval($_POST['minimum_stock'] ?? 10);
-    $unit_price = floatval($_POST['unit_price'] ?? 0);
+    $unit_price = gti_parse_amount($_POST['unit_price'] ?? 0);
     $supplier = sanitize_text_field($_POST['supplier'] ?? '');
     $location = sanitize_text_field($_POST['location'] ?? '');
     $status = gti_spare_stock_status($stock, $minimum_stock);
@@ -187,7 +187,7 @@ gti_dashboard_open( array(
                                 </div>
                                 <div class="gti-ae-field">
                                     <label>Unit Price (Rp) <span class="required">*</span></label>
-                                    <input type="number" name="unit_price" placeholder="e.g., 350000" min="0" step="any" required value="<?php echo esc_attr($_POST['unit_price'] ?? ''); ?>">
+                                    <input type="text" name="unit_price" placeholder="e.g., 350.000" inputmode="numeric" data-gti-money required value="<?php echo esc_attr($_POST['unit_price'] ?? ''); ?>">
                                 </div>
                             </div>
                             <div class="gti-ae-form-grid">
