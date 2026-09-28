@@ -160,7 +160,7 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 
 <h3>Langkah masuk</h3>
 <ol>
-<li>Buka browser (Chrome disarankan), ketik alamat website GTI lalu tambahkan <code>/dashboard/login/</code> di belakangnya. Contoh: <code>https://global-tractors.vod23.net/dashboard/login/</code></li>
+<li>Buka browser (Chrome disarankan), ketik alamat website GTI lalu tambahkan <code>/dashboard/login/</code> di belakangnya. Contoh: <code>https://global-tractors.com/dashboard/login/</code></li>
 <li>Masukkan <strong>email</strong> dan <strong>password</strong> yang diberikan oleh admin perusahaan.</li>
 <li>Klik tombol masuk. Anda akan langsung diarahkan ke halaman Dashboard.</li>
 </ol>
@@ -282,6 +282,18 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 
 <h3>Kotak "Recent Activity" dan "Inbox Summary"</h3>
 <p><strong>Recent Activity</strong> menampilkan 10 tindakan terakhir yang dilakukan staf di dashboard. <strong>Inbox Summary</strong> merangkum isi tiga kotak masuk dalam satu tempat.</p>
+
+<h3>Dua grafik di halaman Dashboard</h3>
+<p>Di antara kartu angka dan kotak Recent Activity ada dua kartu grafik.</p>
+<table>
+<tr><th style="width:30%">Grafik</th><th>Artinya</th></tr>
+<tr><td><strong>Website Visitors</strong><br>(grafik garis, "Last 30 Days")</td><td>Jumlah kunjungan harian ke website publik <code>global-tractors.com</code> selama 30 hari terakhir. Arahkan kursor ke garis untuk melihat angka pada tanggal tertentu.</td></tr>
+<tr><td><strong>Request Overview</strong><br>(grafik donat, "All time")</td><td>Seluruh permintaan yang pernah masuk, dipecah menjadi tiga warna: Request Equipment, Request Quotation, dan Sell Equipment. Angka besar di tengah lingkaran adalah <strong>total ketiganya</strong>, sedangkan daftar di sebelahnya menunjukkan jumlah dan persentase tiap jenis.</td></tr>
+</table>
+
+<p>Angka pengunjung berasal dari layanan statistik <strong>Histats</strong> yang terpasang di website, bukan dihitung sendiri oleh dashboard. Data disimpan sementara selama beberapa jam, jadi angka hari ini bisa tertinggal sebentar dari kenyataan. Kalau data sedang tidak bisa diambil, kartu menampilkan tulisan <em>"Data pengunjung belum tersedia."</em> — ini bukan kerusakan dashboard, cukup dibuka lagi beberapa saat kemudian.</p>
+
+<p>Kartu <strong>Request Overview</strong> hanya muncul bagi pengguna yang punya akses ke kotak masuk permintaan, dan disembunyikan selama belum ada satu pun permintaan masuk. Kalau kartu itu tidak tampil, grafik Website Visitors otomatis melebar memenuhi baris.</p>
 
 <div class="box note">
 <span class="t">Angka yang Anda lihat menyesuaikan peran Anda</span>
