@@ -48,7 +48,12 @@ function gti_get_user_phone( $user_id ) {
  * @param string $phone
  */
 function gti_set_user_phone( $user_id, $phone ) {
-    gti_update_user_meta( $user_id, 'gti_phone', gti_normalize_phone( $phone ) );
+    $phone = gti_normalize_phone( $phone );
+    if ( $phone === '' ) {
+        delete_user_meta( $user_id, 'gti_phone' );
+        return;
+    }
+    gti_update_user_meta( $user_id, 'gti_phone', $phone );
 }
 
 /**

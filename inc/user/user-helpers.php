@@ -41,7 +41,11 @@ function gti_get_user_by_phone( $phone ) {
     global $wpdb;
     
     $phone = gti_normalize_phone( $phone );
-    
+
+    // Input tanpa digit (mis. username "admin") jadi string kosong di sini — tanpa guard ini
+    // query-nya cocok dengan user mana pun yang punya meta gti_phone kosong.
+    if ( $phone === '' ) return null;
+
     $user_id = $wpdb->get_var(
         $wpdb->prepare(
             "SELECT user_id FROM {$wpdb->usermeta}
