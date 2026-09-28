@@ -30,6 +30,11 @@ define( 'GTI_FLUENTFORM_REQUEST_FORM_ID', 3 );
 // Ganti 0 dengan ID form FluentForms yang digunakan untuk sell equipment
 define( 'GTI_FLUENTFORM_SELL_FORM_ID', 4 );
 
+// Histats → chart Website Visitors di dashboard
+// SID akun Histats situs publik (lihat Histats.start di sumber halaman home);
+// option 'gti_histats_sid' menimpanya bila suatu saat SID-nya berganti
+define( 'GTI_HISTATS_SID', '5054838' );
+
 // Rate limit
 define( 'GTI_RL_LOGIN_MAX',       5 );
 define( 'GTI_RL_LOGIN_WINDOW',    900 );   // 15 menit

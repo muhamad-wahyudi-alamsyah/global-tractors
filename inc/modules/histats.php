@@ -20,6 +20,10 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Daily visitors for the last $days, newest last.
  *
+ * The site id comes from the gti_histats_sid option, falling back to
+ * GTI_HISTATS_SID so a fresh install needs no database touch; empty means the
+ * card says it has no figures rather than showing invented ones.
+ *
  * ponytail: scraping their page, because there is no API. If Histats changes
  * the page shape this returns nothing and the card falls back to its empty
  * state — the upgrade path is tracking hits in our own table.
@@ -27,7 +31,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @return array List of array( 'date' => 'Y-m-d', 'visits' => int, 'hits' => int ).
  */
 function gti_histats_daily( $days = 30 ) {
-    $sid = trim( (string) get_option( 'gti_histats_sid', '' ) );
+    $sid = trim( (string) get_option( 'gti_histats_sid', defined( 'GTI_HISTATS_SID' ) ? GTI_HISTATS_SID : '' ) );
     if ( ! $sid ) {
         return array();
     }
