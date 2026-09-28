@@ -64,6 +64,7 @@ require_once GTI_CHILD_DIR . '/inc/modules/assignment.php';
 require_once GTI_CHILD_DIR . '/inc/modules/stock.php';
 require_once GTI_CHILD_DIR . '/inc/modules/news-articles.php';
 require_once GTI_CHILD_DIR . '/inc/modules/media-library.php';
+require_once GTI_CHILD_DIR . '/inc/modules/histats.php';
 require_once GTI_CHILD_DIR . '/inc/modules/fluentform-intake.php';
 
 // ── Setup ────────────────────────────────────────────────────────────────────

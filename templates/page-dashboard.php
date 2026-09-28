@@ -64,9 +64,10 @@ $slug = array( 'request' => 'request-equipment', 'quotation' => 'request-quotati
 $can_inbox = current_user_can( 'gti_manage_requests' ) || current_user_can( 'gti_manage_quotations' );
 
 // Laid out as the dashboard was before PRD v2 — five headline cards, a row of
-// smaller cards, three cards side by side — holding the real figures PRD v2
-// put in place of the placeholder ones. The charts had no data behind them
-// and stay out (§6.14).
+// smaller cards, two charts, three cards side by side — holding the real
+// figures PRD v2 put in place of the placeholder ones. The charts once drew
+// invented numbers; the donut now counts the inbox and the line comes from
+// Histats, and each card says so when its figures are missing (§6.14).
 $primary = array();
 if ( current_user_can( 'gti_manage_equipment' ) ) {
     $primary[] = array( 'title' => 'Used Equipment',   'value' => $counts['used'],   'label' => 'Total unit', 'icon' => 'fa-truck',          'slug' => 'used-equipment' );
@@ -94,10 +95,29 @@ if ( $can_inbox ) {
     $secondary[] = array( 'title' => 'Awaiting Response', 'value' => $inbox_new, 'label' => 'New in the inbox', 'icon' => 'fa-inbox', 'slug' => '' );
 }
 
+// Chart cards. The donut re-uses the counts above, so it costs no extra query;
+// the line is whatever Histats knows about the public site, empty until the
+// gti_histats_sid option holds the site's Histats id.
+$visitors = gti_histats_daily( 30 );
+
+$overview = array(
+    array( 'label' => 'Request Equipment', 'value' => (int) ( $requests['all'] ?? 0 ),   'color' => '#F5A623' ),
+    array( 'label' => 'Request Quotation', 'value' => (int) ( $quotations['all'] ?? 0 ), 'color' => '#1a1f36' ),
+    array( 'label' => 'Sell Equipment',    'value' => (int) ( $sells['all'] ?? 0 ),      'color' => '#6b7280' ),
+);
+$overview_total = array_sum( array_column( $overview, 'value' ) );
+$show_overview  = $can_inbox && $overview_total > 0;
+
+gti_page_data( array(
+    'visitors' => $visitors,
+    'overview' => $show_overview ? array_column( $overview, 'value' ) : array(),
+) );
+
 gti_dashboard_open( array(
     'page'     => 'dashboard',
     'title'    => 'Dashboard',
     'subtitle' => gti_welcome_back(),
+    'js'       => array( 'dashboard' ),
     'cap'      => 'gti_access',
 ) );
 ?>
@@ -143,6 +163,44 @@ gti_dashboard_open( array(
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
+
+    <!-- Charts Row -->
+    <div class="gti-charts-row"<?php if ( ! $show_overview ) : ?> style="grid-template-columns:1fr"<?php endif; ?>>
+        <div class="gti-card gti-chart-card">
+            <div class="gti-card-header">
+                <h3>Website Visitors</h3>
+                <span class="gti-dash-more">Last 30 Days</span>
+            </div>
+            <div class="gti-card-body">
+                <?php if ( $visitors ) : ?>
+                    <canvas id="visitorsChart"></canvas>
+                <?php else : ?>
+                    <p class="gti-dash-empty">Data pengunjung belum tersedia.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <?php if ( $show_overview ) : ?>
+            <div class="gti-card gti-chart-card">
+                <div class="gti-card-header">
+                    <h3>Request Overview</h3>
+                    <span class="gti-dash-more">All time</span>
+                </div>
+                <div class="gti-card-body gti-donut-wrapper">
+                    <div class="gti-donut-chart"><canvas id="requestChart"></canvas></div>
+                    <div class="gti-donut-legend">
+                        <?php foreach ( $overview as $segment ) : ?>
+                            <div class="gti-legend-item">
+                                <span class="gti-legend-dot" style="background:<?php echo esc_attr( $segment['color'] ); ?>"></span>
+                                <span class="gti-legend-label"><?php echo esc_html( $segment['label'] ); ?></span>
+                                <span class="gti-legend-value"><?php echo esc_html( number_format_i18n( $segment['value'] ) . ' (' . round( $segment['value'] / $overview_total * 100 ) . '%)' ); ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
 
     <!-- Bottom Row -->
     <div class="gti-bottom-row">

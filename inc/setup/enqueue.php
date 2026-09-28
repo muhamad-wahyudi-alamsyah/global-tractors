@@ -88,6 +88,19 @@ function gti_enqueue_dashboard_assets() {
         $deps[] = 'gti-inbox-ui';
     }
 
+    // The dashboard's two chart cards. Same CDN build the pre-v2 template
+    // linked; a page script only gets it as a dependency on that one page.
+    if ($slug === 'dashboard') {
+        wp_enqueue_script(
+            'chartjs',
+            'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+            [],
+            '4.4.0',
+            true
+        );
+        $deps[] = 'chartjs';
+    }
+
     foreach ((array) $assets['js'] as $handle) {
         $script = 'gti-page-' . $handle;
         if (gti_enqueue_script($script, 'assets/js/pages/' . $handle . '.js', $deps)) {
