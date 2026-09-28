@@ -187,7 +187,13 @@ gti_dashboard_open( array(
                     <span class="gti-dash-more">All time</span>
                 </div>
                 <div class="gti-card-body gti-donut-wrapper">
-                    <div class="gti-donut-chart"><canvas id="requestChart"></canvas></div>
+                    <div class="gti-donut-chart">
+                        <canvas id="requestChart"></canvas>
+                        <div class="gti-donut-center">
+                            <strong><?php echo esc_html( number_format_i18n( $overview_total ) ); ?></strong>
+                            <span>Total</span>
+                        </div>
+                    </div>
                     <div class="gti-donut-legend">
                         <?php foreach ( $overview as $segment ) : ?>
                             <div class="gti-legend-item">
