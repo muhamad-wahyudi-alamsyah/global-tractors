@@ -38,9 +38,11 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', function () {
             // DOM order, so a category change regenerates the code before later fields.
             form.querySelectorAll('input, select, textarea').forEach(function (el) {
-                if (el.disabled || el.readOnly || el.type === 'file' || el.type === 'hidden') return;
+                // The injected "Lainnya" text input is skipped, and so is the Lainnya option:
+                // test data must not become permanent dropdown options.
+                if (el.disabled || el.readOnly || el.type === 'file' || el.type === 'hidden' || el.classList.contains('gti-other-input')) return;
                 if (el.tagName === 'SELECT') {
-                    var opts = Array.prototype.filter.call(el.options, function (o) { return o.value !== ''; });
+                    var opts = Array.prototype.filter.call(el.options, function (o) { return o.value !== '' && !o.hasAttribute('data-other'); });
                     if (!opts.length) return;
                     el.value = opts[rnd(opts.length)].value;
                 } else if (el.type === 'checkbox' || el.type === 'radio') {

@@ -215,7 +215,7 @@
         setText('drawer-year', eq.year);
         setText('drawer-hours', eq.hours ? number_format(eq.hours) + ' Hours' : null);
         setText('drawer-serial-number', eq.serial_number);
-        setText('drawer-condition', eq.condition_status);
+        setText('drawer-condition', fl('condition_status', eq.condition_status));
         setText('drawer-status-text', sl);
         // Engine & Origin
         setText('drawer-engine', eq.engine);
@@ -231,16 +231,15 @@
         // Pricing
         setText('drawer-selling-price', eq.selling_price ? formatRupiah(eq.selling_price) : null);
         setText('drawer-rental-price', eq.rental_price ? formatRupiah(eq.rental_price) + '/bln' : null);
-        var ptMap = { 'sale':'For Sale', 'rental':'For Rental', 'sale_and_rental':'Sale & Rental', 'price_on_ask':'Price on Ask', 'monthly_rental':'Monthly Rental' };
-        setText('drawer-price-type', ptMap[eq.price_type] || eq.price_type);
+        setText('drawer-price-type', fl('price_type', eq.price_type));
         setText('drawer-vat', eq.vat_included ? 'Yes' : (eq.vat_included === false ? 'No' : null));
         setText('drawer-currency', eq.currency);
         setText('drawer-price-valid-until', formatDate(eq.price_valid_until));
         setText('drawer-negotiable', eq.negotiable == null || eq.negotiable === '' ? null : (eq.negotiable == 1 ? 'Yes' : 'No'));
         // Availability
-        setText('drawer-availability-status', eq.status ? eq.status.charAt(0).toUpperCase() + eq.status.slice(1) : null);
-        setText('drawer-ready-to-use', eq.ready_to_use ? 'Yes' : (eq.ready_to_use === false ? 'No' : null));
-        setText('drawer-service-history', eq.service_history);
+        setText('drawer-availability-status', fl('availability_status', eq.availability_status));
+        setText('drawer-ready-to-use', fl('ready_to_use', eq.ready_to_use));
+        setText('drawer-service-history', fl('service_history', eq.service_history));
         setText('drawer-warranty-avail', eq.warranty_available ? 'Yes' : (eq.warranty_available === false ? 'No' : null));
         setText('drawer-warranty-period', eq.warranty_period);
         setText('drawer-buyer-notes', eq.buyer_notes);
@@ -294,9 +293,9 @@
         document.getElementById('drawer-features-list').innerHTML = featuresHtml || '<span class="gti-drawer-value" style="text-align:center;color:#9ca3af;font-weight:400;width:100%;display:block;">No features</span>';
         // Equipment History
         setText('drawer-previous-usage', eq.previous_usage);
-        setText('drawer-working-condition', eq.working_condition);
-        setText('drawer-maintenance-record', eq.maintenance_record);
-        setText('drawer-ownership', eq.ownership);
+        setText('drawer-working-condition', fl('working_condition', eq.working_condition));
+        setText('drawer-maintenance-record', fl('maintenance_record', eq.maintenance_record));
+        setText('drawer-ownership', fl('ownership', eq.ownership));
         setText('drawer-operator-hours', eq.operator_hours);
         setText('drawer-last-service', eq.last_service_date);
         setText('drawer-equipment-history', eq.equipment_history);
@@ -370,10 +369,26 @@
         var ampm = hours >= 12 ? 'PM' : 'AM'; hours = hours % 12 || 12;
         return day + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ', ' + hours + ':' + minutes + ' ' + ampm;
     }
+    /** Label for a stored value of a managed dropdown (Settings), else the raw value. */
+    function fl(field, value) {
+        if (value === null || value === undefined || value === '') return null;
+        var m = window.gtiPageData && gtiPageData.fieldMap && gtiPageData.fieldMap[field];
+        if (!m) return value;
+        if (m.options.hasOwnProperty(value)) return m.options[value];
+        var low = String(value).toLowerCase();
+        for (var k in m.options) { if (k.toLowerCase() === low) return m.options[k]; }
+        return value;
+    }
     function populateField(form, name, value) {
         var field = form.querySelector('[name="' + name + '"]');
         if (!field) return;
         if (value === null || value === undefined) value = '';
+        // Managed dropdowns ("Lainnya"): unknown / differently-cased values stay visible.
+        if (field.tagName === 'SELECT' && field.querySelector('option[data-other]')) {
+            var one = {}; one[name] = value;
+            window.GTI.customOptions(field.parentNode, one);
+            return;
+        }
         field.value = value;
     }
     function parseJson(val) {
@@ -488,7 +503,7 @@ function openEditModal(eq) {
     populateField(form, 'condition_status', eq.condition_status);
 
     populateField(form, 'type', eq.type);
-    window.GTI.customLocation(form, eq.location || '');
+    populateField(form, 'location', eq.location);
     populateField(form, 'status', eq.status);
     populateField(form, 'stock_number', eq.stock_number);
 

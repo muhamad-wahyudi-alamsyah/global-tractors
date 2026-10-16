@@ -41,7 +41,9 @@ function gti_form_field_names($file, $form_id) {
     $html  = substr($html, $start, strpos($html, '</form>', $start) - $start);
 
     preg_match_all('/\bname="([a-z_]+)"/', $html, $m);
-    return $m[1];
+    // Managed dropdowns render their own <select name=...> through gti_field_select().
+    preg_match_all('/gti_field_select\(\s*\'([a-z_]+)\'/', $html, $sel);
+    return array_merge($m[1], $sel[1]);
 }
 
 /** Every field save_equipment() reads, including the JSON-packed spec fields. */
@@ -83,27 +85,30 @@ foreach ($templates as $label => $info) {
     }
 }
 
-// The "Lainnya" custom-location input (GTI.customLocation in dashboard-ui.js) hangs
-// off data-other and mirrors its text into that option's value, so the input itself
-// must stay nameless — a second name="location" would be the one PHP keeps.
-$location_forms = array(
+// Managed dropdowns come from gti_field_select(), which always appends the
+// "Lainnya" option (data-other) that GTI.customOptions() hangs its text input on.
+// Each form must use it once per managed field instead of a hand-written <select>.
+if (!defined('ABSPATH')) define('ABSPATH', __DIR__);
+require_once $theme . '/inc/helpers/field-options.php';
+$managed_forms = array(
     $theme . '/templates/page-add-used-equipment.php',
     $theme . '/templates/page-add-rental-equipment.php',
     $theme . '/template-parts/dashboard/modal-edit-equipment.php',
     $theme . '/template-parts/dashboard/modal-edit-rental-equipment.php',
 );
 
-foreach ($location_forms as $file) {
+foreach ($managed_forms as $file) {
     $html = file_get_contents($file);
     $name = basename($file);
 
-    if (strpos($html, '<option value="Lainnya" data-other>') === false) {
-        $failures[] = "{$name}: location select is missing <option value=\"Lainnya\" data-other>.";
-    }
-
-    $count = substr_count($html, 'name="location"');
-    if ($count !== 1) {
-        $failures[] = "{$name}: name=\"location\" appears {$count}x — the custom-location input must stay nameless.";
+    foreach (array_keys(gti_field_registry()) as $field) {
+        $calls = preg_match_all("/gti_field_select\\(\\s*'{$field}'/", $html);
+        if ($calls !== 1) {
+            $failures[] = "{$name}: '{$field}' is rendered by gti_field_select() {$calls}x, expected 1.";
+        }
+        if (strpos($html, 'name="' . $field . '"') !== false) {
+            $failures[] = "{$name}: '{$field}' still has a hand-written name=\"{$field}\" input — it would bypass the managed options.";
+        }
     }
 }
 

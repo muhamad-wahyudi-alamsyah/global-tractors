@@ -272,3 +272,4 @@ body.gti-modal-open { overflow: hidden; }
 .gti-user-dropdown-item.danger i { color: var(--gti-danger); }
 .gti-user-dropdown-item.danger:hover { background: #fee2e2; }
 .gti-user-dropdown-sep { height: 1px; background: var(--gti-line); margin: 6px 4px; }
+.gti-other-input { display: block; width: 100%; margin-top: 8px; }

@@ -298,3 +298,4 @@
 .gti-notif-item strong,.gti-notif-item span,.gti-notif-item small{display:block;font-size:12px}
 .gti-notif-item span{color:var(--gti-gray)}
 .gti-notif-item small{font-size:11px;color:var(--gti-gray);margin-top:2px}
+.gti-condition.custom{background:#f3f4f6;color:#6b7280}

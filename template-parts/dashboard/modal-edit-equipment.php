@@ -66,22 +66,22 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Equipment Name <span class="required">*</span></label><input type="text" name="name" required></div>
                                     <div class="gti-ae-field"><label>Equipment Code <span class="required">*</span></label><input type="text" name="equipment_code" value="<?php echo esc_attr($gti_next_code); ?>" readonly required style="background:#f9fafb;cursor:not-allowed;"></div>
-                                    <div class="gti-ae-field"><label>Category <span class="required">*</span></label><select name="category" required><option value="">Select Category</option><option value="Excavator">Excavator</option><option value="Bulldozer">Bulldozer</option><option value="Wheel Loader">Wheel Loader</option><option value="Dump Truck">Dump Truck</option><option value="Motor Grader">Motor Grader</option><option value="Crane">Crane</option><option value="Compactor">Compactor</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('category', 'used')); ?> <span class="required">*</span></label><?php gti_field_select('category', 'used', 'required'); ?></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Brand <span class="required">*</span></label><select name="brand" required><option value="">Select Brand</option><option value="KOMATSU">KOMATSU</option><option value="CATERPILLAR">CATERPILLAR</option><option value="HITACHI">HITACHI</option><option value="VOLVO">VOLVO</option><option value="KOBELCO">KOBELCO</option><option value="DOOSAN">DOOSAN</option><option value="HYUNDAI">HYUNDAI</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('brand', 'used')); ?> <span class="required">*</span></label><?php gti_field_select('brand', 'used', 'required'); ?></div>
                                     <div class="gti-ae-field"><label>Model <span class="required">*</span></label><input type="text" name="model" required></div>
                                     <div class="gti-ae-field"><label>Year <span class="required">*</span></label><input type="number" name="year" min="1900" max="<?php echo date('Y') + 1; ?>" required></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Operating Hours</label><input type="number" name="hours"></div>
                                     <div class="gti-ae-field"><label>Serial Number</label><input type="text" name="serial_number"></div>
-                                    <div class="gti-ae-field"><label>Condition <span class="required">*</span></label><select name="condition_status" required><option value="">Select Condition</option><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('condition_status', 'used')); ?> <span class="required">*</span></label><?php gti_field_select('condition_status', 'used', 'required'); ?></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Engine</label><input type="text" name="engine"></div>
                                     <div class="gti-ae-field"><label>Engine Power</label><input type="text" name="engine_power"></div>
-                                    <div class="gti-ae-field"><label>Country of Origin</label><select name="origin_country"><option value="">Select Origin</option><option value="Japan">Japan</option><option value="USA">USA</option><option value="South Korea">South Korea</option><option value="China">China</option><option value="Germany">Germany</option><option value="Sweden">Sweden</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('origin_country', 'used')); ?></label><?php gti_field_select('origin_country', 'used'); ?></div>
                                 </div>
                             </div>
                         </div>
@@ -92,7 +92,7 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                                     <div class="gti-ae-field"><label>Equipment Type</label><select name="type"><option value="">Select Type</option><option value="used">Used Equipment</option><option value="rental">Rental Equipment</option></select></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Location</label><select name="location"><option value="">Select Location</option><option value="Jakarta">Jakarta</option><option value="Balikpapan">Balikpapan</option><option value="Surabaya">Surabaya</option><option value="Bandung">Bandung</option><option value="Medan">Medan</option><option value="Makassar">Makassar</option><option value="Lainnya" data-other>Lainnya</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('location', 'used')); ?></label><?php gti_field_select('location', 'used'); ?></div>
                                     <div class="gti-ae-field"><label>Availability Status <span class="required">*</span></label><select name="status" required><option value="">Select Status</option><option value="available">Available</option><option value="sold">Sold</option><option value="reserved">Reserved</option><option value="maintenance">Maintenance</option></select></div>
                                     <div class="gti-ae-field"><label>Stock Number (Internal)</label><input type="text" name="stock_number"></div>
                                 </div>
@@ -165,7 +165,7 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Selling Price (IDR)</label><input type="text" name="selling_price" inputmode="numeric" data-gti-money></div>
                                     <div class="gti-ae-field"><label>Rental Price (IDR/Month)</label><input type="text" name="rental_price" inputmode="numeric" data-gti-money></div>
-                                    <div class="gti-ae-field"><label>Price Type</label><select name="price_type"><option value="">-- Select Price Type --</option><option value="sale">For Sale</option><option value="rental">For Rental</option><option value="sale_and_rental">Sale & Rental</option><option value="price_on_ask">Price on Ask</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('price_type', 'used')); ?></label><?php gti_field_select('price_type', 'used'); ?></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>VAT Included?</label><select name="vat_included"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option></select></div>
@@ -179,14 +179,14 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                             <div class="gti-ae-card-header"><h3><i class="fas fa-clipboard-check"></i> Status & Availability</h3></div>
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Availability Status</label><select name="availability_status"><option value="">-- Select Status --</option><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold</option><option value="in_transit">In Transit</option><option value="under_maintenance">Under Maintenance</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('availability_status', 'used')); ?></label><?php gti_field_select('availability_status', 'used'); ?></div>
                                 </div>
                                 <!-- stock_number, condition_status, location, operating_weight, bucket_capacity and engine_power
                                      are each defined exactly once in this form. A repeated name= is sent twice by FormData and
                                      PHP keeps only the last value, which silently wiped the earlier step's input. -->
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Ready to Use</label><select name="ready_to_use"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option><option value="after_service">After Service</option></select></div>
-                                    <div class="gti-ae-field"><label>Service History</label><select name="service_history"><option value="">-- Select --</option><option value="full">Full Service History</option><option value="partial">Partial Service History</option><option value="none">No Service History</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('ready_to_use', 'used')); ?></label><?php gti_field_select('ready_to_use', 'used'); ?></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('service_history', 'used')); ?></label><?php gti_field_select('service_history', 'used'); ?></div>
                                 </div>
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Warranty Available?</label><select name="warranty_available"><option value="">-- Select --</option><option value="yes">Yes</option><option value="no">No</option></select></div>
@@ -250,9 +250,9 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                                 <div class="gti-ae-field gti-ae-field-full"><label>Equipment History</label><textarea name="equipment_history" rows="4"></textarea></div>
                                 <div class="gti-ae-form-grid">
                                     <div class="gti-ae-field"><label>Previous Usage</label><input type="text" name="previous_usage"></div>
-                                    <div class="gti-ae-field"><label>Working Condition</label><select name="working_condition"><option value="">Select</option><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
-                                    <div class="gti-ae-field"><label>Maintenance Record</label><select name="maintenance_record"><option value="">Select</option><option value="full">Full Record</option><option value="partial">Partial Record</option><option value="none">No Record</option></select></div>
-                                    <div class="gti-ae-field"><label>Ownership</label><select name="ownership"><option value="">Select</option><option value="first_owner">First Owner</option><option value="second_owner">Second Owner</option><option value="third_plus">Third Owner or More</option><option value="company">Company Fleet</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('working_condition', 'used')); ?></label><?php gti_field_select('working_condition', 'used'); ?></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('maintenance_record', 'used')); ?></label><?php gti_field_select('maintenance_record', 'used'); ?></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('ownership', 'used')); ?></label><?php gti_field_select('ownership', 'used'); ?></div>
                                     <div class="gti-ae-field"><label>Operator Hours</label><input type="number" name="operator_hours"></div>
                                     <div class="gti-ae-field"><label>Last Service Date</label><input type="date" name="last_service_date"></div>
                                 </div>
@@ -274,9 +274,9 @@ $gti_next_code = isset( $gti_modal_args['next_code'] ) ? $gti_modal_args['next_c
                             <div class="gti-ae-card-header"><h3><i class="fas fa-map-marker-alt"></i> Location Details</h3></div>
                             <div class="gti-ae-card-body">
                                 <div class="gti-ae-form-grid">
-                                    <div class="gti-ae-field"><label>Country</label><select name="location_country"><option value="">Select Country</option><option value="Indonesia">Indonesia</option><option value="Japan">Japan</option><option value="South Korea">South Korea</option><option value="China">China</option><option value="USA">USA</option><option value="Germany">Germany</option></select></div>
-                                    <div class="gti-ae-field"><label>Province</label><select name="location_province"><option value="">Select Province</option><option value="DKI Jakarta">DKI Jakarta</option><option value="Jawa Barat">Jawa Barat</option><option value="Jawa Timur">Jawa Timur</option><option value="Kalimantan Timur">Kalimantan Timur</option><option value="Kalimantan Selatan">Kalimantan Selatan</option><option value="Sulawesi Selatan">Sulawesi Selatan</option><option value="Sumatera Utara">Sumatera Utara</option></select></div>
-                                    <div class="gti-ae-field"><label>City / Regency</label><select name="location_city"><option value="">Select City</option><option value="Jakarta">Jakarta</option><option value="Bandung">Bandung</option><option value="Surabaya">Surabaya</option><option value="Balikpapan">Balikpapan</option><option value="Samarinda">Samarinda</option><option value="Makassar">Makassar</option><option value="Medan">Medan</option></select></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('location_country', 'used')); ?></label><?php gti_field_select('location_country', 'used'); ?></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('location_province', 'used')); ?></label><?php gti_field_select('location_province', 'used'); ?></div>
+                                    <div class="gti-ae-field"><label><?php echo esc_html(gti_field_label('location_city', 'used')); ?></label><?php gti_field_select('location_city', 'used'); ?></div>
                                 </div>
                                 <div class="gti-ae-field gti-ae-field-full"><label>Detailed Address</label><textarea name="detailed_address" rows="2"></textarea></div>
                                 <div class="gti-ae-form-grid">

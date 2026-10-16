@@ -374,7 +374,10 @@
         if (!el) return '';
         if (el.tagName === 'SELECT') {
             var opt = el.options[el.selectedIndex];
-            return opt && opt.value ? opt.text : '';
+            if (!opt || !opt.value) return '';
+            // "Lainnya": the typed text is the value; nothing typed yet shows nothing.
+            if (opt.hasAttribute('data-other')) return opt.value === 'Lainnya' ? '' : opt.value;
+            return opt.text;
         }
         return el.value || '';
     }

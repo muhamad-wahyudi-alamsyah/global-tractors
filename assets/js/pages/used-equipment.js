@@ -247,7 +247,7 @@
         setText('drawer-year', eq.year);
         setText('drawer-hours', eq.hours ? number_format(eq.hours) + ' Hours' : null);
         setText('drawer-serial-number', eq.serial_number);
-        setText('drawer-condition', eq.condition_status);
+        setText('drawer-condition', fl('condition_status', eq.condition_status));
         setText('drawer-status-text', sl);
         setText('drawer-engine', eq.engine);
         setText('drawer-engine-power', eq.engine_power);
@@ -278,16 +278,14 @@
         // === Section 3: Pricing & Availability ===
         setText('drawer-selling-price', eq.selling_price ? formatRupiah(eq.selling_price) : null);
         setText('drawer-rental-price', eq.rental_price ? formatRupiah(eq.rental_price) + '/Month' : null);
-        var priceTypeMap = { 'sale':'For Sale', 'rental':'For Rental', 'sale_and_rental':'Sale & Rental', 'price_on_ask':'Price on Ask' };
-        setText('drawer-price-type', priceTypeMap[eq.price_type] || eq.price_type);
+        setText('drawer-price-type', fl('price_type', eq.price_type));
         setText('drawer-vat', eq.vat_included ? eq.vat_included.charAt(0).toUpperCase() + eq.vat_included.slice(1) : null);
         setText('drawer-currency', eq.currency);
         setText('drawer-price-valid-until', eq.price_valid_until ? formatDateShort(eq.price_valid_until) : null);
         setText('drawer-negotiable', eq.negotiable == null || eq.negotiable === '' ? null : (eq.negotiable == 1 ? 'Yes' : 'No'));
-        setText('drawer-availability-status', eq.availability_status ? eq.availability_status.charAt(0).toUpperCase() + eq.availability_status.slice(1).replace(/_/g,' ') : null);
-        setText('drawer-ready-to-use', eq.ready_to_use ? eq.ready_to_use.charAt(0).toUpperCase() + eq.ready_to_use.slice(1).replace(/_/g,' ') : null);
-        var shMap = { 'full':'Full Service History', 'partial':'Partial Service History', 'none':'No Service History' };
-        setText('drawer-service-history', shMap[eq.service_history] || eq.service_history);
+        setText('drawer-availability-status', fl('availability_status', eq.availability_status));
+        setText('drawer-ready-to-use', fl('ready_to_use', eq.ready_to_use));
+        setText('drawer-service-history', fl('service_history', eq.service_history));
         setText('drawer-warranty-avail', eq.warranty_available ? eq.warranty_available.charAt(0).toUpperCase() + eq.warranty_available.slice(1) : null);
         setText('drawer-warranty-period', eq.warranty_period);
         setText('drawer-buyer-notes', eq.buyer_notes);
@@ -318,11 +316,9 @@
         }
         // === Section 5: Additional ===
         setText('drawer-previous-usage', eq.previous_usage);
-        setText('drawer-working-condition', eq.working_condition ? eq.working_condition.charAt(0).toUpperCase() + eq.working_condition.slice(1) : null);
-        var mrMap = { 'full':'Full Record', 'partial':'Partial Record', 'none':'No Record' };
-        setText('drawer-maintenance-record', mrMap[eq.maintenance_record] || eq.maintenance_record);
-        var ownMap = { 'first_owner':'First Owner', 'second_owner':'Second Owner', 'third_plus':'Third Owner or More', 'company':'Company Fleet' };
-        setText('drawer-ownership', ownMap[eq.ownership] || eq.ownership);
+        setText('drawer-working-condition', fl('working_condition', eq.working_condition));
+        setText('drawer-maintenance-record', fl('maintenance_record', eq.maintenance_record));
+        setText('drawer-ownership', fl('ownership', eq.ownership));
         setText('drawer-operator-hours', eq.operator_hours ? number_format(eq.operator_hours) + ' Hours' : null);
         setText('drawer-last-service', eq.last_service_date ? formatDateShort(eq.last_service_date) : null);
         setText('drawer-equipment-history', eq.equipment_history);
@@ -470,7 +466,7 @@
         populateField(form, 'type', eq.type);
         populateField(form, 'operating_weight', eq.operating_weight);
         populateField(form, 'bucket_capacity', eq.bucket_capacity);
-        window.GTI.customLocation(form, eq.location || '');
+        populateField(form, 'location', eq.location);
         populateField(form, 'status', eq.status);
         populateField(form, 'stock_number', eq.stock_number);
         populateField(form, 'description', eq.description);
@@ -819,10 +815,26 @@
     // ================================================================
     //  HELPERS
     // ================================================================
+    /** Label for a stored value of a managed dropdown (Settings), else the raw value. */
+    function fl(field, value) {
+        if (value === null || value === undefined || value === '') return null;
+        var m = window.gtiPageData && gtiPageData.fieldMap && gtiPageData.fieldMap[field];
+        if (!m) return value;
+        if (m.options.hasOwnProperty(value)) return m.options[value];
+        var low = String(value).toLowerCase();
+        for (var k in m.options) { if (k.toLowerCase() === low) return m.options[k]; }
+        return value;
+    }
     function populateField(form, name, value) {
         var field = form.querySelector('[name="' + name + '"]');
         if (!field) return;
         if (value === null || value === undefined) value = '';
+        // Managed dropdowns ("Lainnya"): unknown / differently-cased values stay visible.
+        if (field.tagName === 'SELECT' && field.querySelector('option[data-other]')) {
+            var one = {}; one[name] = value;
+            window.GTI.customOptions(field.parentNode, one);
+            return;
+        }
         field.value = value;
     }
     function parseJson(val) {

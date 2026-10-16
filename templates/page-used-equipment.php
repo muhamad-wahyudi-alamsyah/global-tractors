@@ -9,11 +9,7 @@ if (!defined('ABSPATH')) exit;
 global $wpdb;
 $table = $wpdb->prefix . 'gti_equipment';
 $year = date('Y');
-$cat_abbrev_map = [
-    'Excavator'     => 'EXC', 'Bulldozer'     => 'BLD', 'Wheel Loader'  => 'WLD',
-    'Dump Truck'    => 'DMP', 'Motor Grader'  => 'MGR', 'Crane'         => 'CRN',
-    'Compactor'     => 'CMP',
-];
+$cat_abbrev_map = gti_field_abbr_map();
 $gti_next_code = '';
 // Default first code
 $gti_next_code = 'GTI-GEN-' . $year . '-001';
@@ -21,7 +17,7 @@ $gti_next_code = 'GTI-GEN-' . $year . '-001';
 // Category abbrev map for JS
 // Handed to the page script as gtiPageData.categoryMap, rather than
 // interpolated into an inline <script> (PRD §13.8).
-gti_page_data( array( 'categoryMap' => $cat_abbrev_map ) );
+gti_page_data( array( 'categoryMap' => $cat_abbrev_map, 'fieldMap' => gti_field_label_map('used') ) );
 
 // AJAX endpoint to get next code
 $gti_ajax_url = admin_url('admin-ajax.php');
@@ -168,7 +164,7 @@ gti_dashboard_open( array(
                         </div>
                         <div class="gti-ue-filter">
                             <select name="category" onchange="this.form.submit()">
-                                <option value="">All Categories</option>
+                                <option value="">All <?php echo esc_html(gti_field_label_or('category', 'used', 'Categories')); ?></option>
                                 <?php foreach ($categories as $cat): ?>
                                     <option value="<?php echo esc_attr($cat); ?>" <?php selected($category, $cat); ?>><?php echo esc_html($cat); ?></option>
                                 <?php endforeach; ?>
@@ -176,7 +172,7 @@ gti_dashboard_open( array(
                         </div>
                         <div class="gti-ue-filter">
                             <select name="brand" onchange="this.form.submit()">
-                                <option value="">All Brands</option>
+                                <option value="">All <?php echo esc_html(gti_field_label_or('brand', 'used', 'Brands')); ?></option>
                                 <?php foreach ($brands as $b): ?>
                                     <option value="<?php echo esc_attr($b); ?>" <?php selected($brand, $b); ?>><?php echo esc_html($b); ?></option>
                                 <?php endforeach; ?>
@@ -194,10 +190,10 @@ gti_dashboard_open( array(
                         </div>
                         <div class="gti-ue-filter">
                             <select name="condition" onchange="this.form.submit()">
-                                <option value="">All Conditions</option>
-                                <option value="Excellent" <?php selected($condition_filter, 'Excellent'); ?>>Excellent</option>
-                                <option value="Good" <?php selected($condition_filter, 'Good'); ?>>Good</option>
-                                <option value="Fair" <?php selected($condition_filter, 'Fair'); ?>>Fair</option>
+                                <option value="">All <?php echo esc_html(gti_field_label_or('condition_status', 'used', 'Conditions')); ?></option>
+                                <?php foreach (gti_field_options('condition_status', 'used') as $o): ?>
+                                    <option value="<?php echo esc_attr($o['value']); ?>" <?php selected(strtolower($condition_filter), strtolower($o['value'])); ?>><?php echo esc_html($o['label']); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <a href="<?php echo esc_url(gti_dashboard_url('used-equipment')); ?>" class="gti-ue-btn-reset">
@@ -216,9 +212,9 @@ gti_dashboard_open( array(
                             <tr>
                                 <th class="col-image">Image</th>
                                 <th class="col-name">Equipment Name</th>
-                                <th class="col-category">Category</th>
-                                <th class="col-brand">Brand</th>
-                                <th class="col-condition">Condition</th>
+                                <th class="col-category"><?php echo esc_html(gti_field_label('category', 'used')); ?></th>
+                                <th class="col-brand"><?php echo esc_html(gti_field_label('brand', 'used')); ?></th>
+                                <th class="col-condition"><?php echo esc_html(gti_field_label('condition_status', 'used')); ?></th>
                                 <th class="col-year">Year</th>
                                 <th class="col-price">Price</th>
                                 <th class="col-status">Status</th>
@@ -259,9 +255,9 @@ gti_dashboard_open( array(
                                         <td class="col-condition">
                                             <?php
                                             $cond_lower = strtolower($eq->condition_status ?? '');
-                                            $cond_class = in_array($cond_lower, array('excellent','good','fair','poor'), true) ? $cond_lower : 'fair';
+                                            $cond_class = in_array($cond_lower, array('excellent','good','fair','poor'), true) ? $cond_lower : ($cond_lower === '' ? 'fair' : 'custom');
                                             ?>
-                                            <span class="gti-condition <?php echo esc_attr($cond_class); ?>"><?php echo esc_html($eq->condition_status); ?></span>
+                                            <span class="gti-condition <?php echo esc_attr($cond_class); ?>"><?php echo esc_html(gti_field_option_label('condition_status', $eq->condition_status, 'used')); ?></span>
                                         </td>
                                         <td class="col-year"><?php echo esc_html($eq->year); ?></td>
                                         <td class="col-price" title="<?php echo esc_attr($_gti_eq_fmt($eq->price)); ?>"><?php echo esc_html($_gti_eq_fmt($eq->price)); ?></td>
@@ -340,23 +336,23 @@ gti_dashboard_open( array(
                 <div class="gti-drawer-section-title"><i class="fas fa-info-circle"></i> General Information</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Name</span><span class="gti-drawer-value" id="drawer-name">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Equipment Code</span><span class="gti-drawer-value" id="drawer-eq-code-info">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Category</span><span class="gti-drawer-value" id="drawer-category">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Brand</span><span class="gti-drawer-value" id="drawer-brand">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('category', 'used')); ?></span><span class="gti-drawer-value" id="drawer-category">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('brand', 'used')); ?></span><span class="gti-drawer-value" id="drawer-brand">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Model</span><span class="gti-drawer-value" id="drawer-model">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Year</span><span class="gti-drawer-value" id="drawer-year">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Hours</span><span class="gti-drawer-value" id="drawer-hours">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Serial Number</span><span class="gti-drawer-value" id="drawer-serial-number">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Condition</span><span class="gti-drawer-value" id="drawer-condition">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('condition_status', 'used')); ?></span><span class="gti-drawer-value" id="drawer-condition">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Status</span><span class="gti-drawer-value" id="drawer-status-text">-</span></div>
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-engine"></i> Engine & Origin</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Engine</span><span class="gti-drawer-value" id="drawer-engine">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Engine Power</span><span class="gti-drawer-value" id="drawer-engine-power">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Origin</span><span class="gti-drawer-value" id="drawer-origin">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('origin_country', 'used')); ?></span><span class="gti-drawer-value" id="drawer-origin">-</span></div>
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-clipboard-list"></i> Basic Information</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Type</span><span class="gti-drawer-value" id="drawer-type">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Operating Weight</span><span class="gti-drawer-value" id="drawer-operating-weight">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Bucket Capacity</span><span class="gti-drawer-value" id="drawer-bucket-capacity">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Location</span><span class="gti-drawer-value" id="drawer-location">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('location', 'used')); ?></span><span class="gti-drawer-value" id="drawer-location">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Stock Number</span><span class="gti-drawer-value" id="drawer-stock-number">-</span></div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
                         <span class="gti-drawer-label">Description</span>
@@ -377,15 +373,15 @@ gti_dashboard_open( array(
                 <div class="gti-drawer-section-title"><i class="fas fa-tag"></i> Pricing Information</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Selling Price</span><span class="gti-drawer-value" id="drawer-selling-price">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Rental Price</span><span class="gti-drawer-value" id="drawer-rental-price">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Price Type</span><span class="gti-drawer-value" id="drawer-price-type">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('price_type', 'used')); ?></span><span class="gti-drawer-value" id="drawer-price-type">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">VAT Included</span><span class="gti-drawer-value" id="drawer-vat">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Currency</span><span class="gti-drawer-value" id="drawer-currency">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Price Valid Until</span><span class="gti-drawer-value" id="drawer-price-valid-until">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Negotiable</span><span class="gti-drawer-value" id="drawer-negotiable">-</span></div>
                 <div class="gti-drawer-section-title" style="margin-top:18px;"><i class="fas fa-clipboard-check"></i> Availability</div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Availability</span><span class="gti-drawer-value" id="drawer-availability-status">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Ready to Use</span><span class="gti-drawer-value" id="drawer-ready-to-use">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Service History</span><span class="gti-drawer-value" id="drawer-service-history">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('availability_status', 'used')); ?></span><span class="gti-drawer-value" id="drawer-availability-status">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('ready_to_use', 'used')); ?></span><span class="gti-drawer-value" id="drawer-ready-to-use">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('service_history', 'used')); ?></span><span class="gti-drawer-value" id="drawer-service-history">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty Available</span><span class="gti-drawer-value" id="drawer-warranty-avail">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Warranty Period</span><span class="gti-drawer-value" id="drawer-warranty-period">-</span></div>
                     <div class="gti-drawer-row" style="flex-direction:column;">
@@ -415,9 +411,9 @@ gti_dashboard_open( array(
             <div class="gti-drawer-section" data-section="additional">
                 <div class="gti-drawer-section-title"><i class="fas fa-history"></i> Equipment History</div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Previous Usage</span><span class="gti-drawer-value" id="drawer-previous-usage">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Working Condition</span><span class="gti-drawer-value" id="drawer-working-condition">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Maintenance Record</span><span class="gti-drawer-value" id="drawer-maintenance-record">-</span></div>
-                    <div class="gti-drawer-row"><span class="gti-drawer-label">Ownership</span><span class="gti-drawer-value" id="drawer-ownership">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('working_condition', 'used')); ?></span><span class="gti-drawer-value" id="drawer-working-condition">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('maintenance_record', 'used')); ?></span><span class="gti-drawer-value" id="drawer-maintenance-record">-</span></div>
+                    <div class="gti-drawer-row"><span class="gti-drawer-label"><?php echo esc_html(gti_field_label('ownership', 'used')); ?></span><span class="gti-drawer-value" id="drawer-ownership">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Operator Hours</span><span class="gti-drawer-value" id="drawer-operator-hours">-</span></div>
                     <div class="gti-drawer-row"><span class="gti-drawer-label">Last Service Date</span><span class="gti-drawer-value" id="drawer-last-service">-</span></div>
                     <div class="gti-drawer-row" style="flex-direction:column;">

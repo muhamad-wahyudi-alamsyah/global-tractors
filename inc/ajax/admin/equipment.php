@@ -222,6 +222,14 @@ trait GTI_Ajax_Equipment {
             'created_by' => $user_id,
         ];
 
+        // Managed dropdowns: a "Lainnya" value becomes a permanent option, and the
+        // stored value is the canonical spelling ("komatsu" -> "KOMATSU").
+        foreach ( array_keys( gti_field_registry() ) as $field ) {
+            if ( isset( $data[ $field ] ) && $data[ $field ] !== '' ) {
+                $data[ $field ] = gti_field_remember( $field, $type, $data[ $field ] );
+            }
+        }
+
         // Remove empty optional fields to avoid overwriting on update
         $optional = [
             'serial_number', 'engine', 'engine_power', 'origin_country',
@@ -372,12 +380,7 @@ trait GTI_Ajax_Equipment {
         $category = sanitize_text_field($_POST['category'] ?? '');
         $year     = date('Y');
 
-        $cat_abbrev = [
-            'Excavator'    => 'EXC', 'Bulldozer'    => 'BLD', 'Wheel Loader' => 'WLD',
-            'Dump Truck'   => 'DMP', 'Motor Grader' => 'MGR', 'Crane'        => 'CRN',
-            'Compactor'    => 'CMP',
-        ];
-        $abbr = $cat_abbrev[$category] ?? 'GEN';
+        $abbr = gti_field_abbr_map()[$category] ?? 'GEN';
 
         $prefix = "GTI-{$abbr}-{$year}-";
 

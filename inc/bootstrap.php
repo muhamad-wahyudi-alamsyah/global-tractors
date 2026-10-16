@@ -21,6 +21,7 @@ require_once GTI_CHILD_DIR . '/inc/helpers/log-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/notification-helpers.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/template-loader.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/equipment-taxonomy.php';
+require_once GTI_CHILD_DIR . '/inc/helpers/field-options.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/spare-parts-taxonomy.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/dashboard-menu.php';
 require_once GTI_CHILD_DIR . '/inc/helpers/layout-helpers.php';
@@ -86,6 +87,7 @@ require_once GTI_CHILD_DIR . '/inc/ajax/ajax-customer-quotation.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/ajax-dashboard.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/admin/inbox.php';
 require_once GTI_CHILD_DIR . '/inc/ajax/admin/management.php';
+require_once GTI_CHILD_DIR . '/inc/ajax/admin/settings.php';
 
 // Domain traits must load before the class that composes them (R6b).
 require_once GTI_CHILD_DIR . '/inc/ajax/admin/equipment.php';

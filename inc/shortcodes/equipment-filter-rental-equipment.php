@@ -62,7 +62,7 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                     <!-- CATEGORIES -->
                     <div class="gti-ef-filter-group">
                         <div class="gti-ef-filter-header open" data-filter="category">
-                            <h4>CATEGORIES</h4>
+                            <h4><?php echo esc_html(gti_field_label_or('category', 'rental', 'CATEGORIES', true)); ?></h4>
                             <span class="toggle-icon"><i class="fas fa-minus"></i></span>
                         </div>
                         <div class="gti-ef-filter-body open" data-filter-body="category">
@@ -83,7 +83,7 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                     <?php if ( ! empty( $brands ) ) : ?>
                     <div class="gti-ef-filter-group">
                         <div class="gti-ef-filter-header" data-filter="brand">
-                            <h4>BRAND</h4>
+                            <h4><?php echo esc_html(gti_field_label_or('brand', 'rental', 'BRAND', true)); ?></h4>
                             <span class="toggle-icon"><i class="fas fa-plus"></i></span>
                         </div>
                         <div class="gti-ef-filter-body" data-filter-body="brand">
@@ -149,7 +149,7 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                     <?php if ( ! empty( $locations ) ) : ?>
                     <div class="gti-ef-filter-group">
                         <div class="gti-ef-filter-header" data-filter="location">
-                            <h4>LOCATION</h4>
+                            <h4><?php echo esc_html(gti_field_label_or('location', 'rental', 'LOCATION', true)); ?></h4>
                             <span class="toggle-icon"><i class="fas fa-plus"></i></span>
                         </div>
                         <div class="gti-ef-filter-body" data-filter-body="location">
@@ -169,7 +169,7 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                     <!-- CONDITION -->
                     <div class="gti-ef-filter-group">
                         <div class="gti-ef-filter-header" data-filter="condition">
-                            <h4>CONDITION</h4>
+                            <h4><?php echo esc_html(gti_field_label_or('condition_status', 'rental', 'CONDITION', true)); ?></h4>
                             <span class="toggle-icon"><i class="fas fa-plus"></i></span>
                         </div>
                         <div class="gti-ef-filter-body" data-filter-body="condition">
@@ -177,7 +177,7 @@ function gti_render_rental_equipment_filter( $atts = [] ) {
                                 <?php foreach ( $conditions as $cond ) : ?>
                                     <label class="gti-ef-checkbox-item">
                                         <input type="checkbox" name="ef-condition" value="<?php echo esc_attr( $cond ); ?>">
-                                        <span><?php echo esc_html( $cond ); ?></span>
+                                        <span><?php echo esc_html( gti_field_option_label('condition_status', $cond, 'rental') ); ?></span>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -485,7 +485,7 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
     $title          = $item['title'] ?: 'Equipment';
     $year           = $item['year'] ?: '—';
     $hours          = $item['hours'] ? number_format( (float) $item['hours'], 0 ) . ' Hrs' : '—';
-    $condition      = $item['condition'] ?: '—';
+    $condition      = gti_field_option_label('condition_status', $item['condition'], 'rental') ?: '—';
     $location       = $item['location'] ?: '—';
     $price          = $item['price'] ?: '';
     $image          = $item['image'] ?: '';
@@ -613,8 +613,8 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                     <div class="gti-ed-specs-list">
                         <div class="gti-ed-spec-item"><i class="fas fa-calendar-alt"></i><span class="spec-label">Year</span><span class="spec-value"><?php echo esc_html( $year ); ?></span></div>
                         <div class="gti-ed-spec-item"><i class="fas fa-tachometer-alt"></i><span class="spec-label">Working Hour</span><span class="spec-value"><?php echo esc_html( $hours ); ?></span></div>
-                        <div class="gti-ed-spec-item"><i class="fas fa-check-circle"></i><span class="spec-label">Condition</span><span class="spec-value"><?php echo esc_html( $condition ); ?></span></div>
-                        <div class="gti-ed-spec-item"><i class="fas fa-map-marker-alt"></i><span class="spec-label">Location</span><span class="spec-value"><?php echo esc_html( $location ); ?>, Indonesia</span></div>
+                        <div class="gti-ed-spec-item"><i class="fas fa-check-circle"></i><span class="spec-label"><?php echo esc_html(gti_field_label_or('condition_status', 'rental', 'Condition')); ?></span><span class="spec-value"><?php echo esc_html( $condition ); ?></span></div>
+                        <div class="gti-ed-spec-item"><i class="fas fa-map-marker-alt"></i><span class="spec-label"><?php echo esc_html(gti_field_label_or('location', 'rental', 'Location')); ?></span><span class="spec-value"><?php echo esc_html( $location ); ?>, Indonesia</span></div>
                     </div>
 
                     <div class="gti-ed-cta-group">
@@ -751,14 +751,14 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 </div>
 
                 <div class="gti-ed-spec-item-quick">
-                    <span class="gti-ed-spec-label-quick">Category</span>
+                    <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('category', 'rental', 'Category')); ?></span>
                     <span class="gti-ed-spec-value-quick">
                         <?php echo esc_html( $item['category'] ?: '—' ); ?>
                     </span>
                 </div>
 
                 <div class="gti-ed-spec-item-quick">
-                    <span class="gti-ed-spec-label-quick">Brand</span>
+                    <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('brand', 'rental', 'Brand')); ?></span>
                     <span class="gti-ed-spec-value-quick">
                         <?php echo esc_html( $item['brand'] ?: '—' ); ?>
                     </span>
@@ -793,9 +793,9 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 </div>
 
                 <div class="gti-ed-spec-item-quick">
-                    <span class="gti-ed-spec-label-quick">Condition</span>
+                    <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('condition_status', 'rental', 'Condition')); ?></span>
                     <span class="gti-ed-spec-value-quick">
-                        <?php echo esc_html( $item['condition'] ?: '—' ); ?>
+                        <?php echo esc_html( gti_field_option_label('condition_status', $item['condition'], 'rental') ?: '—' ); ?>
                     </span>
                 </div>
 
@@ -822,7 +822,7 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 </div>
 
                 <div class="gti-ed-spec-item-quick">
-                    <span class="gti-ed-spec-label-quick">Origin</span>
+                    <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('origin_country', 'rental', 'Origin')); ?></span>
                     <span class="gti-ed-spec-value-quick">
                         <?php echo esc_html( $item['origin_country'] ?: '—' ); ?>
                     </span>
@@ -851,7 +851,7 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 </div>
 
                 <div class="gti-ed-spec-item-quick">
-                    <span class="gti-ed-spec-label-quick">Location</span>
+                    <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('location', 'rental', 'Location')); ?></span>
                     <span class="gti-ed-spec-value-quick">
                         <?php echo esc_html( $item['location'] ?: '—' ); ?>
                     </span>
@@ -1016,11 +1016,11 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 <!-- Price Type -->
                 <div class="gti-ed-spec-item-quick">
                     <span class="gti-ed-spec-label-quick">
-                        Price Type
+                        <?php echo esc_html(gti_field_label_or('price_type', 'rental', 'Price Type')); ?>
                     </span>
 
                     <span class="gti-ed-spec-value-quick">
-                        <?php echo esc_html( $item['price_type'] ?: '—' ); ?>
+                        <?php echo esc_html( gti_field_option_label('price_type', $item['price_type'], 'rental') ?: '—' ); ?>
                     </span>
                 </div>
 
@@ -1102,20 +1102,12 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 <!-- Ready to Use -->
                 <div class="gti-ed-spec-item-quick">
                     <span class="gti-ed-spec-label-quick">
-                        Ready to Use
+                        <?php echo esc_html(gti_field_label_or('ready_to_use', 'rental', 'Ready to Use')); ?>
                     </span>
 
                     <span class="gti-ed-spec-value-quick">
                         <?php
-                        echo esc_html(
-                            ucfirst(
-                                str_replace(
-                                    '_',
-                                    ' ',
-                                    $item['ready_to_use']
-                                )
-                            ) ?: '—'
-                        );
+                        echo esc_html( gti_field_option_label('ready_to_use', $item['ready_to_use'], 'rental') ?: '—' );
                         ?>
                     </span>
                 </div>
@@ -1123,11 +1115,11 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 <!-- Service History -->
                 <div class="gti-ed-spec-item-quick">
                     <span class="gti-ed-spec-label-quick">
-                        Service History
+                        <?php echo esc_html(gti_field_label_or('service_history', 'rental', 'Service History')); ?>
                     </span>
 
                     <span class="gti-ed-spec-value-quick">
-                        <?php echo esc_html( $item['service_history'] ?: '—' ); ?>
+                        <?php echo esc_html( gti_field_option_label('service_history', $item['service_history'], 'rental') ?: '—' ); ?>
                     </span>
                 </div>
 
@@ -1203,24 +1195,16 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Ready to Use</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('ready_to_use', 'rental', 'Ready to Use')); ?></span>
                         <span class="gti-ed-spec-value-quick">
-                            <?php echo esc_html(
-                                ucfirst(
-                                    str_replace(
-                                        '_',
-                                        ' ',
-                                        $item['ready_to_use']
-                                    )
-                                ) ?: '—'
-                            ); ?>
+                            <?php echo esc_html( gti_field_option_label('ready_to_use', $item['ready_to_use'], 'rental') ?: '—' ); ?>
                         </span>
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Service History</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('service_history', 'rental', 'Service History')); ?></span>
                         <span class="gti-ed-spec-value-quick">
-                            <?php echo esc_html( $item['service_history'] ?: '—' ); ?>
+                            <?php echo esc_html( gti_field_option_label('service_history', $item['service_history'], 'rental') ?: '—' ); ?>
                         </span>
                     </div>
 
@@ -1245,29 +1229,23 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Working Condition</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('working_condition', 'rental', 'Working Condition')); ?></span>
                         <span class="gti-ed-spec-value-quick">
-                            <?php echo esc_html( ucfirst( $item['working_condition'] ) ?: '—' ); ?>
+                            <?php echo esc_html( gti_field_option_label('working_condition', $item['working_condition'], 'rental') ?: '—' ); ?>
                         </span>
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Maintenance Record</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('maintenance_record', 'rental', 'Maintenance Record')); ?></span>
                         <span class="gti-ed-spec-value-quick">
-                            <?php echo esc_html( $item['maintenance_record'] ?: '—' ); ?>
+                            <?php echo esc_html( gti_field_option_label('maintenance_record', $item['maintenance_record'], 'rental') ?: '—' ); ?>
                         </span>
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Ownership</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('ownership', 'rental', 'Ownership')); ?></span>
                         <span class="gti-ed-spec-value-quick">
-                            <?php echo esc_html(
-                                str_replace(
-                                    '_',
-                                    ' ',
-                                    ucfirst( $item['ownership'] )
-                                ) ?: '—'
-                            ); ?>
+                            <?php echo esc_html( gti_field_option_label('ownership', $item['ownership'], 'rental') ?: '—' ); ?>
                         </span>
                     </div>
 
@@ -1382,21 +1360,21 @@ function gti_rental_render_equipment_detail( $equipment_id ) {
                 <div style="display: flex; flex-direction: column; gap: 4px;">
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Country</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('location_country', 'rental', 'Country')); ?></span>
                         <span class="gti-ed-spec-value-quick">
                             <?php echo esc_html( $item['location_country'] ?: '—' ); ?>
                         </span>
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">Province</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('location_province', 'rental', 'Province')); ?></span>
                         <span class="gti-ed-spec-value-quick">
                             <?php echo esc_html( $item['location_province'] ?: '—' ); ?>
                         </span>
                     </div>
 
                     <div class="gti-ed-spec-item-quick">
-                        <span class="gti-ed-spec-label-quick">City</span>
+                        <span class="gti-ed-spec-label-quick"><?php echo esc_html(gti_field_label_or('location_city', 'rental', 'City')); ?></span>
                         <span class="gti-ed-spec-value-quick">
                             <?php echo esc_html( $item['location_city'] ?: '—' ); ?>
                         </span>

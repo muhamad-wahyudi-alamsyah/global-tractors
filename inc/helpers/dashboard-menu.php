@@ -45,6 +45,7 @@ function gti_dashboard_menu() {
 
         array( 'type' => 'section', 'label' => 'SYSTEM' ),
         array( 'type' => 'item', 'slug' => 'users',        'label' => 'Users',        'icon' => 'fa-user-shield', 'cap' => 'gti_manage_users' ),
+        array( 'type' => 'item', 'slug' => 'settings',     'label' => 'Settings',     'icon' => 'fa-sliders-h',   'cap' => 'gti_manage_settings' ),
         array( 'type' => 'item', 'slug' => 'activity-log', 'label' => 'Activity Log', 'icon' => 'fa-history',     'cap' => 'gti_manage_settings' ),
     );
 

@@ -1,0 +1,25 @@
+.gti-st-note { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; border-radius: 10px; padding: 12px 16px; font-size: 13px; margin-bottom: 20px; }
+.gti-st-note i { margin-right: 6px; }
+.gti-st-group { font-size: 15px; font-weight: 600; margin: 24px 0 12px; color: #1a1f36; }
+.gti-st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+.gti-st-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.gti-st-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.gti-st-card-head h3 { font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+.gti-st-card-head small { font-weight: 400; color: #6b7280; }
+.gti-st-card code, .gti-st-options code { font-size: 11px; background: #f3f4f6; color: #6b7280; padding: 1px 6px; border-radius: 4px; }
+.gti-st-btn { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 6px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.gti-st-btn:hover { background: #f9fafb; }
+.gti-st-options { list-style: none; margin: 0; padding: 0; max-height: 280px; overflow-y: auto; }
+.gti-st-options li { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+.gti-st-opt-label { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.gti-st-scope { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #eef2ff; color: #4338ca; white-space: nowrap; }
+.gti-st-scope-used { background: #ecfdf5; color: #047857; }
+.gti-st-scope-rental { background: #fff7ed; color: #c2410c; }
+.gti-st-count { font-size: 11px; color: #9ca3af; white-space: nowrap; min-width: 48px; text-align: right; }
+.gti-st-icon { border: 0; background: transparent; color: #6b7280; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.gti-st-icon:hover { background: #f3f4f6; color: #1a1f36; }
+.gti-st-icon.danger:hover { background: #fef2f2; color: #dc2626; }
+.gti-st-empty { color: #9ca3af; font-style: italic; }
+.gti-st-add { align-self: flex-start; border: 1px dashed #d1d5db; background: transparent; border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer; color: #374151; }
+.gti-st-add:hover { border-color: #F9B204; color: #92400e; }
+@media (max-width: 480px) { .gti-st-grid { grid-template-columns: 1fr; } }

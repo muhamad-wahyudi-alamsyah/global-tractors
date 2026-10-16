@@ -24,6 +24,7 @@ function gti_add_rewrite_rules() {
     add_rewrite_rule('^dashboard/news-articles/?$', 'index.php?gti_page=news-articles', 'top');        add_rewrite_rule('^dashboard/news-articles/add/?$', 'index.php?gti_page=add-news-article', 'top');    add_rewrite_rule('^dashboard/media-library/?$', 'index.php?gti_page=media-library', 'top');
     add_rewrite_rule('^dashboard/users/?$', 'index.php?gti_page=users', 'top');
     add_rewrite_rule('^dashboard/website-settings/?$', 'index.php?gti_page=website-settings', 'top');
+    add_rewrite_rule('^dashboard/settings/?$', 'index.php?gti_page=settings', 'top');
     add_rewrite_rule('^dashboard/activity-log/?$', 'index.php?gti_page=activity-log', 'top');
     add_rewrite_rule('^dashboard/?$', 'index.php?gti_page=dashboard', 'top');
 }
@@ -67,6 +68,7 @@ function gti_handle_dashboard_routing() {
         'users' => 'page-users',
         'website-settings' => 'page-coming-soon',
         'activity-log' => 'page-activity-log',
+        'settings' => 'page-settings',
     ];
 
     if (!isset($map[$page])) return;

@@ -85,6 +85,7 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 <li>Menu Media Library (Galeri File)</li>
 <li>Menu Users (Akun Pengguna)</li>
 <li>Menu Activity Log (Catatan Aktivitas)</li>
+<li>Menu Settings (Pengaturan Pilihan Formulir)</li>
 <li>Email Otomatis ke Pelanggan</li>
 <li>Kamus Istilah</li>
 <li>Pertanyaan yang Sering Muncul</li>
@@ -258,6 +259,7 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 <tr><td>Media Library</td><td>Ya</td><td>Ya</td><td>Ya</td><td>Ya</td></tr>
 <tr><td>Users</td><td>Ya</td><td>—</td><td>—</td><td>—</td></tr>
 <tr><td>Activity Log</td><td>Ya</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Settings</td><td>Ya</td><td>—</td><td>—</td><td>—</td></tr>
 </table>
 
 <div class="box">
@@ -630,7 +632,38 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 <p>Ketika ada data yang hilang atau berubah tanpa penjelasan, halaman ini menjawab pertanyaan "siapa, kapan, dari mana" dalam hitungan detik — tanpa perlu saling menuduh. Gunakan sebagai alat penelusuran, bukan alat pengawasan harian.</p>
 </div>
 
-<h2>17. Email Otomatis ke Pelanggan</h2>
+<div class="page-break"></div>
+<h2>17. Menu Settings (Pengaturan Pilihan Formulir)</h2>
+<p class="small">Hanya dapat diakses oleh GTI Super Admin.</p>
+
+<p>Di sini Super Admin mengatur <strong>nama field</strong> dan <strong>daftar pilihan (dropdown)</strong> pada formulir Add/Edit Used Equipment dan Rental Equipment, tanpa perlu membuka WordPress admin. Field yang bisa diatur: Category, Brand, Condition, Country of Origin, Location, Country/Province/City, Price Type, Availability Status, Ready to Use, Service History, Working Condition, Maintenance Record, dan Ownership.</p>
+
+<h3>Mengubah nama field</h3>
+<p>Klik <strong>Rename</strong> pada kartu field, pilih berlaku untuk <strong>Used &amp; Rental (terhubung)</strong>, <strong>Used saja</strong>, atau <strong>Rental saja</strong>, lalu tulis nama barunya. Nama baru ikut tampil di formulir, tabel, detail unit, dan halaman website.</p>
+
+<h3>Menambah, mengubah, dan menghapus pilihan</h3>
+<table>
+<tr><th style="width:26%">Tombol</th><th>Fungsinya</th></tr>
+<tr><td>Add option</td><td>Menambah pilihan baru. Tentukan tampil di Used &amp; Rental, Used saja, atau Rental saja.</td></tr>
+<tr><td>Ikon pensil</td><td>Mengubah nama pilihan dan scope-nya. Untuk Brand, Location, dan field sejenis, mengubah nama juga memperbarui unit yang sudah memakainya.</td></tr>
+<tr><td>Ikon tempat sampah</td><td>Menghapus pilihan dari dropdown. Unit yang sudah memakainya <strong>tidak berubah</strong> dan tetap tampil di formulir edit.</td></tr>
+</table>
+<p>Setiap pilihan menampilkan jumlah unit yang memakainya. Pada Category terdapat <strong>singkatan kode</strong> (misalnya EXC) yang dipakai untuk membentuk kode unit otomatis; bila dikosongkan, kode memakai GEN.</p>
+
+<h3>Pilihan "Lainnya" di formulir</h3>
+<p>Di formulir Add/Edit Equipment, setiap dropdown di atas memiliki pilihan <strong>Lainnya</strong>. Bila dipilih, muncul kolom teks untuk menulis pilihan baru. Setelah unit disimpan, pilihan tersebut <strong>otomatis menjadi pilihan tetap</strong> dan bisa dipilih langsung pada unit berikutnya, tanpa mengetik lagi. Pilihan baru hanya muncul pada jenis unitnya (Used atau Rental); ubah scope-nya di Settings bila ingin dipakai di keduanya.</p>
+
+<div class="box tip">
+<span class="t">Tulis dengan konsisten</span>
+<p>Sistem mengenali tulisan yang sama walau huruf besar/kecilnya berbeda ("komatsu" dianggap "KOMATSU"), sehingga filter di website tidak terpecah. Tetap periksa ejaan sebelum menyimpan.</p>
+</div>
+
+<div class="box">
+<span class="t">Field yang tidak bisa diubah</span>
+<p>Tipe alat (Used/Rental) dan Status unit (Available, Sold, Reserved, Draft, dan sebagainya) tidak termasuk, karena dipakai langsung oleh sistem untuk stok otomatis dan tampilan website.</p>
+</div>
+
+<h2>18. Email Otomatis ke Pelanggan</h2>
 
 <p>Inilah fitur yang paling menghemat waktu tim. <strong>Setiap kali status sebuah permintaan berhasil diubah, sistem otomatis mengirim email ke pelanggan.</strong> Staf tidak perlu mengetik apa pun.</p>
 
@@ -677,7 +710,7 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 </div>
 
 <div class="page-break"></div>
-<h2>18. Kamus Istilah</h2>
+<h2>19. Kamus Istilah</h2>
 
 <table>
 <tr><th style="width:28%">Istilah</th><th>Artinya dalam bahasa sehari-hari</th></tr>
@@ -697,7 +730,7 @@ code { background:#f3f4f6; padding:1px 5px; border-radius:3px; font-size:9.5pt; 
 <tr><td>Media Library</td><td>Gudang penyimpanan foto dan dokumen website.</td></tr>
 </table>
 
-<h2>19. Pertanyaan yang Sering Muncul</h2>
+<h2>20. Pertanyaan yang Sering Muncul</h2>
 
 <h4>Menu yang saya cari tidak ada di sidebar. Rusak?</h4>
 <p>Tidak. Sistem menyembunyikan menu yang tidak menjadi hak peran Anda. Jika Anda memang memerlukannya untuk bekerja, mintalah Super Admin meninjau peran akun Anda.</p>

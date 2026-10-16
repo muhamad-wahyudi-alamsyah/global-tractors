@@ -38,13 +38,17 @@ function gti_render_search_card( $atts = [] ) {
         $prices[ isset( $parts[1] ) ? trim( $parts[1] ) : '' ] = trim( $parts[0] );
     }
 
+    // Spans both catalogs, so it follows the Used wording.
+    $brand_label = gti_field_label_or( 'brand', 'used', 'Brand' );
+    $type_label  = gti_field_label_or( 'category', 'used', 'Type' );
+
     $selects = [
         'listing' => [ 'Listing', '150px', [
             home_url( $atts['used_url'] )   => 'Used Equipment',
             home_url( $atts['rental_url'] ) => 'Rental Equipment',
         ] ],
-        'brand'   => [ 'Brand', '160px', [ '' => 'All Brand' ] + $options['brands'] ],
-        'type'    => [ 'Type', '160px', [ '' => 'All Type' ] + $options['types'] ],
+        'brand'   => [ $brand_label, '160px', [ '' => 'All ' . $brand_label ] + $options['brands'] ],
+        'type'    => [ $type_label, '160px', [ '' => 'All ' . $type_label ] + $options['types'] ],
         'year'    => [ 'Year', '140px', [ '' => 'All Year' ] + $options['years'] ],
         'price'   => [ 'Price', '160px', $prices ],
     ];
